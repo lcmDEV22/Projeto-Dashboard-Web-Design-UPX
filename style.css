@@ -1,10 +1,60 @@
+body {
+    background-image: url('https://media.istockphoto.com/id/2202100777/pt/foto/high-voltage-power-lines-at-sunset-with-digital-energy-flow.jpg?s=612x612&w=0&k=20&c=zWccYg9-ih-Fkg3uxgRsKBjPJBNglrc8WuRry_Q-3c8='); /* Imagem de fundo */
+    background-size: cover;
+    height: 100vh;
+    color: white;
+}
+
+.login-form {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.7); /* Fundo preto com transparência */
+    padding: 20px;
+    border-radius: 22px;
+    width: 300px;
+    margin: 0 auto;
+}   
+
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: white;
+}
+
+.input-form {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.12); /* Branco com transparência */
+    padding: 10px;
+    margin: 20px;
+    border-radius: 6px;
+}
+
+.input-form input {
+    flex: 1;
+    border: none;
+    background: rgba(255, 255, 255, 0.12); /* Branco com transparência */
+    background: none;
+    color: white;
+    font-size: 14px;
+    outline: none;
+}
+
+.input-form input::placeholder {
+    color: white;
+}
+
 /* Botão de Cadastrar */
 .btn-cadastrar {
     background-color: yellow;
     color:black;
     border: none;
     padding: 10px 22px;
-    border-radius: 8px;
+    border-radius: 22px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
@@ -22,11 +72,11 @@
 
 /* Botão de Entrar */
 .btn-entrar {
-    background-color: black;
-    color: yellow;
+    background-color: rgba(255, 255, 255, 0.12); /* Branco com transparência */
+    color: white;
     border: none;
     padding: 10px 22px;
-    border-radius: 8px;
+    border-radius: 22px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
@@ -42,10 +92,36 @@
     transform: translateY(0);
 }
 
+body.Login {
+    color: black;
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    border-radius: 22px;
+    width: 300px;
+    margin: 0 auto;
+}
 
+body.Cadastro {
+    background-color: black;
+    color: yellow;
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    border-radius: 22px;
+    width: 300px;
+    margin: 0 auto;
+}
 
-
-
+div.login-form {
+    background: rgba(255, 255, 255, 0.08); /* Branco com transparência */
+    padding: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.3); /* Borda branca com transparência */
+    border-radius: 22px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.416); /* Sombra preta com transparência */
+    backdrop-filter: blur(7px); /* Efeito de desfoque */
+    width: 300px;
+    height: 300px;
+    margin: 0 auto;
+}
 
 
 

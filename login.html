@@ -1,47 +1,27 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
+<head class="Tela-Login">
     <link rel="stylesheet" href="style.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fazer Login</title>
-    <style>
-        body {
-            /* Insira o caminho da sua imagem dentro do url() */
-            background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRf1YdOu374kSp3W8eCibL9vICDWVk91l1WpYyuK8ixAQ&s=10');
-            
-            /* Evita que a imagem fique se repetindo na tela */
-            background-repeat: no-repeat;
-            
-            /* Centraliza a imagem no fundo */
-            background-position: center;
-            
-            /* Faz a imagem cobrir toda a área da tela */
-            background-size: cover;
-            
-            /* Garante altura mínima para ocupar a tela inteira */
-            height: 100vh;
-            margin: 0;
-        }
-    </style>
 </head>
 <br>
 <br>
-<h1>FAÇA O LOGIN</h1>
-<body align="center">
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
 
-    <form action="dashboard.html" method="post">
-        <label for="usuario"><b>Usuário:</b></label>
-        <input type="text" id="usuario" name="usuario"><br><br>
-        <label for="senha"><b>Senha:</b></label>
-        <input type="password" id="senha" name="senha"><br><br>
-        <input type="submit" value="Entrar" class="btn-entrar">
-    </form>
+<body align="center" class="Login">
+    <div class="login-form">
+        <h2>FAÇA O LOGIN</h2>
+        <form action="dashboard.html" method="post">
+            <div class="input-form">
+                <input type="text" id="usuario" name="usuario" placeholder="Usuário">
+            </div>
+            <div class="input-form">
+                <input type="password" id="senha" name="senha" placeholder="Senha">
+            </div>
+            <input type="submit" value="Entrar" class="btn-entrar">
+        </form>
+    </div>
 </body>
 
 </html>
