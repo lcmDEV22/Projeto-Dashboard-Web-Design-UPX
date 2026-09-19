@@ -1,4 +1,4 @@
-
+/* Botão de Cadastrar */
 .btn-cadastrar {
     background-color: yellow;
     color:black;
@@ -20,7 +20,27 @@
     transform: translateY(0);
 }
 
+/* Botão de Entrar */
+.btn-entrar {
+    background-color: black;
+    color: yellow;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+}
 
+.btn-entrar:hover {
+    background-color: black;
+    transform: translateY(-2px);
+}
+
+.btn-entrar:active {
+    transform: translateY(0);
+}
 
 
 
