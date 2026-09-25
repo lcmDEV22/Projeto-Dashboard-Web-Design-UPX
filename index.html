@@ -1,27 +1,29 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head class="Tela-Login">
-    <link rel="stylesheet" href="style.css">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fazer Login</title>
+    <meta name="description" content="Acesse sua conta para entrar no painel do projeto.">
+    <meta name="robots" content="noindex, follow">
+    <title>Entrar na conta | Painel</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-<br>
-<br>
-
-<body align="center" class="Login">
-    <div class="login-form">
-        <h2 class="h2-login">FAÇA O LOGIN</h2>
+<body class="Login">
+    <main class="login-form">
+        <h1 class="h2-login">Entrar na conta</h1>
         <form action="dashboard.html" method="post">
             <div class="input-login-form">
-                <input type="text" id="usuario" name="usuario" placeholder="Usuário">
+                <label class="sr-only" for="usuario">Usuário</label>
+                <input type="text" id="usuario" name="usuario" placeholder="Usuário" autocomplete="username" required>
             </div>
             <div class="input-login-form">
-                <input type="password" id="senha" name="senha" placeholder="Senha">
+                <label class="sr-only" for="senha">Senha</label>
+                <input type="password" id="senha" name="senha" placeholder="Senha" autocomplete="current-password" required>
             </div>
             <input type="submit" value="Entrar" class="btn-entrar">
         </form>
-    </div>
+        <p class="auth-link">Ainda não tem uma conta? <a href="cadastro.html">Cadastre-se</a></p>
+    </main>
 </body>
 
 </html>

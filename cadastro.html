@@ -1,35 +1,35 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <link rel="stylesheet" href="style.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastro de Usuário</title>
+    <meta name="description" content="Crie sua conta para acessar o painel do projeto.">
+    <meta name="robots" content="noindex, follow">
+    <title>Criar conta | Painel</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-<br>
-<br>
-
-<body align="center" class="Cadastro">
-    <div class="cadastro-form">
-        <h2 class="h2-cadastro">FAÇA O CADASTRO</h2>
-        <form action="login.html" method="post">
+<body class="Cadastro">
+    <main class="cadastro-form">
+        <h1 class="h2-cadastro">Criar conta</h1>
+        <form action="index.html" method="post">
             <div class="input-cadastro-form">
-                <input type="text" id="usuario" name="usuario" placeholder="Usuário">
+                <label class="sr-only" for="usuario">Usuário</label>
+                <input type="text" id="usuario" name="usuario" placeholder="Usuário" autocomplete="username" required>
             </div>
             <div class="input-cadastro-form">
-                <input type="text" id="email" name="email" placeholder="E-mail">
+                <label class="sr-only" for="email">E-mail</label>
+                <input type="email" id="email" name="email" placeholder="E-mail" autocomplete="email" required>
             </div>
             <div class="input-cadastro-form">
-                <input type="password" id="senha" name="senha" placeholder="Senha">
+                <label class="sr-only" for="senha">Senha</label>
+                <input type="password" id="senha" name="senha" placeholder="Senha" autocomplete="new-password" required>
             </div>
-            <input type="submit" value="Entrar" class="btn-entrar">
+            <input type="submit" value="Cadastrar" class="btn-entrar">
         </form>
-    </div>
+        <p class="auth-link">Já tem uma conta? <a href="index.html">Entrar</a></p>
+    </main>
 </body>
 </html>
-<body>
-    
-</body>
 
 
 
