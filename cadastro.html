@@ -5,48 +5,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro de Usuário</title>
-    <style>
-        body {
-            /* Insira o caminho da sua imagem dentro do url() */
-            background-image: url('https://wallpapers.com/images/featured/cacador-de-demonios-minimalista-9l0kvp4mv453r739.jpg');
-            
-            /* Evita que a imagem fique se repetindo na tela */
-            background-repeat: no-repeat;
-            
-            /* Centraliza a imagem no fundo */
-            background-position: center;
-            
-            /* Faz a imagem cobrir toda a área da tela */
-            background-size: cover;
-            
-            /* Garante altura mínima para ocupar a tela inteira */
-            height: 100vh;
-            margin: 0;
-        }
-    </style>
 </head>
 <br>
 <br>
 
 <body align="center" class="Cadastro">
-    <h1 align="center"><font color="Yellow">CADASTRO DE USUÁRIO</font></h1>
-
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-
-    <form action="login.html" method="post">
-        <label for="Usuário"><font color="Yellow"><b>Usuário:</b></font></label>
-        <input type="text" id="usuario" name="usuario"><br><br>
-        <label for="email"><font color="Yellow"><b>E-mail:</b></font></label>
-        <input type="email" id="email" name="email"><br><br>
-        <label for="senha"><font color="Yellow"><b>Senha:</b></font></label>
-        <input id="senha" name="senha" type="password"><br><br>
-        <input type="submit" value="Cadastrar" class="btn-cadastrar">
-    </form>
-    
+    <div class="cadastro-form">
+        <h2 class="h2-cadastro">FAÇA O CADASTRO</h2>
+        <form action="login.html" method="post">
+            <div class="input-cadastro-form">
+                <input type="text" id="usuario" name="usuario" placeholder="Usuário">
+            </div>
+            <div class="input-cadastro-form">
+                <input type="text" id="email" name="email" placeholder="E-mail">
+            </div>
+            <div class="input-cadastro-form">
+                <input type="password" id="senha" name="senha" placeholder="Senha">
+            </div>
+            <input type="submit" value="Entrar" class="btn-entrar">
+        </form>
+    </div>
 </body>
 </html>
 <body>

@@ -1,5 +1,5 @@
-body {
-    background-image: url('https://media.istockphoto.com/id/2202100777/pt/foto/high-voltage-power-lines-at-sunset-with-digital-energy-flow.jpg?s=612x612&w=0&k=20&c=zWccYg9-ih-Fkg3uxgRsKBjPJBNglrc8WuRry_Q-3c8='); /* Imagem de fundo */
+body.Login {
+    background-image: url('https://img.magnific.com/premium-vector/abstract-shapes-painting-design-line-light-dark-blue-blue-gradient-wallpaper-background_172010-904.jpg'); /* Imagem de fundo */
     background-size: cover;
     height: 100vh;
     color: white;
@@ -18,13 +18,13 @@ body {
     margin: 0 auto;
 }   
 
-h2 {
+.h2-login {
     text-align: center;
     margin-bottom: 20px;
     color: white;
 }
 
-.input-form {
+.input-login-form {
     display: flex;
     align-items: center;
     margin-bottom: 20px;
@@ -34,7 +34,7 @@ h2 {
     border-radius: 6px;
 }
 
-.input-form input {
+.input-login-form input {
     flex: 1;
     border: none;
     background: rgba(255, 255, 255, 0.12); /* Branco com transparência */
@@ -44,13 +44,13 @@ h2 {
     outline: none;
 }
 
-.input-form input::placeholder {
+.input-login-form input::placeholder {
     color: white;
 }
 
 /* Botão de Cadastrar */
 .btn-cadastrar {
-    background-color: yellow;
+    background-color: white;
     color:black;
     border: none;
     padding: 10px 22px;
@@ -101,14 +101,27 @@ body.Login {
     margin: 0 auto;
 }
 
+
+body.Cadastro{
+    background-image: url('https://static.vecteezy.com/ti/vetor-gratis/p1/11731499-ceu-azul-fundo-textura-natureza-cor-unica-gratis-vetor.jpg'); /* Imagem de fundo */
+    background-size: cover;
+    height: 100vh;
+    color: white;
+}
+
 body.Cadastro {
-    background-color: black;
-    color: yellow;
+    color: black;
     font-family: Arial, sans-serif;
     padding: 20px;
     border-radius: 22px;
     width: 300px;
     margin: 0 auto;
+}
+
+.h2-cadastro {
+    text-align: center;
+    margin-bottom: 20px;
+    color: white;
 }
 
 div.login-form {
@@ -123,7 +136,54 @@ div.login-form {
     margin: 0 auto;
 }
 
+.cadastro-form {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.7); /* Fundo preto com transparência */
+    padding: 20px;
+    border-radius: 22px;
+    width: 300px;
+    margin: 0 auto;
+}
 
+div.cadastro-form{
+    background: rgba(255, 255, 255, 0.08); /* Branco com transparência */
+    padding: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.3); /* Borda branca com transparência */
+    border-radius: 22px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.416); /* Sombra preta com transparência */
+    backdrop-filter: blur(7px); /* Efeito de desfoque */
+    width: 300px;
+    height: 300px;
+    margin: 0 auto;
+}
+
+.input-cadastro-form {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.12); /* Branco com transparência */
+    padding: 10px;
+    margin: 20px;
+    border-radius: 6px;
+}
+
+.input-cadastro-form input {
+    flex: 1;
+    border: none;
+    background: rgba(255, 255, 255, 0.12); /* Branco com transparência */
+    background: none;
+    color: white;
+    font-size: 14px;
+    outline: none;
+}
+
+.input-cadastro-form input::placeholder {
+    color: white;
+}
 
 
 
