@@ -1,6 +1,6 @@
 /* Fundos de cada página de autenticação. */
 body.Login {
-    background-image: url('https://img.magnific.com/premium-vector/abstract-shapes-painting-design-line-light-dark-blue-blue-gradient-wallpaper-background_172010-904.jpg'); /* Imagem de fundo */
+    background-image: url('imagens/FundoLogin.avif'); /* Imagem de fundo */
     background-size: cover;
     height: 100vh;
     color: white;
@@ -119,7 +119,7 @@ body.Login {
 
 /* Fundo e cartão específicos da página de cadastro. */
 body.Cadastro{
-    background-image: url('https://static.vecteezy.com/ti/vetor-gratis/p1/11731499-ceu-azul-fundo-textura-natureza-cor-unica-gratis-vetor.jpg'); /* Imagem de fundo */
+    background-image: url('images/FundoCadastro.jpg'); /* Imagem de fundo */
     background-size: cover;
     height: 100vh;
     color: white;
