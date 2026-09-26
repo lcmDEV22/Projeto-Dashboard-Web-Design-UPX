@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <!-- Metadados do documento e arquivo de estilos compartilhado. -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Crie sua conta para acessar o painel do projeto.">
@@ -9,9 +10,11 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="Cadastro">
+    <!-- Conteúdo principal da tela de cadastro. -->
     <main class="cadastro-form">
         <h1 class="h2-cadastro">Criar conta</h1>
         <form action="index.html" method="post">
+            <!-- Campos com autocomplete e validação nativa do navegador. -->
             <div class="input-cadastro-form">
                 <label class="sr-only" for="usuario">Usuário</label>
                 <input type="text" id="usuario" name="usuario" placeholder="Usuário" autocomplete="username" required>
@@ -26,6 +29,7 @@
             </div>
             <input type="submit" value="Cadastrar" class="btn-entrar">
         </form>
+        <!-- Link para quem já possui uma conta. -->
         <p class="auth-link">Já tem uma conta? <a href="index.html">Entrar</a></p>
     </main>
 </body>

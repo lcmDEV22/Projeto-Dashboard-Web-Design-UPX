@@ -1,3 +1,4 @@
+/* Fundos de cada página de autenticação. */
 body.Login {
     background-image: url('https://img.magnific.com/premium-vector/abstract-shapes-painting-design-line-light-dark-blue-blue-gradient-wallpaper-background_172010-904.jpg'); /* Imagem de fundo */
     background-size: cover;
@@ -5,6 +6,7 @@ body.Login {
     color: white;
 }
 
+/* Cartão principal: organiza título, formulário e link no centro da tela. */
 .login-form {
     height: 100vh;
     display: flex;
@@ -13,7 +15,7 @@ body.Login {
     justify-content: center;
     background: rgba(0, 0, 0, 0.7); /* Fundo preto com transparência */
     padding: 20px;
-    border-radius: 22px;
+    border-radius: 20px;
     width: 300px;
     margin: 0 auto;
 }   
@@ -24,14 +26,21 @@ body.Login {
     color: white;
 }
 
+/* Mantém campos e botão em coluna e alinha o botão ao centro. */
+.login-form form,
+.cadastro-form form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
 .input-login-form {
     display: flex;
     align-items: center;
     margin-bottom: 20px;
     background: rgba(255, 255, 255, 0.12); /* Branco com transparência */
     padding: 10px;
-    margin: 20px;
-    border-radius: 6px;
+    margin: 10px;
 }
 
 .input-login-form input {
@@ -42,6 +51,7 @@ body.Login {
     color: white;
     font-size: 14px;
     outline: none;
+    align-items: center;
 }
 
 .input-login-form input::placeholder {
@@ -49,7 +59,6 @@ body.Login {
 }
 
 .sr-only {
-    position: absolute;
     width: 1px;
     height: 1px;
     padding: 0;
@@ -75,54 +84,40 @@ body.Login {
     color:black;
     border: none;
     padding: 10px 22px;
-    border-radius: 22px;
+    border-radius: 20px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     transition: 0.3s;
 }
 
-.btn-cadastrar:hover {
-    background-color:yellow;
-    transform: translateY(-2px);
-}
-
-.btn-cadastrar:active {
-    transform: translateY(0);
-}
 
 /* Botão de Entrar */
 .btn-entrar {
+    align-self: center;
     background-color: rgba(255, 255, 255, 0.12); /* Branco com transparência */
     color: white;
     border: none;
-    padding: 10px 22px;
-    border-radius: 22px;
+    padding: 12px 22px;
+    border-radius: 20px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     transition: 0.3s;
 }
 
-.btn-entrar:hover {
-    background-color: black;
-    transform: translateY(-2px);
-}
-
-.btn-entrar:active {
-    transform: translateY(0);
-}
 
 body.Login {
     color: black;
     font-family: Arial, sans-serif;
     padding: 20px;
-    border-radius: 22px;
+    border-radius: 20px;
     width: 300px;
     margin: 0 auto;
 }
 
 
+/* Fundo e cartão específicos da página de cadastro. */
 body.Cadastro{
     background-image: url('https://static.vecteezy.com/ti/vetor-gratis/p1/11731499-ceu-azul-fundo-textura-natureza-cor-unica-gratis-vetor.jpg'); /* Imagem de fundo */
     background-size: cover;
@@ -147,13 +142,13 @@ body.Cadastro {
 
 div.login-form {
     background: rgba(255, 255, 255, 0.08); /* Branco com transparência */
-    padding: 20px;
+    padding: 22px;
     border: 1px solid rgba(255, 255, 255, 0.3); /* Borda branca com transparência */
     border-radius: 22px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.416); /* Sombra preta com transparência */
     backdrop-filter: blur(7px); /* Efeito de desfoque */
     width: 300px;
-    height: 300px;
+    height: 200px;
     margin: 0 auto;
 }
 
@@ -188,8 +183,7 @@ div.cadastro-form{
     margin-bottom: 20px;
     background: rgba(255, 255, 255, 0.12); /* Branco com transparência */
     padding: 10px;
-    margin: 20px;
-    border-radius: 6px;
+    margin: 10px;
 }
 
 .input-cadastro-form input {
