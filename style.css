@@ -148,7 +148,7 @@ div.login-form {
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.416); /* Sombra preta com transparência */
     backdrop-filter: blur(7px); /* Efeito de desfoque */
     width: 300px;
-    height: 200px;
+    height: 300px;
     margin: 0 auto;
 }
 
