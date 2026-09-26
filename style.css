@@ -119,7 +119,7 @@ body.Login {
 
 /* Fundo e cartão específicos da página de cadastro. */
 body.Cadastro{
-    background-image: url('images/FundoCadastro.jpg'); /* Imagem de fundo */
+    background-image: url('imagens/FundoCadastro.jpg'); /* Imagem de fundo */
     background-size: cover;
     height: 100vh;
     color: white;
