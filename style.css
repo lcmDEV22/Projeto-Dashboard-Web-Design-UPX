@@ -84,6 +84,23 @@ body.Login {
     color: white;
 }
 
+/* Mostra o resultado das ações de cadastro e login. */
+.auth-message {
+    min-height: 1.5em;
+    margin-top: 12px;
+    color: white;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.auth-message.is-error {
+    color: #ffb4ab;
+}
+
+.auth-message.is-success {
+    color: #b8f7c5;
+}
+
 /* Botão de Cadastrar */
 .btn-cadastrar {
     background-color: white;
@@ -257,6 +274,34 @@ body.dashboard .dashboard-container {
     margin-bottom: 30px;
 }
 
+/* Alinha o usuário e a ação de sair ao título do painel. */
+.dashboard-header,
+.dashboard-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.dashboard-actions p {
+    color: var(--text);
+}
+
+.btn-sair {
+    padding: 9px 16px;
+    border: 1px solid #c33;
+    border-radius: 6px;
+    background: transparent;
+    color: #a22;
+    font: inherit;
+    cursor: pointer;
+}
+
+.btn-sair:hover {
+    background: #a22;
+    color: var(--white);
+}
+
 /* Organiza os indicadores em três colunas. */
 .cards-grid {
     display: grid;
@@ -373,6 +418,13 @@ body.dashboard > section h2 {
 
     .dashboard-container h1 {
         font-size: 1.8rem;
+    }
+
+    .dashboard-header,
+    .dashboard-actions {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 8px;
     }
 
     .cards-grid {

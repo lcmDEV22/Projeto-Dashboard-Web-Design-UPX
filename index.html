@@ -13,7 +13,7 @@
     <!-- Conteúdo principal da tela de login. -->
     <main class="login-form">
         <h1 class="h2-login">Entrar na conta</h1>
-        <form action="dashboard.html" method="post">
+        <form id="loginForm" action="dashboard.html" method="post">
             <!-- Campos com autocomplete e validação nativa do navegador. -->
             <div class="input-login-form">
                 <label class="sr-only" for="usuario">Usuário</label>
@@ -25,9 +25,11 @@
             </div>
             <input type="submit" value="Entrar" class="btn-entrar">
         </form>
+        <p class="auth-message" id="authMessage" role="status" aria-live="polite"></p>
         <!-- Link para quem ainda precisa criar uma conta. -->
         <p class="auth-link">Ainda não tem uma conta? <a href="cadastro.html">Cadastre-se</a></p>
     </main>
+    <script src="auth.js"></script>
 </body>
 
 </html>

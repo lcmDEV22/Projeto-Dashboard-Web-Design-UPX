@@ -17,8 +17,16 @@
     <!--Inicio da Dashboard-->
 
     <div class="dashboard-container">
-        <h1>Dashboard</h1>
-        <h2>Painel de Controle</h2>
+        <header class="dashboard-header">
+            <div>
+                <h1>Dashboard</h1>
+                <h2>Painel de Controle</h2>
+            </div>
+            <div class="dashboard-actions">
+                <p>Olá, <span id="usuarioLogado"></span></p>
+                <button class="btn-sair" id="btnSair" type="button">Sair</button>
+            </div>
+        </header>
 
         <!--Indicador em card-->
 
@@ -58,6 +66,7 @@
     </section>
 
     <script src="script.js"></script>
+    <script src="auth.js"></script>
 
 </body>
 

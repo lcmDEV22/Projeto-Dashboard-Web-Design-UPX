@@ -13,7 +13,7 @@
     <!-- Conteúdo principal da tela de cadastro. -->
     <main class="cadastro-form">
         <h1 class="h2-cadastro">Criar conta</h1>
-        <form action="index.html" method="post">
+        <form id="cadastroForm" action="index.html" method="post">
             <!-- Campos com autocomplete e validação nativa do navegador. -->
             <div class="input-cadastro-form">
                 <label class="sr-only" for="usuario">Usuário</label>
@@ -25,13 +25,15 @@
             </div>
             <div class="input-cadastro-form">
                 <label class="sr-only" for="senha">Senha</label>
-                <input type="password" id="senha" name="senha" placeholder="Senha" autocomplete="new-password" required>
+                <input type="password" id="senha" name="senha" placeholder="Senha" autocomplete="new-password" minlength="8" required>
             </div>
             <input type="submit" value="Cadastrar" class="btn-entrar">
         </form>
+        <p class="auth-message" id="authMessage" role="status" aria-live="polite"></p>
         <!-- Link para quem já possui uma conta. -->
         <p class="auth-link">Já tem uma conta? <a href="index.html">Entrar</a></p>
     </main>
+    <script src="auth.js"></script>
 </body>
 </html>
 
