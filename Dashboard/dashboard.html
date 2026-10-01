@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Consumo</title>
+
+    <!--Liga o html com o CSS-->
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!--Inicio da Dashboard-->
+
+    <div class="dashboard-container">
+        <h1>Dashboard</h1>
+        <h2>Painel de Controle</h2>
+
+        <!--Indicador em card-->
+
+        <section class="cards-grid">
+
+            <div class="card">
+                <span class="card-title">Total de Consumo</span>
+                <strong>R$ xx.xxx,xx</strong>
+                <small>+xx,x% este mês</small>
+            </div>
+
+            <div class="card">
+                <span class="card-title">Consumo Diário</span>
+                <strong>x.xxx</strong>
+                <small>+xx,x% este mês</small>
+            </div>
+
+            <div class="card">
+                <span class="card-title">Consumo Mensal</span>
+                <strong>x.xxx</strong>
+                <small>+xx,x% este mês</small>
+            </div>
+
+        </section>
+    </div>
+
+    <!--Container gráfico-->
+
+    <section>
+        <h2>Consumo Mensal</h2>
+        <canvas id="meuGrafico"></canvas>
+    </section>
+
+    <section>
+        <h2>Consumo Diário</h2>
+        <canvas id="meuGrafico2"></canvas>
+    </section>
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
