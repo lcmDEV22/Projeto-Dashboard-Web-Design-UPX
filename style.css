@@ -1,24 +1,29 @@
-/* Fundos de cada página de autenticação. */
+/* Aplica box sizing previsível em todas as páginas. */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+/* Define os fundos das páginas de autenticação. */
 body.Login {
     background-image: url('imagens/FundoLogin.avif'); /* Imagem de fundo */
-    background-size: cover;
-    height: 100vh;
-    color: white;
 }
 
 /* Cartão principal: organiza título, formulário e link no centro da tela. */
 .login-form {
-    height: 100vh;
+    min-height: 350px;
+    height: auto;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     background: rgba(0, 0, 0, 0.7); /* Fundo preto com transparência */
-    padding: 20px;
+    padding: 24px;
     border-radius: 20px;
-    width: 300px;
+    width: min(100%, 360px);
     margin: 0 auto;
-}   
+}
 
 .h2-login {
     text-align: center;
@@ -37,14 +42,15 @@ body.Login {
 .input-login-form {
     display: flex;
     align-items: center;
-    margin-bottom: 20px;
+    width: 100%;
+    margin: 8px 0;
     background: rgba(255, 255, 255, 0.12); /* Branco com transparência */
     padding: 10px;
-    margin: 10px;
 }
 
 .input-login-form input {
     flex: 1;
+    min-width: 0;
     border: none;
     background: rgba(255, 255, 255, 0.12); /* Branco com transparência */
     background: none;
@@ -107,31 +113,26 @@ body.Login {
 }
 
 
-body.Login {
+/* Centraliza as telas de autenticação e adapta a largura ao dispositivo. */
+body.Login,
+body.Cadastro {
+    min-height: 100vh;
+    width: 100%;
+    margin: 0;
+    padding: 24px;
+    display: grid;
+    place-items: center;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     color: black;
     font-family: Arial, sans-serif;
-    padding: 20px;
-    border-radius: 20px;
-    width: 300px;
-    margin: 0 auto;
 }
 
 
 /* Fundo e cartão específicos da página de cadastro. */
 body.Cadastro{
     background-image: url('imagens/FundoCadastro.jpg'); /* Imagem de fundo */
-    background-size: cover;
-    height: 100vh;
-    color: white;
-}
-
-body.Cadastro {
-    color: black;
-    font-family: Arial, sans-serif;
-    padding: 20px;
-    border-radius: 22px;
-    width: 300px;
-    margin: 0 auto;
 }
 
 .h2-cadastro {
@@ -147,21 +148,23 @@ div.login-form {
     border-radius: 22px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.416); /* Sombra preta com transparência */
     backdrop-filter: blur(7px); /* Efeito de desfoque */
-    width: 300px;
-    height: 300px;
+    width: min(100%, 360px);
+    min-height: 350px;
+    height: auto;
     margin: 0 auto;
 }
 
 .cadastro-form {
-    height: 100vh;
+    min-height: 350px;
+    height: auto;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     background: rgba(0, 0, 0, 0.7); /* Fundo preto com transparência */
-    padding: 20px;
+    padding: 24px;
     border-radius: 22px;
-    width: 300px;
+    width: min(100%, 380px);
     margin: 0 auto;
 }
 
@@ -172,22 +175,24 @@ div.cadastro-form{
     border-radius: 22px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.416); /* Sombra preta com transparência */
     backdrop-filter: blur(7px); /* Efeito de desfoque */
-    width: 300px;
-    height: 300px;
+    width: min(100%, 380px);
+    min-height: 350px;
+    height: auto;
     margin: 0 auto;
 }
 
 .input-cadastro-form {
     display: flex;
     align-items: center;
-    margin-bottom: 20px;
+    width: 100%;
+    margin: 8px 0;
     background: rgba(255, 255, 255, 0.12); /* Branco com transparência */
     padding: 10px;
-    margin: 10px;
 }
 
 .input-cadastro-form input {
     flex: 1;
+    min-width: 0;
     border: none;
     background: rgba(255, 255, 255, 0.12); /* Branco com transparência */
     background: none;
@@ -198,6 +203,12 @@ div.cadastro-form{
 
 .input-cadastro-form input::placeholder {
     color: white;
+}
+
+/* Mantém formulários e campos dentro da largura do painel. */
+.login-form form,
+.cadastro-form form {
+    width: 100%;
 }
 
 /* Define as cores usadas somente no dashboard. */
@@ -225,7 +236,7 @@ body.dashboard {
 }
 
 /* Centraliza o título e os indicadores do dashboard. */
-.dashboard-container {
+body.dashboard .dashboard-container {
     width: 90%;
     max-width: 1200px;
     margin: 0 auto;
@@ -259,6 +270,7 @@ body.dashboard {
     border-radius: 15px;
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    text-align: center;
 }
 
 .card:hover {
@@ -313,8 +325,8 @@ body.dashboard > section h2 {
     display: block;
 }
 
-/* Ajusta os indicadores e gráficos para telas menores. */
-@media (max-width: 768px) {
+/* Distribui os cards em duas colunas em telas médias. */
+@media (max-width: 900px) {
     .dashboard-container {
         width: 92%;
         padding-top: 35px;
@@ -322,6 +334,45 @@ body.dashboard > section h2 {
 
     .dashboard-container h1 {
         font-size: 1.9rem;
+    }
+
+    .cards-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* Centraliza o último card quando ele fica sozinho na linha do tablet. */
+@media (min-width: 601px) and (max-width: 900px) {
+    .cards-grid .card:last-child:nth-child(odd) {
+        grid-column: 1 / -1;
+        justify-self: center;
+        width: calc((100% - 20px) / 2);
+    }
+}
+
+/* Empilha os cards e reduz os gráficos em telas pequenas. */
+@media (max-width: 600px) {
+    body.Login,
+    body.Cadastro {
+        padding: 16px;
+    }
+
+    .login-form,
+    div.login-form,
+    .cadastro-form,
+    div.cadastro-form {
+        width: 100%;
+        min-height: 0;
+        padding: 24px 18px;
+    }
+
+    .dashboard-container {
+        width: 92%;
+        padding: 32px 0 20px;
+    }
+
+    .dashboard-container h1 {
+        font-size: 1.8rem;
     }
 
     .cards-grid {
@@ -335,10 +386,11 @@ body.dashboard > section h2 {
 
     #meuGrafico,
     #meuGrafico2 {
-        height: 280px;
+        height: 260px;
     }
 }
 
+/* Evita que os números dos cards fiquem grandes demais no celular. */
 @media (max-width: 480px) {
     .dashboard-container h1 {
         font-size: 1.7rem;
@@ -350,6 +402,11 @@ body.dashboard > section h2 {
 
     .card strong {
         font-size: 1.5rem;
+    }
+
+    body.dashboard > section {
+        margin-bottom: 28px;
+        padding: 16px;
     }
 }
 
