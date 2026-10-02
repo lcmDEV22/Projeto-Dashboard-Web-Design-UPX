@@ -252,12 +252,128 @@ body.dashboard {
     font-family: 'Poppins', sans-serif;
 }
 
+/* Divide a tela entre a navegação lateral e o conteúdo principal. */
+body.dashboard .dashboard-layout {
+    display: grid;
+    grid-template-columns: 230px minmax(0, 1fr);
+    gap: 28px;
+    width: min(1440px, 100%);
+    min-height: 100vh;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+/* Mantém a navegação acessível enquanto o usuário consulta os gráficos. */
+body.dashboard .dashboard-sidebar {
+    position: sticky;
+    top: 24px;
+    align-self: start;
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 48px);
+    padding: 22px 16px;
+    border-radius: 8px;
+    background: #20382b;
+    color: #fff;
+}
+
+body.dashboard .sidebar-brand {
+    color: #fff;
+    font-size: 1.35rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+body.dashboard .sidebar-caption {
+    margin: 30px 8px 10px;
+    color: #b9c9be;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+body.dashboard .sidebar-nav {
+    display: grid;
+    gap: 6px;
+}
+
+body.dashboard .sidebar-link,
+body.dashboard .btn-exportar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 44px;
+    padding: 10px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #edf4ef;
+    font: inherit;
+    font-size: 0.9rem;
+    text-align: left;
+    cursor: pointer;
+}
+
+body.dashboard .sidebar-link:hover,
+body.dashboard .sidebar-link.is-active {
+    background: #365443;
+    color: #fff;
+}
+
+body.dashboard .sidebar-link:focus-visible,
+body.dashboard .btn-exportar:focus-visible {
+    outline: 2px solid #f0c36a;
+    outline-offset: 2px;
+}
+
+body.dashboard .sidebar-link-icon {
+    display: grid;
+    flex: 0 0 26px;
+    width: 26px;
+    height: 26px;
+    place-items: center;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.12);
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+body.dashboard .sidebar-export {
+    margin-top: auto;
+}
+
+body.dashboard .sidebar-export .sidebar-caption {
+    margin-top: 24px;
+}
+
+body.dashboard .btn-exportar {
+    justify-content: center;
+    background: #f0c36a;
+    color: #26342c;
+    font-weight: 600;
+}
+
+body.dashboard .btn-exportar:hover {
+    background: #f6d48f;
+}
+
+body.dashboard .export-status {
+    min-height: 1.4em;
+    margin-top: 8px;
+    color: #d8e4db;
+    font-size: 0.75rem;
+}
+
+body.dashboard .dashboard-main {
+    min-width: 0;
+}
+
 /* Centraliza o título e os indicadores do dashboard. */
 body.dashboard .dashboard-container {
-    width: 90%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 50px 0 30px;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 18px 0 26px;
 }
 
 .dashboard-container h1 {
@@ -345,18 +461,17 @@ body.dashboard .dashboard-container {
     font-weight: 600;
 }
 
-/* Dá espaço e fundo branco às áreas dos gráficos. */
-body.dashboard > section {
-    width: 90%;
-    max-width: 1200px;
-    margin: 20px auto 50px;
+/* Dá espaço e fundo branco ao painel gráfico selecionado. */
+body.dashboard .dashboard-main > .chart-panel {
+    width: 100%;
+    margin: 0 0 28px;
     background: var(--white);
     padding: 25px;
-    border-radius: 15px;
+    border-radius: 8px;
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
 }
 
-body.dashboard > section h2 {
+body.dashboard .chart-panel h2 {
     color: var(--text);
     font-size: 1.3rem;
     margin-bottom: 20px;
@@ -430,9 +545,10 @@ body.dashboard > section h2 {
 
 /* Distribui os cards em duas colunas em telas médias. */
 @media (max-width: 900px) {
-    .dashboard-container {
-        width: 92%;
-        padding-top: 35px;
+    body.dashboard .dashboard-layout {
+        grid-template-columns: 200px minmax(0, 1fr);
+        gap: 18px;
+        padding: 18px;
     }
 
     .dashboard-container h1 {
@@ -469,9 +585,33 @@ body.dashboard > section h2 {
         padding: 24px 18px;
     }
 
-    .dashboard-container {
-        width: 92%;
-        padding: 32px 0 20px;
+    body.dashboard .dashboard-layout {
+        grid-template-columns: 1fr;
+        gap: 14px;
+        padding: 14px;
+    }
+
+    body.dashboard .dashboard-sidebar {
+        position: static;
+        min-height: 0;
+        padding: 16px;
+    }
+
+    body.dashboard .dashboard-sidebar > .sidebar-caption,
+    body.dashboard .sidebar-export .sidebar-caption {
+        margin: 12px 4px 8px;
+    }
+
+    body.dashboard .sidebar-nav {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    body.dashboard .sidebar-export {
+        margin-top: 8px;
+    }
+
+    body.dashboard .dashboard-container {
+        padding: 14px 0 20px;
     }
 
     .dashboard-container h1 {
@@ -489,8 +629,7 @@ body.dashboard > section h2 {
         grid-template-columns: 1fr;
     }
 
-    body.dashboard > section {
-        width: 92%;
+    body.dashboard .dashboard-main > .chart-panel {
         padding: 20px;
     }
 
@@ -514,8 +653,8 @@ body.dashboard > section h2 {
         font-size: 1.5rem;
     }
 
-    body.dashboard > section {
-        margin-bottom: 28px;
+    body.dashboard .dashboard-main > .chart-panel {
+        margin-bottom: 20px;
         padding: 16px;
     }
 }

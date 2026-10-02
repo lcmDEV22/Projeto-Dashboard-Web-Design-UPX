@@ -4,6 +4,12 @@ const canvases = [
 ].filter(Boolean);
 const dadosGraficos = new Map();
 const nomesMeses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+const dadosConsumoMensal = [4200, 5100, 4800, 6200, 5900, 7100, 6800, 7900, 8300, 9100, 8700, 9800];
+const dadosConsumoDiario = [
+    320, 350, 295, 410, 375, 430, 390, 460, 425, 510,
+    480, 445, 530, 495, 560, 520, 475, 590, 545, 610,
+    575, 630, 590, 660, 620, 690, 645, 710, 675, 735, 700
+];
 
 // Configura os seletores do gráfico diário com o mês atual e anos próximos.
 function configurarFiltrosDiarios() {
@@ -49,17 +55,10 @@ function criarGrafico(canvas) {
     canvas.height = altura * proporcao;
     ctx.scale(proporcao, proporcao);
 
-    const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-    const consumoMensal = [4200, 5100, 4800, 6200, 5900, 7100, 6800, 7900, 8300, 9100, 8700, 9800];
-    // Série de exemplo diária; ela é limitada ao número de dias do período escolhido.
-    const consumoDiario = [
-        320, 350, 295, 410, 375, 430, 390, 460, 425, 510,
-        480, 445, 530, 495, 560, 520, 475, 590, 545, 610,
-        575, 630, 590, 660, 620, 690, 645, 710, 675, 735, 700
-    ];
+    const meses = nomesMeses.map((mes) => mes.slice(0, 3));
     const isGraficoDiario = canvas.id === "meuGrafico2";
     let dias = [];
-    let valoresDiarios = consumoDiario;
+    let valoresDiarios = dadosConsumoDiario;
     let mesSelecionado = null;
     let anoSelecionado = null;
 
@@ -70,11 +69,11 @@ function criarGrafico(canvas) {
         // O dia zero do próximo mês informa quantos dias existem no mês selecionado.
         const quantidadeDias = new Date(anoSelecionado, mesSelecionado + 1, 0).getDate();
         dias = Array.from({ length: quantidadeDias }, (_, index) => String(index + 1));
-        valoresDiarios = consumoDiario.slice(0, quantidadeDias);
+        valoresDiarios = dadosConsumoDiario.slice(0, quantidadeDias);
     }
 
     const labels = isGraficoDiario ? dias : meses;
-    const valores = isGraficoDiario ? valoresDiarios : consumoMensal;
+    const valores = isGraficoDiario ? valoresDiarios : dadosConsumoMensal;
     const intervaloRotulos = isGraficoDiario ? 5 : 1;
 
     // Reserva espaço para os eixos e calcula a escala vertical do gráfico.
@@ -273,18 +272,109 @@ function configurarInteracaoGraficos() {
     });
 }
 
+// Alterna o painel selecionado e redesenha o canvas depois que ele fica visível.
+function configurarSelecaoGraficos() {
+    const botoes = document.querySelectorAll("[data-chart-target]");
+    const paineis = document.querySelectorAll(".chart-panel");
+
+    botoes.forEach((botao) => {
+        botao.addEventListener("click", () => {
+            const painelSelecionado = botao.dataset.chartTarget;
+
+            botoes.forEach((item) => {
+                const estaSelecionado = item === botao;
+                item.classList.toggle("is-active", estaSelecionado);
+                item.setAttribute("aria-pressed", String(estaSelecionado));
+            });
+
+            // Evita reexibir um tooltip antigo ao voltar para outro gráfico.
+            document.querySelectorAll(".tooltip-grafico").forEach((tooltip) => {
+                tooltip.hidden = true;
+            });
+
+            paineis.forEach((painel) => {
+                painel.hidden = painel.id !== painelSelecionado;
+            });
+
+            // O canvas precisa estar visível para medir sua largura antes de desenhar.
+            const canvas = document.querySelector(`#${painelSelecionado} canvas`);
+            if (canvas) {
+                criarGrafico(canvas);
+            }
+        });
+    });
+
+    // Aplica a seleção inicial da navegação aos painéis.
+    const botaoInicial = document.querySelector("[data-chart-target].is-active") || botoes[0];
+    if (botaoInicial) {
+        const painelInicial = botaoInicial.dataset.chartTarget;
+        paineis.forEach((painel) => {
+            painel.hidden = painel.id !== painelInicial;
+        });
+    }
+}
+
+// Monta um CSV com os dados mensais do ano e os dias do período selecionado.
+function exportarHistorico() {
+    const mesSelecionado = Number(document.getElementById("filtroMesDiario").value);
+    const anoSelecionado = Number(document.getElementById("filtroAnoDiario").value);
+    const quantidadeDias = new Date(anoSelecionado, mesSelecionado + 1, 0).getDate();
+    const linhas = [["Tipo", "Período", "Consumo (kWh)"]];
+
+    dadosConsumoMensal.forEach((valor, indice) => {
+        linhas.push(["Mensal", `${nomesMeses[indice]} de ${anoSelecionado}`, String(valor)]);
+    });
+
+    dadosConsumoDiario.slice(0, quantidadeDias).forEach((valor, indice) => {
+        linhas.push([
+            "Diário",
+            `${String(indice + 1).padStart(2, "0")}/${String(mesSelecionado + 1).padStart(2, "0")}/${anoSelecionado}`,
+            String(valor)
+        ]);
+    });
+
+    // Usa ponto e vírgula e BOM para abrir acentos corretamente em planilhas locais.
+    const conteudoCsv = `\uFEFF${linhas.map((linha) => linha.join(";")).join("\r\n")}`;
+    const arquivo = new Blob([conteudoCsv], { type: "text/csv;charset=utf-8;" });
+    const enderecoArquivo = URL.createObjectURL(arquivo);
+    const linkDownload = document.createElement("a");
+    const status = document.getElementById("statusExportacao");
+
+    linkDownload.href = enderecoArquivo;
+    linkDownload.download = `historico-consumo-${anoSelecionado}-${String(mesSelecionado + 1).padStart(2, "0")}.csv`;
+    document.body.appendChild(linkDownload);
+    linkDownload.click();
+    linkDownload.remove();
+    window.setTimeout(() => URL.revokeObjectURL(enderecoArquivo), 1000);
+    status.textContent = "Histórico exportado em CSV.";
+}
+
+// Liga o comando da barra lateral à geração do arquivo CSV.
+function configurarExportacaoHistorico() {
+    const botaoExportar = document.getElementById("btnExportarHistorico");
+    if (botaoExportar) {
+        botaoExportar.addEventListener("click", exportarHistorico);
+    }
+}
+
 function desenharGraficos() {
     // Atualiza todos os canvases, inclusive após mudar o período ou redimensionar a tela.
     document.querySelectorAll(".tooltip-grafico").forEach((tooltip) => {
         tooltip.hidden = true;
     });
-    canvases.forEach(criarGrafico);
+    canvases.forEach((canvas) => {
+        if (canvas.clientWidth > 0) {
+            criarGrafico(canvas);
+        }
+    });
 }
 
 // Prepara os filtros antes do primeiro desenho para que já usem o período atual.
 document.addEventListener("DOMContentLoaded", () => {
     configurarFiltrosDiarios();
     configurarInteracaoGraficos();
+    configurarSelecaoGraficos();
+    configurarExportacaoHistorico();
     desenharGraficos();
 });
 window.addEventListener("resize", desenharGraficos);

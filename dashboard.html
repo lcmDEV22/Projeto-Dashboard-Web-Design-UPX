@@ -14,73 +14,92 @@
 
 <body class="dashboard">
 
-    <!--Inicio da Dashboard-->
-
-    <div class="dashboard-container">
-        <header class="dashboard-header">
-            <div>
-                <h1>Dashboard</h1>
-                <h2>Painel de Controle</h2>
+    <!-- Organiza a navegação lateral e o conteúdo principal do dashboard. -->
+    <div class="dashboard-layout">
+        <aside class="dashboard-sidebar" aria-label="Navegação do dashboard">
+            <a class="sidebar-brand" href="dashboard.html">Consumo</a>
+            <p class="sidebar-caption">PAINEL</p>
+            <nav class="sidebar-nav" aria-label="Gráficos disponíveis">
+                <button class="sidebar-link is-active" type="button" data-chart-target="secaoGraficoMensal" aria-controls="secaoGraficoMensal" aria-pressed="true">
+                    <span class="sidebar-link-icon" aria-hidden="true">M</span>
+                    Consumo mensal
+                </button>
+                <button class="sidebar-link" type="button" data-chart-target="secaoGraficoDiario" aria-controls="secaoGraficoDiario" aria-pressed="false">
+                    <span class="sidebar-link-icon" aria-hidden="true">D</span>
+                    Consumo diário
+                </button>
+            </nav>
+            <div class="sidebar-export">
+                <p class="sidebar-caption">DADOS</p>
+                <button class="btn-exportar" id="btnExportarHistorico" type="button">
+                    <span aria-hidden="true">↓</span>
+                    Exportar histórico
+                </button>
+                <p id="statusExportacao" class="export-status" role="status" aria-live="polite"></p>
             </div>
-            <div class="dashboard-actions">
-                <p>Olá, <span id="usuarioLogado"></span></p>
-                <button class="btn-sair" id="btnSair" type="button">Sair</button>
+        </aside>
+
+        <main class="dashboard-main">
+            <!-- Início do conteúdo principal do dashboard. -->
+            <div class="dashboard-container">
+                <header class="dashboard-header">
+                    <div>
+                        <h1>Dashboard</h1>
+                        <h2>Painel de Controle</h2>
+                    </div>
+                    <div class="dashboard-actions">
+                        <p>Olá, <span id="usuarioLogado"></span></p>
+                        <button class="btn-sair" id="btnSair" type="button">Sair</button>
+                    </div>
+                </header>
+
+                <!-- Indicadores resumidos do consumo. -->
+                <section class="cards-grid">
+                    <div class="card">
+                        <span class="card-title">Total de Consumo</span>
+                        <strong>R$ xx.xxx,xx</strong>
+                        <small>+xx,x% este mês</small>
+                    </div>
+                    <div class="card">
+                        <span class="card-title">Consumo Diário</span>
+                        <strong>x.xxx</strong>
+                        <small>+xx,x% este mês</small>
+                    </div>
+                    <div class="card">
+                        <span class="card-title">Consumo Mensal</span>
+                        <strong>x.xxx</strong>
+                        <small>+xx,x% este mês</small>
+                    </div>
+                </section>
             </div>
-        </header>
 
-        <!--Indicador em card-->
+            <!-- Cada painel é exibido pela seleção correspondente na barra lateral. -->
+            <section class="chart-panel" id="secaoGraficoMensal" aria-labelledby="tituloGraficoMensal">
+                <h2 id="tituloGraficoMensal">Consumo Mensal</h2>
+                <div class="grafico-wrapper">
+                    <canvas id="meuGrafico" aria-label="Gráfico de consumo mensal"></canvas>
+                    <div id="tooltipGraficoMensal" class="tooltip-grafico" role="status" aria-live="polite" hidden></div>
+                </div>
+            </section>
 
-        <section class="cards-grid">
-
-            <div class="card">
-                <span class="card-title">Total de Consumo</span>
-                <strong>R$ xx.xxx,xx</strong>
-                <small>+xx,x% este mês</small>
-            </div>
-
-            <div class="card">
-                <span class="card-title">Consumo Diário</span>
-                <strong>x.xxx</strong>
-                <small>+xx,x% este mês</small>
-            </div>
-
-            <div class="card">
-                <span class="card-title">Consumo Mensal</span>
-                <strong>x.xxx</strong>
-                <small>+xx,x% este mês</small>
-            </div>
-
-        </section>
+            <section class="chart-panel" id="secaoGraficoDiario" aria-labelledby="tituloGraficoDiario" hidden>
+                <h2 id="tituloGraficoDiario">Consumo Diário</h2>
+                <!-- Filtros que definem o mês e o ano representados no gráfico diário. -->
+                <div class="filtros-diarios">
+                    <label for="filtroMesDiario">Mês
+                        <select id="filtroMesDiario"></select>
+                    </label>
+                    <label for="filtroAnoDiario">Ano
+                        <select id="filtroAnoDiario"></select>
+                    </label>
+                </div>
+                <div class="grafico-wrapper">
+                    <canvas id="meuGrafico2" aria-label="Gráfico de consumo diário"></canvas>
+                    <div id="tooltipGraficoDiario" class="tooltip-grafico" role="status" aria-live="polite" hidden></div>
+                </div>
+            </section>
+        </main>
     </div>
-
-    <!--Container gráfico-->
-
-    <section>
-        <h2>Consumo Mensal</h2>
-        <!-- Wrapper que ancora o tooltip mensal ao canvas em qualquer largura. -->
-        <div class="grafico-wrapper">
-            <canvas id="meuGrafico" aria-label="Gráfico de consumo mensal"></canvas>
-            <div id="tooltipGraficoMensal" class="tooltip-grafico" role="status" aria-live="polite" hidden></div>
-        </div>
-    </section>
-
-    <section>
-        <h2>Consumo Diário</h2>
-        <!-- Filtros que definem o mês e o ano representados no gráfico diário. -->
-        <div class="filtros-diarios">
-            <label for="filtroMesDiario">Mês
-                <select id="filtroMesDiario"></select>
-            </label>
-            <label for="filtroAnoDiario">Ano
-                <select id="filtroAnoDiario"></select>
-            </label>
-        </div>
-        <!-- Mantém o tooltip ancorado ao gráfico mesmo quando o layout muda de tamanho. -->
-        <div class="grafico-wrapper">
-            <canvas id="meuGrafico2" aria-label="Gráfico de consumo diário"></canvas>
-            <div id="tooltipGraficoDiario" class="tooltip-grafico" role="status" aria-live="polite" hidden></div>
-        </div>
-    </section>
 
     <script src="script.js"></script>
     <script src="auth.js"></script>
