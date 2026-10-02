@@ -4,12 +4,38 @@ const canvases = [
 ].filter(Boolean);
 const dadosGraficos = new Map();
 const nomesMeses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-const dadosConsumoMensal = [4200, 5100, 4800, 6200, 5900, 7100, 6800, 7900, 8300, 9100, 8700, 9800];
-const dadosConsumoDiario = [
+const dadosDemoMensais = [4200, 5100, 4800, 6200, 5900, 7100, 6800, 7900, 8300, 9100, 8700, 9800];
+const dadosDemoDiarios = [
     320, 350, 295, 410, 375, 430, 390, 460, 425, 510,
     480, 445, 530, 495, 560, 520, 475, 590, 545, 610,
     575, 630, 590, 660, 620, 690, 645, 710, 675, 735, 700
 ];
+// Gera valores de demonstração plausíveis para cada grandeza enquanto a API não está conectada.
+function criarSerieDemo(tamanho, media, amplitude, fase = 0) {
+    return Array.from({ length: tamanho }, (_, indice) =>
+        Number((media + Math.sin((indice + fase) * 1.7) * amplitude).toFixed(1))
+    );
+}
+
+const seriesGrandezas = {
+    consumo: { nome: "Consumo", unidade: "kWh", mensal: dadosDemoMensais, diario: dadosDemoDiarios },
+    tensao: { nome: "Tensão", unidade: "V", mensal: criarSerieDemo(12, 220, 3), diario: criarSerieDemo(31, 220, 4) },
+    corrente: { nome: "Corrente", unidade: "A", mensal: criarSerieDemo(12, 5.2, 0.7), diario: criarSerieDemo(31, 5.2, 1.1, 1) },
+    potencia: { nome: "Potência", unidade: "W", mensal: criarSerieDemo(12, 1140, 180), diario: criarSerieDemo(31, 1140, 240, 2) }
+};
+let grandezaSelecionada = "consumo";
+let dadosConsumoMensal = [...dadosDemoMensais];
+let dadosConsumoDiario = [...dadosDemoDiarios];
+let resumoConsumo = {
+    totalCostBrl: 1240.5,
+    dailyConsumptionKwh: dadosDemoDiarios[0],
+    monthlyConsumptionKwh: dadosDemoMensais[new Date().getMonth()],
+    dailyChangePercent: 0,
+    monthlyChangePercent: 0
+};
+let requisicaoAtual = null;
+let dadosReaisCarregados = false;
+let periodoDadosCarregados = null;
 
 // Configura os seletores do gráfico diário com o mês atual e anos próximos.
 function configurarFiltrosDiarios() {
@@ -39,8 +65,8 @@ function configurarFiltrosDiarios() {
 
     filtroMes.value = String(new Date().getMonth());
     filtroAno.value = String(anoAtual);
-    filtroMes.addEventListener("change", desenharGraficos);
-    filtroAno.addEventListener("change", desenharGraficos);
+    filtroMes.addEventListener("change", atualizarDadosDashboard);
+    filtroAno.addEventListener("change", atualizarDadosDashboard);
 }
 
 // Desenha um dos gráficos no canvas recebido.
@@ -57,8 +83,9 @@ function criarGrafico(canvas) {
 
     const meses = nomesMeses.map((mes) => mes.slice(0, 3));
     const isGraficoDiario = canvas.id === "meuGrafico2";
+    const serieSelecionada = seriesGrandezas[grandezaSelecionada];
     let dias = [];
-    let valoresDiarios = dadosConsumoDiario;
+    let valoresDiarios = serieSelecionada.diario;
     let mesSelecionado = null;
     let anoSelecionado = null;
 
@@ -69,11 +96,11 @@ function criarGrafico(canvas) {
         // O dia zero do próximo mês informa quantos dias existem no mês selecionado.
         const quantidadeDias = new Date(anoSelecionado, mesSelecionado + 1, 0).getDate();
         dias = Array.from({ length: quantidadeDias }, (_, index) => String(index + 1));
-        valoresDiarios = dadosConsumoDiario.slice(0, quantidadeDias);
+        valoresDiarios = serieSelecionada.diario.slice(0, quantidadeDias);
     }
 
     const labels = isGraficoDiario ? dias : meses;
-    const valores = isGraficoDiario ? valoresDiarios : dadosConsumoMensal;
+    const valores = isGraficoDiario ? valoresDiarios : serieSelecionada.mensal;
     const intervaloRotulos = isGraficoDiario ? 5 : 1;
 
     // Reserva espaço para os eixos e calcula a escala vertical do gráfico.
@@ -99,6 +126,8 @@ function criarGrafico(canvas) {
     dadosGraficos.set(canvas.id, {
         pontos,
         tipo: isGraficoDiario ? "diario" : "mensal",
+        grandeza: serieSelecionada.nome,
+        unidade: serieSelecionada.unidade,
         mes: mesSelecionado,
         ano: anoSelecionado
     });
@@ -109,7 +138,7 @@ function criarGrafico(canvas) {
     ctx.fillStyle = "#777";
     ctx.font = "12px Poppins, sans-serif";
     ctx.textAlign = "left";
-    ctx.fillText("Valores em kWh", margemEsquerda, 16);
+    ctx.fillText(`Valores em ${serieSelecionada.unidade}`, margemEsquerda, 16);
 
     // Desenha as linhas horizontais de referência da área do gráfico.
     ctx.strokeStyle = "#e5e5e5";
@@ -234,7 +263,7 @@ function atualizarTooltipGrafico(evento) {
         periodo = nomesMeses[ponto.indice];
     }
 
-    tooltip.textContent = `${periodo}: ${ponto.valor.toLocaleString("pt-BR")} kWh`;
+    tooltip.textContent = `${periodo}: ${ponto.valor.toLocaleString("pt-BR")} ${dadosGrafico.unidade}`;
     tooltip.hidden = false;
 
     // Mantém a caixa dentro das bordas do canvas em telas estreitas.
@@ -298,7 +327,7 @@ function configurarSelecaoGraficos() {
 
             // O canvas precisa estar visível para medir sua largura antes de desenhar.
             const canvas = document.querySelector(`#${painelSelecionado} canvas`);
-            if (canvas) {
+            if (canvas && (!API_CONFIG.baseUrl.trim() || dadosReaisCarregados)) {
                 criarGrafico(canvas);
             }
         });
@@ -314,10 +343,37 @@ function configurarSelecaoGraficos() {
     }
 }
 
+// Sincroniza os seletores dos dois painéis e redesenha usando a grandeza escolhida.
+function configurarSelecaoGrandeza() {
+    const seletores = document.querySelectorAll(".seletor-grandeza");
+
+    seletores.forEach((seletor) => {
+        seletor.value = grandezaSelecionada;
+        seletor.addEventListener("change", () => {
+            grandezaSelecionada = seletor.value;
+            seletores.forEach((outroSeletor) => {
+                outroSeletor.value = grandezaSelecionada;
+            });
+            desenharGraficos();
+        });
+    });
+}
+
 // Monta um CSV com os dados mensais do ano e os dias do período selecionado.
 function exportarHistorico() {
     const mesSelecionado = Number(document.getElementById("filtroMesDiario").value);
     const anoSelecionado = Number(document.getElementById("filtroAnoDiario").value);
+
+    // Impede exportar a série de outro período enquanto a consulta está pendente.
+    if (API_CONFIG.baseUrl.trim() && (
+        !periodoDadosCarregados ||
+        periodoDadosCarregados.mes !== mesSelecionado ||
+        periodoDadosCarregados.ano !== anoSelecionado
+    )) {
+        atualizarStatusApi("Aguarde os dados do período selecionado antes de exportar.", "loading");
+        return;
+    }
+
     const quantidadeDias = new Date(anoSelecionado, mesSelecionado + 1, 0).getDate();
     const linhas = [["Tipo", "Período", "Consumo (kWh)"]];
 
@@ -357,11 +413,226 @@ function configurarExportacaoHistorico() {
     }
 }
 
+// Valida tamanho e valores das séries recebidas para o período consultado.
+function validarSerieApi(serie, tamanhoEsperado, nomeSerie) {
+    if (!Array.isArray(serie) || serie.length !== tamanhoEsperado) {
+        throw new Error(`A série ${nomeSerie} deve conter ${tamanhoEsperado} valores.`);
+    }
+
+    return serie.map((valor) => {
+        const numero = Number(valor);
+        if (!Number.isFinite(numero) || numero < 0) {
+            throw new Error(`A série ${nomeSerie} contém um valor inválido.`);
+        }
+        return numero;
+    });
+}
+
+// Converte a resposta da API para o formato consumido pelos gráficos e indicadores.
+function normalizarRespostaApi(resposta, mes, ano) {
+    if (!resposta || typeof resposta !== "object" || !resposta.summary) {
+        throw new Error("Resposta da API fora do formato documentado.");
+    }
+
+    const diasDoMes = new Date(ano, mes + 1, 0).getDate();
+    const resumo = {
+        totalCostBrl: Number(resposta.summary.totalCostBrl),
+        dailyConsumptionKwh: Number(resposta.summary.dailyConsumptionKwh),
+        monthlyConsumptionKwh: Number(resposta.summary.monthlyConsumptionKwh),
+        dailyChangePercent: Number(resposta.summary.dailyChangePercent ?? 0),
+        monthlyChangePercent: Number(resposta.summary.monthlyChangePercent ?? 0)
+    };
+
+    Object.values(resumo).forEach((valor) => {
+        if (!Number.isFinite(valor)) {
+            throw new Error("O resumo da API contém um valor inválido.");
+        }
+    });
+
+    const medidas = resposta.measurements;
+    if (!medidas || !medidas.voltage || !medidas.current || !medidas.power) {
+        throw new Error("A API deve enviar voltage, current e power em measurements.");
+    }
+
+    return {
+        resumo,
+        metricas: {
+            consumo: {
+                nome: "Consumo",
+                unidade: "kWh",
+                mensal: validarSerieApi(resposta.monthlyConsumptionKwh, 12, "monthlyConsumptionKwh"),
+                diario: validarSerieApi(resposta.dailyConsumptionKwh, diasDoMes, "dailyConsumptionKwh")
+            },
+            tensao: {
+                nome: "Tensão",
+                unidade: "V",
+                mensal: validarSerieApi(medidas.voltage.monthly, 12, "measurements.voltage.monthly"),
+                diario: validarSerieApi(medidas.voltage.daily, diasDoMes, "measurements.voltage.daily")
+            },
+            corrente: {
+                nome: "Corrente",
+                unidade: "A",
+                mensal: validarSerieApi(medidas.current.monthly, 12, "measurements.current.monthly"),
+                diario: validarSerieApi(medidas.current.daily, diasDoMes, "measurements.current.daily")
+            },
+            potencia: {
+                nome: "Potência",
+                unidade: "W",
+                mensal: validarSerieApi(medidas.power.monthly, 12, "measurements.power.monthly"),
+                diario: validarSerieApi(medidas.power.daily, diasDoMes, "measurements.power.daily")
+            }
+        },
+        anos: Array.isArray(resposta.availableYears) ? resposta.availableYears : []
+    };
+}
+
+// Atualiza os cards com formatação brasileira e variações recebidas pela API.
+function atualizarIndicadores() {
+    const formatarConsumo = (valor) => `${valor.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} kWh`;
+    const formatarVariacao = (valor) => `${valor > 0 ? "+" : ""}${valor.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}% no período`;
+
+    document.getElementById("cardCustoTotal").textContent = resumoConsumo.totalCostBrl.toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL"
+    });
+    document.getElementById("cardConsumoDiario").textContent = formatarConsumo(resumoConsumo.dailyConsumptionKwh);
+    document.getElementById("cardConsumoMensal").textContent = formatarConsumo(resumoConsumo.monthlyConsumptionKwh);
+    document.getElementById("variacaoConsumoDiario").textContent = formatarVariacao(resumoConsumo.dailyChangePercent);
+    document.getElementById("variacaoConsumoMensal").textContent = formatarVariacao(resumoConsumo.monthlyChangePercent);
+}
+
+// Acrescenta os anos informados pela API sem remover os anos padrão do seletor.
+function adicionarAnosDisponiveis(anos) {
+    const filtroAno = document.getElementById("filtroAnoDiario");
+    const anosExistentes = new Set(Array.from(filtroAno.options, (opcao) => Number(opcao.value)));
+
+    anos.forEach((ano) => {
+        const anoNumerico = Number(ano);
+        if (!Number.isInteger(anoNumerico) || anosExistentes.has(anoNumerico)) {
+            return;
+        }
+
+        const opcao = document.createElement("option");
+        opcao.value = String(anoNumerico);
+        opcao.textContent = String(anoNumerico);
+        filtroAno.appendChild(opcao);
+        anosExistentes.add(anoNumerico);
+    });
+
+    Array.from(filtroAno.options)
+        .sort((primeiro, segundo) => Number(primeiro.value) - Number(segundo.value))
+        .forEach((opcao) => filtroAno.appendChild(opcao));
+}
+
+// Exibe o estado atual do serviço junto aos indicadores.
+function atualizarStatusApi(mensagem, tipo = "") {
+    const status = document.getElementById("statusApi");
+    status.textContent = mensagem;
+    status.className = `api-status${tipo ? ` is-${tipo}` : ""}`;
+}
+
+// Busca e valida os dados para o mês e ano selecionados.
+async function carregarDadosDashboard() {
+    const baseUrl = API_CONFIG.baseUrl.trim();
+    const botaoExportar = document.getElementById("btnExportarHistorico");
+
+    if (!baseUrl) {
+        atualizarStatusApi("Exibindo dados de demonstração. Configure a URL em api-config.js para conectar a API.", "demo");
+        botaoExportar.disabled = false;
+        atualizarIndicadores();
+        desenharGraficos();
+        return;
+    }
+
+    if (requisicaoAtual) {
+        requisicaoAtual.abort();
+    }
+
+    const controlador = new AbortController();
+    requisicaoAtual = controlador;
+    const temporizador = window.setTimeout(() => controlador.abort(), API_CONFIG.timeoutMs);
+    const mes = Number(document.getElementById("filtroMesDiario").value);
+    const ano = Number(document.getElementById("filtroAnoDiario").value);
+    const botaoAtualizar = document.getElementById("btnAtualizarDados");
+    botaoAtualizar.disabled = true;
+    botaoExportar.disabled = true;
+    atualizarStatusApi("Carregando dados do serviço...", "loading");
+
+    try {
+        const enderecoBase = `${baseUrl.replace(/\/+$/, "")}/`;
+        const enderecoApi = new URL(API_CONFIG.dashboardPath.replace(/^\/+/, ""), enderecoBase);
+        enderecoApi.searchParams.set("year", String(ano));
+        enderecoApi.searchParams.set("month", String(mes + 1));
+
+        // Inclui cookies de sessão se o backend autenticar a API dessa maneira.
+        const respostaHttp = await fetch(enderecoApi, {
+            headers: { Accept: "application/json" },
+            credentials: "include",
+            cache: "no-store",
+            signal: controlador.signal
+        });
+
+        if (!respostaHttp.ok) {
+            throw new Error(`A API respondeu com HTTP ${respostaHttp.status}.`);
+        }
+
+        const resposta = await respostaHttp.json();
+        const dados = normalizarRespostaApi(resposta, mes, ano);
+
+        Object.assign(seriesGrandezas, dados.metricas);
+        dadosConsumoMensal = dados.metricas.consumo.mensal;
+        dadosConsumoDiario = dados.metricas.consumo.diario;
+        resumoConsumo = dados.resumo;
+        dadosReaisCarregados = true;
+        periodoDadosCarregados = { mes, ano };
+        adicionarAnosDisponiveis(dados.anos);
+        atualizarIndicadores();
+        desenharGraficos();
+        botaoExportar.disabled = false;
+        atualizarStatusApi(`Dados atualizados às ${new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}.`, "success");
+    } catch (erro) {
+        if (erro.name !== "AbortError") {
+            const periodoAnterior = periodoDadosCarregados
+                ? ` Último período válido: ${String(periodoDadosCarregados.mes + 1).padStart(2, "0")}/${periodoDadosCarregados.ano}.`
+                : " Nenhum dado real foi carregado ainda.";
+            atualizarStatusApi(`${erro.message}${periodoAnterior} Confira a URL e o contrato descrito em API.md.`, "error");
+        } else if (requisicaoAtual === controlador) {
+            atualizarStatusApi("A API demorou para responder. Tente atualizar novamente.", "error");
+        }
+    } finally {
+        window.clearTimeout(temporizador);
+        if (requisicaoAtual === controlador) {
+            requisicaoAtual = null;
+            botaoAtualizar.disabled = false;
+            botaoExportar.disabled = Boolean(baseUrl) && (
+                !periodoDadosCarregados ||
+                periodoDadosCarregados.mes !== mes ||
+                periodoDadosCarregados.ano !== ano
+            );
+        }
+    }
+}
+
+// Recarrega a API ao mudar o período ou redesenha o modo demonstrativo.
+function atualizarDadosDashboard() {
+    if (API_CONFIG.baseUrl.trim()) {
+        carregarDadosDashboard();
+    } else {
+        desenharGraficos();
+    }
+}
+
 function desenharGraficos() {
     // Atualiza todos os canvases, inclusive após mudar o período ou redimensionar a tela.
     document.querySelectorAll(".tooltip-grafico").forEach((tooltip) => {
         tooltip.hidden = true;
     });
+
+    // Não mostra séries de demonstração quando a API está configurada e ainda carrega.
+    if (API_CONFIG.baseUrl.trim() && !dadosReaisCarregados) {
+        return;
+    }
+
     canvases.forEach((canvas) => {
         if (canvas.clientWidth > 0) {
             criarGrafico(canvas);
@@ -374,7 +645,9 @@ document.addEventListener("DOMContentLoaded", () => {
     configurarFiltrosDiarios();
     configurarInteracaoGraficos();
     configurarSelecaoGraficos();
+    configurarSelecaoGrandeza();
     configurarExportacaoHistorico();
-    desenharGraficos();
+    document.getElementById("btnAtualizarDados").addEventListener("click", carregarDadosDashboard);
+    carregarDadosDashboard();
 });
 window.addEventListener("resize", desenharGraficos);

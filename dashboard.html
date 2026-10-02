@@ -49,26 +49,30 @@
                     </div>
                     <div class="dashboard-actions">
                         <p>Olá, <span id="usuarioLogado"></span></p>
+                        <button class="btn-atualizar" id="btnAtualizarDados" type="button">Atualizar</button>
                         <button class="btn-sair" id="btnSair" type="button">Sair</button>
                     </div>
                 </header>
 
+                <!-- Informa se os dados são reais, demonstrativos ou se houve falha na API. -->
+                <p id="statusApi" class="api-status" role="status" aria-live="polite"></p>
+
                 <!-- Indicadores resumidos do consumo. -->
                 <section class="cards-grid">
                     <div class="card">
-                        <span class="card-title">Total de Consumo</span>
-                        <strong>R$ xx.xxx,xx</strong>
-                        <small>+xx,x% este mês</small>
+                        <span class="card-title">Custo total</span>
+                        <strong id="cardCustoTotal">--</strong>
+                        <small id="variacaoCustoTotal">Período selecionado</small>
                     </div>
                     <div class="card">
                         <span class="card-title">Consumo Diário</span>
-                        <strong>x.xxx</strong>
-                        <small>+xx,x% este mês</small>
+                        <strong id="cardConsumoDiario">--</strong>
+                        <small id="variacaoConsumoDiario">--</small>
                     </div>
                     <div class="card">
                         <span class="card-title">Consumo Mensal</span>
-                        <strong>x.xxx</strong>
-                        <small>+xx,x% este mês</small>
+                        <strong id="cardConsumoMensal">--</strong>
+                        <small id="variacaoConsumoMensal">--</small>
                     </div>
                 </section>
             </div>
@@ -76,6 +80,17 @@
             <!-- Cada painel é exibido pela seleção correspondente na barra lateral. -->
             <section class="chart-panel" id="secaoGraficoMensal" aria-labelledby="tituloGraficoMensal">
                 <h2 id="tituloGraficoMensal">Consumo Mensal</h2>
+                <!-- Permite trocar a grandeza exibida no gráfico mensal. -->
+                <div class="chart-toolbar">
+                    <label for="grandezaGraficoMensal">
+                        <select id="grandezaGraficoMensal" class="seletor-grandeza">
+                            <option value="consumo">Consumo (kWh)</option>
+                            <option value="tensao">Tensão (V)</option>
+                            <option value="corrente">Corrente (A)</option>
+                            <option value="potencia">Potência (W)</option>
+                        </select>
+                    </label>
+                </div>
                 <div class="grafico-wrapper">
                     <canvas id="meuGrafico" aria-label="Gráfico de consumo mensal"></canvas>
                     <div id="tooltipGraficoMensal" class="tooltip-grafico" role="status" aria-live="polite" hidden></div>
@@ -92,6 +107,15 @@
                     <label for="filtroAnoDiario">Ano
                         <select id="filtroAnoDiario"></select>
                     </label>
+                    <!-- Mantém a grandeza alinhada aos filtros de mês e ano. -->
+                    <label class="filtro-grandeza" for="grandezaGraficoDiario">
+                        <select id="grandezaGraficoDiario" class="seletor-grandeza">
+                            <option value="consumo">Consumo (kWh)</option>
+                            <option value="tensao">Tensão (V)</option>
+                            <option value="corrente">Corrente (A)</option>
+                            <option value="potencia">Potência (W)</option>
+                        </select>
+                    </label>
                 </div>
                 <div class="grafico-wrapper">
                     <canvas id="meuGrafico2" aria-label="Gráfico de consumo diário"></canvas>
@@ -101,6 +125,7 @@
         </main>
     </div>
 
+    <script src="api-config.js"></script>
     <script src="script.js"></script>
     <script src="auth.js"></script>
 
