@@ -362,6 +362,64 @@ body.dashboard > section h2 {
     margin-bottom: 20px;
 }
 
+/* Alinha os seletores de período sem competir com o título do gráfico. */
+.filtros-diarios {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: -6px 0 18px;
+}
+
+.filtros-diarios label {
+    display: grid;
+    gap: 4px;
+    color: #666;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.filtros-diarios select {
+    min-width: 140px;
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: var(--white);
+    color: var(--text);
+    font: inherit;
+}
+
+/* Cria uma referência local para posicionar tooltips nos gráficos. */
+.grafico-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.grafico-wrapper canvas {
+    cursor: crosshair;
+    touch-action: pan-y;
+}
+
+/* Mantém a leitura do valor legível sem aumentar o tamanho do gráfico. */
+.tooltip-grafico {
+    position: absolute;
+    z-index: 1;
+    max-width: calc(100% - 16px);
+    padding: 7px 10px;
+    border-radius: 6px;
+    background: #26342c;
+    color: #fff;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    text-align: center;
+    pointer-events: none;
+    transform: translate(-50%, -100%);
+    white-space: normal;
+}
+
+.tooltip-grafico.is-below {
+    transform: translate(-50%, 0);
+}
+
 /* Define a área de desenho dos gráficos. */
 #meuGrafico,
 #meuGrafico2 {

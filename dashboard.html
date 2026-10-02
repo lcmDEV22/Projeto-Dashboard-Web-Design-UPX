@@ -57,12 +57,29 @@
 
     <section>
         <h2>Consumo Mensal</h2>
-        <canvas id="meuGrafico"></canvas>
+        <!-- Wrapper que ancora o tooltip mensal ao canvas em qualquer largura. -->
+        <div class="grafico-wrapper">
+            <canvas id="meuGrafico" aria-label="Gráfico de consumo mensal"></canvas>
+            <div id="tooltipGraficoMensal" class="tooltip-grafico" role="status" aria-live="polite" hidden></div>
+        </div>
     </section>
 
     <section>
         <h2>Consumo Diário</h2>
-        <canvas id="meuGrafico2"></canvas>
+        <!-- Filtros que definem o mês e o ano representados no gráfico diário. -->
+        <div class="filtros-diarios">
+            <label for="filtroMesDiario">Mês
+                <select id="filtroMesDiario"></select>
+            </label>
+            <label for="filtroAnoDiario">Ano
+                <select id="filtroAnoDiario"></select>
+            </label>
+        </div>
+        <!-- Mantém o tooltip ancorado ao gráfico mesmo quando o layout muda de tamanho. -->
+        <div class="grafico-wrapper">
+            <canvas id="meuGrafico2" aria-label="Gráfico de consumo diário"></canvas>
+            <div id="tooltipGraficoDiario" class="tooltip-grafico" role="status" aria-live="polite" hidden></div>
+        </div>
     </section>
 
     <script src="script.js"></script>
