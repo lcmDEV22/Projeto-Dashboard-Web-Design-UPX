@@ -28,6 +28,10 @@
                     <span class="sidebar-link-icon" aria-hidden="true">D</span>
                     Consumo diário
                 </button>
+                <button class="sidebar-link" type="button" data-chart-target="secaoHistorico" aria-controls="secaoHistorico" aria-pressed="false">
+                    <span class="sidebar-link-icon" aria-hidden="true">H</span>
+                    Histórico
+                </button>
             </nav>
             <div class="sidebar-export">
                 <p class="sidebar-caption">DADOS</p>
@@ -57,7 +61,49 @@
                 <!-- Informa se os dados são reais, demonstrativos ou se houve falha na API. -->
                 <p id="statusApi" class="api-status" role="status" aria-live="polite"></p>
 
-                <!-- Indicadores resumidos do consumo. -->
+                <!-- Mostra apenas o estado atual do ambiente e da conexão do dispositivo. -->
+                <section class="estado-atual" aria-labelledby="tituloEstadoAtual">
+                    <div class="estado-atual-cabecalho">
+                        <div>
+                            <h2 id="tituloEstadoAtual">Estado atual do sistema</h2>
+                            <p>Leituras instantâneas dos sensores e do controlador.</p>
+                        </div>
+                        <p class="ultima-atualizacao">Última atualização: <time id="ultimaAtualizacaoAtual">Aguardando dados</time></p>
+                    </div>
+
+                    <div class="estado-atual-grid">
+                        <article class="card estado-card">
+                            <span class="card-title">Luminosidade</span>
+                            <strong id="valorLuminosidadeAtual">--</strong>
+                            <small>Intensidade de luz ambiente</small>
+                        </article>
+                        <article class="card estado-card">
+                            <span class="card-title">Presença</span>
+                            <strong id="valorPresencaAtual">--</strong>
+                            <small id="detalhePresencaAtual">Estado do sensor</small>
+                        </article>
+                        <article class="card estado-card">
+                            <span class="card-title">Intensidade da iluminação</span>
+                            <strong id="valorIntensidadeAtual">--</strong>
+                            <small>Nível de brilho configurado</small>
+                        </article>
+                        <article class="card estado-card">
+                            <span class="card-title">Consumo atual</span>
+                            <strong id="valorConsumoAtual">--</strong>
+                            <small>Potência instantânea medida</small>
+                        </article>
+                    </div>
+
+                    <!-- Apresenta estados binários sem depender apenas de cor. -->
+                    <div class="status-dispositivos" aria-label="Status dos dispositivos">
+                        <p>Status da iluminação <strong id="statusIluminacaoAtual" class="status-indicador">Aguardando</strong></p>
+                        <p>Conexão do ESP32 <strong id="statusEsp32Atual" class="status-indicador">Aguardando</strong></p>
+                    </div>
+                </section>
+
+                <!-- Indicadores consolidados do período, separados das leituras atuais. -->
+                <section class="resumo-periodo" aria-labelledby="tituloResumoPeriodo">
+                    <h2 id="tituloResumoPeriodo">Resumo do período</h2>
                 <section class="cards-grid">
                     <div class="card">
                         <span class="card-title">Custo total</span>
@@ -74,6 +120,7 @@
                         <strong id="cardConsumoMensal">--</strong>
                         <small id="variacaoConsumoMensal">--</small>
                     </div>
+                </section>
                 </section>
             </div>
 
@@ -120,6 +167,45 @@
                 <div class="grafico-wrapper">
                     <canvas id="meuGrafico2" aria-label="Gráfico de consumo diário"></canvas>
                     <div id="tooltipGraficoDiario" class="tooltip-grafico" role="status" aria-live="polite" hidden></div>
+                </div>
+            </section>
+
+            <!-- Mantém as consultas anteriores separadas dos indicadores atuais. -->
+            <section class="chart-panel historico-panel" id="secaoHistorico" aria-labelledby="tituloHistorico" hidden>
+                <h2 id="tituloHistorico">Histórico de dados</h2>
+                <p class="historico-intro">Consulte medições guardadas neste navegador e compare o consumo mensal entre períodos.</p>
+                <p id="statusHistorico" class="historico-status" role="status" aria-live="polite"></p>
+
+                <!-- Compara duas medições mensais e representa visualmente os valores. -->
+                <section class="comparacao-historico" aria-labelledby="tituloComparacao">
+                    <h3 id="tituloComparacao">Comparar períodos</h3>
+                    <div class="comparacao-controles">
+                        <label for="periodoComparacaoA">Primeiro período
+                            <select id="periodoComparacaoA"></select>
+                        </label>
+                        <label for="periodoComparacaoB">Segundo período
+                            <select id="periodoComparacaoB"></select>
+                        </label>
+                    </div>
+                    <p id="resultadoComparacao" class="resultado-comparacao" role="status" aria-live="polite"></p>
+                    <div id="graficoComparacao" class="grafico-comparacao" aria-label="Comparação do consumo mensal"></div>
+                </section>
+
+                <!-- Exibe a data medida e o instante em que cada consulta foi guardada. -->
+                <div class="tabela-historico-wrapper">
+                    <table class="tabela-historico">
+                        <caption id="legendaHistorico">Registros mais recentes</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Período medido</th>
+                                <th scope="col">Grandeza</th>
+                                <th scope="col">Valor</th>
+                                <th scope="col">Coletado em</th>
+                                <th scope="col">Origem</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listaHistorico"></tbody>
+                    </table>
                 </div>
             </section>
         </main>

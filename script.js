@@ -10,6 +10,10 @@ const dadosDemoDiarios = [
     480, 445, 530, 495, 560, 520, 475, 590, 545, 610,
     575, 630, 590, 660, 620, 690, 645, 710, 675, 735, 700
 ];
+const CHAVE_HISTORICO = "dashboardHistoricalReadings";
+const LIMITE_REGISTROS_HISTORICO = 5000;
+let registrosHistorico = [];
+
 // Gera valores de demonstração plausíveis para cada grandeza enquanto a API não está conectada.
 function criarSerieDemo(tamanho, media, amplitude, fase = 0) {
     return Array.from({ length: tamanho }, (_, indice) =>
@@ -32,6 +36,16 @@ let resumoConsumo = {
     monthlyConsumptionKwh: dadosDemoMensais[new Date().getMonth()],
     dailyChangePercent: 0,
     monthlyChangePercent: 0
+};
+let estadoAtual = {
+    luminosidadeLux: null,
+    presencaDetectada: null,
+    intensidadePercentual: null,
+    potenciaWatts: null,
+    iluminacaoLigada: null,
+    esp32Conectado: null,
+    atualizadoEm: null,
+    origemHorario: ""
 };
 let requisicaoAtual = null;
 let dadosReaisCarregados = false;
@@ -359,35 +373,291 @@ function configurarSelecaoGrandeza() {
     });
 }
 
-// Monta um CSV com os dados mensais do ano e os dias do período selecionado.
-function exportarHistorico() {
-    const mesSelecionado = Number(document.getElementById("filtroMesDiario").value);
-    const anoSelecionado = Number(document.getElementById("filtroAnoDiario").value);
+// Carrega os registros anteriores sem ocultar erros de leitura do armazenamento.
+function carregarHistoricoSalvo() {
+    try {
+        const salvo = localStorage.getItem(CHAVE_HISTORICO);
+        registrosHistorico = salvo ? JSON.parse(salvo) : [];
+        if (!Array.isArray(registrosHistorico)) {
+            throw new Error("O histórico salvo não possui um formato válido.");
+        }
+        atualizarStatusHistorico(`${registrosHistorico.length.toLocaleString("pt-BR")} registros recuperados deste navegador.`);
+    } catch (erro) {
+        registrosHistorico = [];
+        atualizarStatusHistorico(`Não foi possível ler o histórico deste navegador: ${erro.message}`);
+    }
 
-    // Impede exportar a série de outro período enquanto a consulta está pendente.
-    if (API_CONFIG.baseUrl.trim() && (
-        !periodoDadosCarregados ||
-        periodoDadosCarregados.mes !== mesSelecionado ||
-        periodoDadosCarregados.ano !== anoSelecionado
-    )) {
-        atualizarStatusApi("Aguarde os dados do período selecionado antes de exportar.", "loading");
+    renderizarHistorico();
+}
+
+// Converte uma data local em formato ISO sem deslocar o dia por fuso horário.
+function formatarDataHistorico(ano, mes, dia) {
+    return `${ano}-${String(mes + 1).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
+}
+
+// Guarda snapshots mensais e diários com a data consultada e a hora da captura.
+function registrarHistorico(mes, ano, origem) {
+    const capturadoEm = new Date().toISOString();
+    const hoje = new Date();
+    const limiteDemo = formatarDataHistorico(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+    const novosRegistros = [];
+
+    Object.entries(seriesGrandezas).forEach(([chave, serie]) => {
+        serie.mensal.forEach((valor, indice) => {
+            const data = formatarDataHistorico(ano, indice, 1);
+            if (origem === "Demonstração" && data > limiteDemo) {
+                return;
+            }
+            novosRegistros.push({
+                tipo: "mensal",
+                data,
+                grandeza: serie.nome,
+                chaveGrandeza: chave,
+                valor,
+                unidade: serie.unidade,
+                capturadoEm,
+                origem
+            });
+        });
+
+        serie.diario.forEach((valor, indice) => {
+            const data = formatarDataHistorico(ano, mes, indice + 1);
+            if (origem === "Demonstração" && data > limiteDemo) {
+                return;
+            }
+            novosRegistros.push({
+                tipo: "diario",
+                data,
+                grandeza: serie.nome,
+                chaveGrandeza: chave,
+                valor,
+                unidade: serie.unidade,
+                capturadoEm,
+                origem
+            });
+        });
+    });
+
+    // Atualiza a leitura mais recente do mesmo dia, métrica e origem sem duplicar a tabela.
+    const registrosPorChave = new Map(registrosHistorico
+        .filter((registro) => !(registro.origem === "Demonstração" && registro.data > limiteDemo))
+        .map((registro) => [
+            `${registro.tipo}|${registro.data}|${registro.chaveGrandeza}|${registro.origem}`,
+            registro
+        ]));
+    novosRegistros.forEach((registro) => {
+        const chave = `${registro.tipo}|${registro.data}|${registro.chaveGrandeza}|${registro.origem}`;
+        registrosPorChave.set(chave, registro);
+    });
+
+    registrosHistorico = Array.from(registrosPorChave.values())
+        .sort((primeiro, segundo) => segundo.capturadoEm.localeCompare(primeiro.capturadoEm))
+        .slice(0, LIMITE_REGISTROS_HISTORICO);
+
+    try {
+        localStorage.setItem(CHAVE_HISTORICO, JSON.stringify(registrosHistorico));
+        atualizarStatusHistorico(`${registrosHistorico.length.toLocaleString("pt-BR")} registros guardados neste navegador.`);
+    } catch (erro) {
+        atualizarStatusHistorico(`Os dados foram carregados, mas não foi possível salvar o histórico: ${erro.message}`);
+    }
+
+    renderizarHistorico();
+}
+
+// Atualiza o texto de estado da área de histórico.
+function atualizarStatusHistorico(mensagem) {
+    const status = document.getElementById("statusHistorico");
+    if (status) {
+        status.textContent = mensagem;
+    }
+}
+
+// Obtém a medição mensal mais recente para cada período disponível.
+function obterConsumosMensaisHistoricos() {
+    const porPeriodo = new Map();
+    registrosHistorico
+        .filter((registro) => registro.tipo === "mensal" && registro.chaveGrandeza === "consumo")
+        .forEach((registro) => {
+            const periodo = registro.data.slice(0, 7);
+            const atual = porPeriodo.get(periodo);
+            if (!atual || registro.capturadoEm > atual.capturadoEm) {
+                porPeriodo.set(periodo, registro);
+            }
+        });
+
+    return Array.from(porPeriodo.entries()).sort(([periodoA], [periodoB]) => periodoA.localeCompare(periodoB));
+}
+
+// Preenche os filtros com os períodos salvos e preserva escolhas ainda válidas.
+function atualizarOpcoesComparacao(periodos) {
+    const seletores = [
+        document.getElementById("periodoComparacaoA"),
+        document.getElementById("periodoComparacaoB")
+    ];
+    const valoresAnteriores = seletores.map((seletor) => seletor.value);
+
+    seletores.forEach((seletor, indice) => {
+        seletor.replaceChildren();
+        periodos.forEach(([periodo]) => {
+            const [ano, mes] = periodo.split("-").map(Number);
+            const opcao = document.createElement("option");
+            opcao.value = periodo;
+            opcao.textContent = new Date(ano, mes - 1, 1).toLocaleDateString("pt-BR", {
+                month: "long",
+                year: "numeric"
+            });
+            seletor.appendChild(opcao);
+        });
+    });
+
+    seletores.forEach((seletor, indice) => {
+        const periodoAnteriorExiste = periodos.some(([periodo]) => periodo === valoresAnteriores[indice]);
+        const periodoInicial = periodos.length > 1
+            ? periodos[periodos.length - 2 + indice][0]
+            : periodos[0]?.[0];
+        seletor.value = periodoAnteriorExiste ? valoresAnteriores[indice] : periodoInicial || "";
+    });
+}
+
+// Mostra a diferença numérica e barras responsivas dos dois meses selecionados.
+function renderizarComparacaoHistorico(periodos) {
+    const periodoA = document.getElementById("periodoComparacaoA").value;
+    const periodoB = document.getElementById("periodoComparacaoB").value;
+    const resultado = document.getElementById("resultadoComparacao");
+    const grafico = document.getElementById("graficoComparacao");
+    const registroA = periodos.find(([periodo]) => periodo === periodoA)?.[1];
+    const registroB = periodos.find(([periodo]) => periodo === periodoB)?.[1];
+    grafico.replaceChildren();
+
+    if (!registroA || !registroB) {
+        resultado.textContent = "Carregue períodos diferentes para comparar o consumo mensal.";
         return;
     }
 
-    const quantidadeDias = new Date(anoSelecionado, mesSelecionado + 1, 0).getDate();
-    const linhas = [["Tipo", "Período", "Consumo (kWh)"]];
+    if (periodoA === periodoB) {
+        resultado.textContent = "Selecione dois períodos diferentes para ver a comparação.";
+        return;
+    }
 
-    dadosConsumoMensal.forEach((valor, indice) => {
-        linhas.push(["Mensal", `${nomesMeses[indice]} de ${anoSelecionado}`, String(valor)]);
+    const diferenca = registroB.valor - registroA.valor;
+    const variacao = registroA.valor === 0 ? null : (diferenca / registroA.valor) * 100;
+    const direcao = diferenca > 0 ? "aumento" : diferenca < 0 ? "redução" : "sem alteração";
+    const percentual = variacao === null
+        ? ""
+        : ` (${variacao > 0 ? "+" : ""}${variacao.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%)`;
+    resultado.textContent = `${direcao === "sem alteração" ? "Sem alteração" : `${direcao[0].toLocaleUpperCase("pt-BR")}${direcao.slice(1)}`} de ${Math.abs(diferenca).toLocaleString("pt-BR", { maximumFractionDigits: 2 })} kWh${percentual} no segundo período em relação ao primeiro.`;
+
+    const maiorValor = Math.max(registroA.valor, registroB.valor);
+    [
+        [periodoA, registroA],
+        [periodoB, registroB]
+    ].forEach(([periodo, registro]) => {
+        const linha = document.createElement("div");
+        linha.className = "barra-comparacao";
+        const rotulo = document.createElement("span");
+        const [ano, mes] = periodo.split("-").map(Number);
+        rotulo.textContent = new Date(ano, mes - 1, 1).toLocaleDateString("pt-BR", {
+            month: "short",
+            year: "numeric"
+        });
+
+        const trilho = document.createElement("span");
+        trilho.className = "barra-comparacao-trilho";
+        const barra = document.createElement("span");
+        barra.className = "barra-comparacao-valor";
+        barra.style.width = `${maiorValor > 0 ? (registro.valor / maiorValor) * 100 : 0}%`;
+        trilho.appendChild(barra);
+
+        const valor = document.createElement("strong");
+        valor.textContent = `${registro.valor.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} kWh`;
+        linha.append(rotulo, trilho, valor);
+        grafico.appendChild(linha);
+    });
+}
+
+// Renderiza uma amostra recente e os dados de comparação a partir do histórico local.
+function renderizarHistorico() {
+    const tabela = document.getElementById("listaHistorico");
+    if (!tabela) {
+        return;
+    }
+
+    const periodos = obterConsumosMensaisHistoricos();
+    const legenda = document.getElementById("legendaHistorico");
+    atualizarOpcoesComparacao(periodos);
+    renderizarComparacaoHistorico(periodos);
+    tabela.replaceChildren();
+
+    const registrosRecentes = [...registrosHistorico]
+        .sort((primeiro, segundo) => segundo.capturadoEm.localeCompare(primeiro.capturadoEm))
+        .slice(0, 50);
+    legenda.textContent = registrosHistorico.length > registrosRecentes.length
+        ? `Registros mais recentes (50 de ${registrosHistorico.length.toLocaleString("pt-BR")})`
+        : "Registros mais recentes";
+
+    if (registrosRecentes.length === 0) {
+        const linha = document.createElement("tr");
+        const celula = document.createElement("td");
+        celula.className = "historico-vazio";
+        celula.colSpan = 5;
+        celula.textContent = "Nenhum registro guardado ainda. Atualize os dados para iniciar o histórico.";
+        linha.appendChild(celula);
+        tabela.appendChild(linha);
+        return;
+    }
+
+    registrosRecentes.forEach((registro) => {
+        const linha = document.createElement("tr");
+        const dataMedida = new Date(`${registro.data}T00:00:00`).toLocaleDateString("pt-BR");
+        const dataCaptura = new Date(registro.capturadoEm).toLocaleString("pt-BR");
+        const valores = [
+            registro.tipo === "mensal" ? `Mês de ${dataMedida}` : dataMedida,
+            registro.grandeza,
+            `${registro.valor.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} ${registro.unidade}`,
+            dataCaptura,
+            registro.origem
+        ];
+
+        valores.forEach((valor) => {
+            const celula = document.createElement("td");
+            celula.textContent = valor;
+            linha.appendChild(celula);
+        });
+        tabela.appendChild(linha);
     });
 
-    dadosConsumoDiario.slice(0, quantidadeDias).forEach((valor, indice) => {
-        linhas.push([
-            "Diário",
-            `${String(indice + 1).padStart(2, "0")}/${String(mesSelecionado + 1).padStart(2, "0")}/${anoSelecionado}`,
-            String(valor)
-        ]);
+}
+
+// Liga a alteração dos períodos à atualização da comparação.
+function configurarComparacaoHistorico() {
+    ["periodoComparacaoA", "periodoComparacaoB"].forEach((id) => {
+        document.getElementById(id).addEventListener("change", () => {
+            renderizarComparacaoHistorico(obterConsumosMensaisHistoricos());
+        });
     });
+}
+
+// Exporta todos os registros guardados, incluindo os horários e a origem dos dados.
+function exportarHistorico() {
+    if (registrosHistorico.length === 0) {
+        document.getElementById("statusExportacao").textContent = "Não há registros históricos para exportar.";
+        return;
+    }
+
+    const linhas = [["Tipo", "Data do período", "Grandeza", "Valor", "Unidade", "Coletado em", "Origem"]];
+    [...registrosHistorico]
+        .sort((primeiro, segundo) => primeiro.data.localeCompare(segundo.data))
+        .forEach((registro) => {
+            linhas.push([
+                registro.tipo,
+                registro.data,
+                registro.grandeza,
+                String(registro.valor),
+                registro.unidade,
+                registro.capturadoEm,
+                registro.origem
+            ]);
+        });
 
     // Usa ponto e vírgula e BOM para abrir acentos corretamente em planilhas locais.
     const conteudoCsv = `\uFEFF${linhas.map((linha) => linha.join(";")).join("\r\n")}`;
@@ -397,12 +667,12 @@ function exportarHistorico() {
     const status = document.getElementById("statusExportacao");
 
     linkDownload.href = enderecoArquivo;
-    linkDownload.download = `historico-consumo-${anoSelecionado}-${String(mesSelecionado + 1).padStart(2, "0")}.csv`;
+    linkDownload.download = "historico-consumo.csv";
     document.body.appendChild(linkDownload);
     linkDownload.click();
     linkDownload.remove();
     window.setTimeout(() => URL.revokeObjectURL(enderecoArquivo), 1000);
-    status.textContent = "Histórico exportado em CSV.";
+    status.textContent = "Histórico completo exportado em CSV.";
 }
 
 // Liga o comando da barra lateral à geração do arquivo CSV.
@@ -426,6 +696,61 @@ function validarSerieApi(serie, tamanhoEsperado, nomeSerie) {
         }
         return numero;
     });
+}
+
+// Valida uma leitura atual opcional sem transformar valores ausentes em zeros.
+function validarLeituraAtual(valor, nomeCampo, maximo = Infinity) {
+    if (valor === undefined || valor === null) {
+        return null;
+    }
+
+    const numero = Number(valor);
+    if (!Number.isFinite(numero) || numero < 0 || numero > maximo) {
+        throw new Error(`A leitura atual ${nomeCampo} contém um valor inválido.`);
+    }
+    return numero;
+}
+
+// Normaliza os sensores e estados atuais, que são opcionais para compatibilidade da API.
+function normalizarEstadoAtual(resposta) {
+    const atual = resposta.currentState ?? {};
+    if (typeof atual !== "object" || Array.isArray(atual)) {
+        throw new Error("O campo currentState deve ser um objeto.");
+    }
+
+    const validarEstadoBooleano = (valor, nomeCampo) => {
+        if (valor === undefined || valor === null) {
+            return null;
+        }
+        if (typeof valor !== "boolean") {
+            throw new Error(`O estado atual ${nomeCampo} deve ser booleano.`);
+        }
+        return valor;
+    };
+
+    let atualizadoEm = null;
+    let origemHorario = "";
+    if (atual.lastUpdatedAt !== undefined && atual.lastUpdatedAt !== null) {
+        if (typeof atual.lastUpdatedAt !== "string" || !Number.isFinite(Date.parse(atual.lastUpdatedAt))) {
+            throw new Error("O horário lastUpdatedAt do estado atual é inválido.");
+        }
+        atualizadoEm = new Date(atual.lastUpdatedAt).toISOString();
+        origemHorario = "Atualizado pelo dispositivo";
+    } else {
+        atualizadoEm = new Date().toISOString();
+        origemHorario = "Consulta recebida pelo dashboard";
+    }
+
+    return {
+        luminosidadeLux: validarLeituraAtual(atual.ambientLightLux, "ambientLightLux"),
+        presencaDetectada: validarEstadoBooleano(atual.presenceDetected, "presenceDetected"),
+        intensidadePercentual: validarLeituraAtual(atual.lightingIntensityPercent, "lightingIntensityPercent", 100),
+        potenciaWatts: validarLeituraAtual(atual.powerWatts, "powerWatts"),
+        iluminacaoLigada: validarEstadoBooleano(atual.lightingOn, "lightingOn"),
+        esp32Conectado: validarEstadoBooleano(atual.esp32Connected, "esp32Connected"),
+        atualizadoEm,
+        origemHorario
+    };
 }
 
 // Converte a resposta da API para o formato consumido pelos gráficos e indicadores.
@@ -456,6 +781,7 @@ function normalizarRespostaApi(resposta, mes, ano) {
 
     return {
         resumo,
+        estadoAtual: normalizarEstadoAtual(resposta),
         metricas: {
             consumo: {
                 nome: "Consumo",
@@ -484,6 +810,78 @@ function normalizarRespostaApi(resposta, mes, ano) {
         },
         anos: Array.isArray(resposta.availableYears) ? resposta.availableYears : []
     };
+}
+
+// Atualiza os cards atuais e informa a origem do horário exibido.
+function atualizarEstadoAtual() {
+    const formatarNumero = (valor, casas = 1) => valor === null
+        ? "Não informado"
+        : valor.toLocaleString("pt-BR", { maximumFractionDigits: casas });
+    const formatarBooleano = (valor) => valor === null
+        ? "Não informado"
+        : valor ? "Detectada" : "Não detectada";
+    const luminosidade = document.getElementById("valorLuminosidadeAtual");
+    const presenca = document.getElementById("valorPresencaAtual");
+    const intensidade = document.getElementById("valorIntensidadeAtual");
+    const consumo = document.getElementById("valorConsumoAtual");
+    const atualizacao = document.getElementById("ultimaAtualizacaoAtual");
+    const detalhePresenca = document.getElementById("detalhePresencaAtual");
+
+    luminosidade.textContent = estadoAtual.luminosidadeLux === null
+        ? "Não informado"
+        : `${formatarNumero(estadoAtual.luminosidadeLux)} lux`;
+    presenca.textContent = formatarBooleano(estadoAtual.presencaDetectada);
+    intensidade.textContent = estadoAtual.intensidadePercentual === null
+        ? "Não informado"
+        : `${formatarNumero(estadoAtual.intensidadePercentual, 0)}%`;
+    consumo.textContent = estadoAtual.potenciaWatts === null
+        ? "Não informado"
+        : `${formatarNumero(estadoAtual.potenciaWatts)} W`;
+    detalhePresenca.textContent = estadoAtual.presencaDetectada === null
+        ? "Leitura do sensor"
+        : "Leitura do sensor de presença";
+
+    const atualizarIndicador = (id, valor, ligado, desligado) => {
+        const indicador = document.getElementById(id);
+        indicador.className = "status-indicador";
+        if (valor === null) {
+            indicador.textContent = "Não informado";
+            return;
+        }
+        indicador.textContent = valor ? ligado : desligado;
+        indicador.classList.add(valor ? "is-on" : "is-off");
+        if (id === "statusEsp32Atual") {
+            indicador.classList.toggle("is-connected", valor);
+            indicador.classList.toggle("is-disconnected", !valor);
+        }
+    };
+
+    atualizarIndicador("statusIluminacaoAtual", estadoAtual.iluminacaoLigada, "Ligada", "Desligada");
+    atualizarIndicador("statusEsp32Atual", estadoAtual.esp32Conectado, "Conectado", "Desconectado");
+
+    if (estadoAtual.atualizadoEm) {
+        const dataAtualizacao = new Date(estadoAtual.atualizadoEm);
+        atualizacao.dateTime = dataAtualizacao.toISOString();
+        atualizacao.textContent = `${estadoAtual.origemHorario}: ${dataAtualizacao.toLocaleString("pt-BR")}`;
+    } else {
+        atualizacao.removeAttribute("datetime");
+        atualizacao.textContent = "Aguardando dados";
+    }
+}
+
+// Preenche o painel atual com leituras claramente demonstrativas quando não há API.
+function carregarEstadoDemonstrativo() {
+    estadoAtual = {
+        luminosidadeLux: 320,
+        presencaDetectada: false,
+        intensidadePercentual: 65,
+        potenciaWatts: 1140,
+        iluminacaoLigada: true,
+        esp32Conectado: true,
+        atualizadoEm: new Date().toISOString(),
+        origemHorario: "Demonstração atualizada"
+    };
+    atualizarEstadoAtual();
 }
 
 // Atualiza os cards com formatação brasileira e variações recebidas pela API.
@@ -538,7 +936,12 @@ async function carregarDadosDashboard() {
 
     if (!baseUrl) {
         atualizarStatusApi("Exibindo dados de demonstração. Configure a URL em api-config.js para conectar a API.", "demo");
-        botaoExportar.disabled = false;
+        carregarEstadoDemonstrativo();
+        registrarHistorico(
+            Number(document.getElementById("filtroMesDiario").value),
+            Number(document.getElementById("filtroAnoDiario").value),
+            "Demonstração"
+        );
         atualizarIndicadores();
         desenharGraficos();
         return;
@@ -555,7 +958,6 @@ async function carregarDadosDashboard() {
     const ano = Number(document.getElementById("filtroAnoDiario").value);
     const botaoAtualizar = document.getElementById("btnAtualizarDados");
     botaoAtualizar.disabled = true;
-    botaoExportar.disabled = true;
     atualizarStatusApi("Carregando dados do serviço...", "loading");
 
     try {
@@ -583,9 +985,12 @@ async function carregarDadosDashboard() {
         dadosConsumoMensal = dados.metricas.consumo.mensal;
         dadosConsumoDiario = dados.metricas.consumo.diario;
         resumoConsumo = dados.resumo;
+        estadoAtual = dados.estadoAtual;
         dadosReaisCarregados = true;
         periodoDadosCarregados = { mes, ano };
         adicionarAnosDisponiveis(dados.anos);
+        registrarHistorico(mes, ano, "API");
+        atualizarEstadoAtual();
         atualizarIndicadores();
         desenharGraficos();
         botaoExportar.disabled = false;
@@ -604,11 +1009,7 @@ async function carregarDadosDashboard() {
         if (requisicaoAtual === controlador) {
             requisicaoAtual = null;
             botaoAtualizar.disabled = false;
-            botaoExportar.disabled = Boolean(baseUrl) && (
-                !periodoDadosCarregados ||
-                periodoDadosCarregados.mes !== mes ||
-                periodoDadosCarregados.ano !== ano
-            );
+            botaoExportar.disabled = registrosHistorico.length === 0;
         }
     }
 }
@@ -618,6 +1019,11 @@ function atualizarDadosDashboard() {
     if (API_CONFIG.baseUrl.trim()) {
         carregarDadosDashboard();
     } else {
+        registrarHistorico(
+            Number(document.getElementById("filtroMesDiario").value),
+            Number(document.getElementById("filtroAnoDiario").value),
+            "Demonstração"
+        );
         desenharGraficos();
     }
 }
@@ -647,6 +1053,8 @@ document.addEventListener("DOMContentLoaded", () => {
     configurarSelecaoGraficos();
     configurarSelecaoGrandeza();
     configurarExportacaoHistorico();
+    configurarComparacaoHistorico();
+    carregarHistoricoSalvo();
     document.getElementById("btnAtualizarDados").addEventListener("click", carregarDadosDashboard);
     carregarDadosDashboard();
 });

@@ -447,6 +447,111 @@ body.dashboard .api-status.is-demo {
     color: #596a60;
 }
 
+/* Agrupa as leituras instantâneas para distingui-las do resumo histórico. */
+body.dashboard .estado-atual {
+    margin-bottom: 28px;
+    padding: 22px;
+    border: 1px solid #e3e9e4;
+    border-radius: 12px;
+    background: #eef4ef;
+}
+
+body.dashboard .estado-atual-cabecalho {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    margin-bottom: 18px;
+}
+
+body.dashboard .estado-atual-cabecalho h2,
+body.dashboard .resumo-periodo > h2 {
+    margin: 0;
+    color: var(--text);
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+body.dashboard .estado-atual-cabecalho p,
+body.dashboard .ultima-atualizacao {
+    color: #596a60;
+    font-size: 0.85rem;
+}
+
+body.dashboard .ultima-atualizacao {
+    padding-top: 4px;
+}
+
+/* Distribui quatro indicadores em telas largas e permite quebrar em telas menores. */
+body.dashboard .estado-atual-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+}
+
+body.dashboard .estado-card {
+    min-width: 0;
+    padding: 18px 12px;
+    border: 1px solid #edf0ed;
+    border-radius: 10px;
+}
+
+body.dashboard .estado-card strong {
+    overflow-wrap: anywhere;
+    font-size: clamp(1.25rem, 2vw, 1.8rem);
+}
+
+body.dashboard .estado-card small {
+    color: #68776d;
+    font-weight: 400;
+}
+
+/* Mantém os estados de iluminação e conexão legíveis também sem cor. */
+body.dashboard .status-dispositivos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 22px;
+    margin-top: 16px;
+}
+
+body.dashboard .status-dispositivos p {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    color: #53665a;
+    font-size: 0.9rem;
+}
+
+body.dashboard .status-indicador {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: #e2e7e3;
+    color: #3f5145;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+body.dashboard .status-indicador.is-on,
+body.dashboard .status-indicador.is-connected {
+    background: #d9f1df;
+    color: #216238;
+}
+
+body.dashboard .status-indicador.is-off,
+body.dashboard .status-indicador.is-disconnected {
+    background: #f8e3df;
+    color: #8b3026;
+}
+
+body.dashboard .resumo-periodo > h2 {
+    margin-bottom: 14px;
+}
+
 .btn-sair {
     padding: 9px 16px;
     border: 1px solid #c33;
@@ -612,6 +717,138 @@ body.dashboard .filtros-diarios .filtro-grandeza {
     transform: translate(-50%, 0);
 }
 
+/* Separa os controles de comparação da listagem de registros históricos. */
+body.dashboard .historico-intro {
+    margin: -10px 0 18px;
+    color: #596a60;
+}
+
+body.dashboard .historico-status {
+    min-height: 1.5em;
+    margin-bottom: 12px;
+    color: #53665a;
+    font-size: 0.85rem;
+}
+
+body.dashboard .comparacao-historico {
+    margin-bottom: 24px;
+    padding: 18px;
+    border: 1px solid #e3e9e4;
+    border-radius: 8px;
+    background: #f9fbf9;
+}
+
+body.dashboard .comparacao-historico h3 {
+    margin-bottom: 12px;
+    color: var(--text);
+    font-size: 1rem;
+}
+
+body.dashboard .comparacao-controles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+body.dashboard .comparacao-controles label {
+    display: grid;
+    flex: 1 1 180px;
+    gap: 4px;
+    color: #666;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+body.dashboard .comparacao-controles select {
+    width: 100%;
+    min-height: 40px;
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: var(--white);
+    color: var(--text);
+    font: inherit;
+}
+
+body.dashboard .resultado-comparacao {
+    min-height: 1.5em;
+    margin: 14px 0 8px;
+    color: #26342c;
+    font-weight: 600;
+}
+
+/* Desenha barras escaláveis sem depender de uma biblioteca externa. */
+body.dashboard .grafico-comparacao {
+    display: grid;
+    gap: 12px;
+}
+
+body.dashboard .barra-comparacao {
+    display: grid;
+    grid-template-columns: minmax(90px, 150px) minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    color: #53665a;
+    font-size: 0.85rem;
+}
+
+body.dashboard .barra-comparacao-trilho {
+    height: 14px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #e5ebe6;
+}
+
+body.dashboard .barra-comparacao-valor {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--primary);
+}
+
+body.dashboard .tabela-historico-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid #e3e9e4;
+    border-radius: 8px;
+}
+
+body.dashboard .tabela-historico {
+    width: 100%;
+    min-width: 640px;
+    border-collapse: collapse;
+    background: var(--white);
+    font-size: 0.85rem;
+    text-align: left;
+}
+
+body.dashboard .tabela-historico caption {
+    padding: 12px;
+    color: #53665a;
+    font-weight: 600;
+    text-align: left;
+}
+
+body.dashboard .tabela-historico th,
+body.dashboard .tabela-historico td {
+    padding: 10px 12px;
+    border-top: 1px solid #e8ece9;
+    white-space: nowrap;
+}
+
+body.dashboard .tabela-historico th {
+    background: #f5f8f5;
+    color: #53665a;
+    font-weight: 600;
+}
+
+body.dashboard .tabela-historico .historico-vazio {
+    padding: 18px 12px;
+    color: #68776d;
+    text-align: center;
+    white-space: normal;
+}
+
 /* Define a área de desenho dos gráficos. */
 #meuGrafico,
 #meuGrafico2 {
@@ -633,6 +870,10 @@ body.dashboard .filtros-diarios .filtro-grandeza {
     }
 
     .cards-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    body.dashboard .estado-atual-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
@@ -706,8 +947,39 @@ body.dashboard .filtros-diarios .filtro-grandeza {
         grid-template-columns: 1fr;
     }
 
+    body.dashboard .estado-atual {
+        padding: 16px;
+    }
+
+    body.dashboard .estado-atual-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    body.dashboard .estado-card {
+        padding: 16px 10px;
+    }
+
+    body.dashboard .status-dispositivos {
+        flex-direction: column;
+        gap: 8px;
+    }
+
     body.dashboard .dashboard-main > .chart-panel {
         padding: 20px;
+    }
+
+    body.dashboard .comparacao-historico {
+        padding: 14px;
+    }
+
+    body.dashboard .barra-comparacao {
+        grid-template-columns: minmax(75px, 110px) minmax(0, 1fr);
+        gap: 6px 8px;
+    }
+
+    body.dashboard .barra-comparacao strong {
+        grid-column: 2;
     }
 
     #meuGrafico,
@@ -720,6 +992,10 @@ body.dashboard .filtros-diarios .filtro-grandeza {
 @media (max-width: 480px) {
     .dashboard-container h1 {
         font-size: 1.7rem;
+    }
+
+    body.dashboard .estado-atual-grid {
+        grid-template-columns: 1fr;
     }
 
     .card {
@@ -735,8 +1011,6 @@ body.dashboard .filtros-diarios .filtro-grandeza {
         padding: 16px;
     }
 }
-
-
 
 
 
