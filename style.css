@@ -64,6 +64,13 @@ body.Login {
     color: white;
 }
 
+/* Mantém um indicador de foco visível mesmo com o outline removido dos campos. */
+.input-login-form:focus-within,
+.input-cadastro-form:focus-within {
+    outline: 2px solid #f0c36a;
+    outline-offset: 2px;
+}
+
 .sr-only {
     width: 1px;
     height: 1px;
@@ -1115,7 +1122,6 @@ body.dashboard .tabela-historico .historico-vazio {
         padding: 16px;
     }
 }
-
 
 
 

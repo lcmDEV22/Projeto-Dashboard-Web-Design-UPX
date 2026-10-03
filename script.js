@@ -13,6 +13,7 @@ const dadosDemoDiarios = [
 const CHAVE_HISTORICO = "dashboardHistoricalReadings";
 const LIMITE_REGISTROS_HISTORICO = 5000;
 let registrosHistorico = [];
+let avisoHistorico = "";
 let intervaloPeriodoAplicado = null;
 
 // Gera valores de demonstração plausíveis para cada grandeza enquanto a API não está conectada.
@@ -575,18 +576,49 @@ function configurarSelecaoGrandeza() {
     });
 }
 
+// Valida os campos usados pelas funções do histórico antes de exibi-los ou agregá-los.
+function registroHistoricoValido(registro) {
+    if (!registro || typeof registro !== "object" || Array.isArray(registro)) {
+        return false;
+    }
+
+    const dataValida = typeof registro.data === "string" &&
+        /^\d{4}-\d{2}-\d{2}$/.test(registro.data) &&
+        Number.isFinite(Date.parse(`${registro.data}T00:00:00Z`)) &&
+        new Date(`${registro.data}T00:00:00Z`).toISOString().slice(0, 10) === registro.data;
+
+    return ["diario", "mensal", "resumo"].includes(registro.tipo) &&
+        dataValida &&
+        typeof registro.grandeza === "string" &&
+        typeof registro.chaveGrandeza === "string" &&
+        typeof registro.unidade === "string" &&
+        typeof registro.origem === "string" &&
+        typeof registro.capturadoEm === "string" &&
+        Number.isFinite(Date.parse(registro.capturadoEm)) &&
+        typeof registro.valor === "number" &&
+        Number.isFinite(registro.valor) &&
+        registro.valor >= 0;
+}
+
 // Carrega os registros anteriores sem ocultar erros de leitura do armazenamento.
 function carregarHistoricoSalvo() {
+    avisoHistorico = "";
     try {
         const salvo = localStorage.getItem(CHAVE_HISTORICO);
-        registrosHistorico = salvo ? JSON.parse(salvo) : [];
-        if (!Array.isArray(registrosHistorico)) {
+        const registrosSalvos = salvo ? JSON.parse(salvo) : [];
+        if (!Array.isArray(registrosSalvos)) {
             throw new Error("O histórico salvo não possui um formato válido.");
+        }
+        registrosHistorico = registrosSalvos.filter(registroHistoricoValido);
+        const quantidadeIgnorada = registrosSalvos.length - registrosHistorico.length;
+        if (quantidadeIgnorada) {
+            avisoHistorico = `${quantidadeIgnorada.toLocaleString("pt-BR")} ${quantidadeIgnorada === 1 ? "registro inválido foi ignorado" : "registros inválidos foram ignorados"}.`;
         }
         atualizarStatusHistorico(`${registrosHistorico.length.toLocaleString("pt-BR")} registros recuperados deste navegador.`);
     } catch (erro) {
         registrosHistorico = [];
-        atualizarStatusHistorico(`Não foi possível ler o histórico deste navegador: ${erro.message}`);
+        avisoHistorico = `Não foi possível ler o histórico salvo: ${erro.message}`;
+        atualizarStatusHistorico("Nenhum registro anterior foi recuperado.");
     }
 
     renderizarHistorico();
@@ -688,7 +720,7 @@ function registrarHistorico(mes, ano, origem, atualizarInterface = true) {
 function atualizarStatusHistorico(mensagem) {
     const status = document.getElementById("statusHistorico");
     if (status) {
-        status.textContent = mensagem;
+        status.textContent = avisoHistorico ? `${mensagem} ${avisoHistorico}` : mensagem;
     }
 }
 
