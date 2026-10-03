@@ -19,8 +19,12 @@
         <aside class="dashboard-sidebar" aria-label="Navegação do dashboard">
             <a class="sidebar-brand" href="dashboard.html">Consumo</a>
             <p class="sidebar-caption">PAINEL</p>
-            <nav class="sidebar-nav" aria-label="Gráficos disponíveis">
-                <button class="sidebar-link is-active" type="button" data-chart-target="secaoGraficoMensal" aria-controls="secaoGraficoMensal" aria-pressed="true">
+            <nav class="sidebar-nav" aria-label="Seções do dashboard">
+                <button class="sidebar-link is-active" type="button" data-chart-target="secaoEstadoAtual" aria-controls="secaoEstadoAtual" aria-pressed="true">
+                    <span class="sidebar-link-icon" aria-hidden="true">R</span>
+                    Resumo atual
+                </button>
+                <button class="sidebar-link" type="button" data-chart-target="secaoGraficoMensal" aria-controls="secaoGraficoMensal" aria-pressed="false">
                     <span class="sidebar-link-icon" aria-hidden="true">M</span>
                     Consumo mensal
                 </button>
@@ -61,72 +65,103 @@
                 <!-- Informa se os dados são reais, demonstrativos ou se houve falha na API. -->
                 <p id="statusApi" class="api-status" role="status" aria-live="polite"></p>
 
-                <!-- Mostra apenas o estado atual do ambiente e da conexão do dispositivo. -->
-                <section class="estado-atual" aria-labelledby="tituloEstadoAtual">
-                    <div class="estado-atual-cabecalho">
+                <!-- Define um intervalo ou um atalho antes de atualizar os indicadores e gráficos. -->
+                <section class="filtro-periodo" aria-labelledby="tituloFiltroPeriodo">
+                    <div class="filtro-periodo-cabecalho">
                         <div>
-                            <h2 id="tituloEstadoAtual">Estado atual do sistema</h2>
-                            <p>Leituras instantâneas dos sensores e do controlador.</p>
+                            <h2 id="tituloFiltroPeriodo">Analisar período</h2>
+                            <p>O filtro usa as medições históricas disponíveis e não altera o estado atual.</p>
                         </div>
-                        <p class="ultima-atualizacao">Última atualização: <time id="ultimaAtualizacaoAtual">Aguardando dados</time></p>
+                        <label for="atalhoPeriodo">Período predefinido
+                            <select id="atalhoPeriodo">
+                                <option value="mes-atual">Mês atual</option>
+                                <option value="7">Últimos 7 dias</option>
+                                <option value="30">Últimos 30 dias</option>
+                                <option value="90">Últimos 90 dias</option>
+                                <option value="personalizado">Personalizado</option>
+                            </select>
+                        </label>
                     </div>
-
-                    <div class="estado-atual-grid">
-                        <article class="card estado-card">
-                            <span class="card-title">Luminosidade</span>
-                            <strong id="valorLuminosidadeAtual">--</strong>
-                            <small>Intensidade de luz ambiente</small>
-                        </article>
-                        <article class="card estado-card">
-                            <span class="card-title">Presença</span>
-                            <strong id="valorPresencaAtual">--</strong>
-                            <small id="detalhePresencaAtual">Estado do sensor</small>
-                        </article>
-                        <article class="card estado-card">
-                            <span class="card-title">Intensidade da iluminação</span>
-                            <strong id="valorIntensidadeAtual">--</strong>
-                            <small>Nível de brilho configurado</small>
-                        </article>
-                        <article class="card estado-card">
-                            <span class="card-title">Consumo atual</span>
-                            <strong id="valorConsumoAtual">--</strong>
-                            <small>Potência instantânea medida</small>
-                        </article>
+                    <div class="filtro-periodo-controles">
+                        <label for="dataInicioPeriodo">Data inicial
+                            <input id="dataInicioPeriodo" type="date" required>
+                        </label>
+                        <label for="dataFimPeriodo">Data final
+                            <input id="dataFimPeriodo" type="date" required>
+                        </label>
+                        <button class="btn-atualizar" id="btnAplicarPeriodo" type="button">Aplicar período</button>
+                        <button class="btn-atualizar btn-resetar-periodo" id="btnResetarPeriodo" type="button">Mês atual</button>
                     </div>
-
-                    <!-- Apresenta estados binários sem depender apenas de cor. -->
-                    <div class="status-dispositivos" aria-label="Status dos dispositivos">
-                        <p>Status da iluminação <strong id="statusIluminacaoAtual" class="status-indicador">Aguardando</strong></p>
-                        <p>Conexão do ESP32 <strong id="statusEsp32Atual" class="status-indicador">Aguardando</strong></p>
-                    </div>
+                    <p id="statusFiltroPeriodo" class="filtro-periodo-status" role="status" aria-live="polite"></p>
                 </section>
 
                 <!-- Indicadores consolidados do período, separados das leituras atuais. -->
                 <section class="resumo-periodo" aria-labelledby="tituloResumoPeriodo">
                     <h2 id="tituloResumoPeriodo">Resumo do período</h2>
-                <section class="cards-grid">
-                    <div class="card">
-                        <span class="card-title">Custo total</span>
-                        <strong id="cardCustoTotal">--</strong>
-                        <small id="variacaoCustoTotal">Período selecionado</small>
-                    </div>
-                    <div class="card">
-                        <span class="card-title">Consumo Diário</span>
-                        <strong id="cardConsumoDiario">--</strong>
-                        <small id="variacaoConsumoDiario">--</small>
-                    </div>
-                    <div class="card">
-                        <span class="card-title">Consumo Mensal</span>
-                        <strong id="cardConsumoMensal">--</strong>
-                        <small id="variacaoConsumoMensal">--</small>
-                    </div>
-                </section>
+                    <section class="cards-grid">
+                        <div class="card">
+                            <span class="card-title">Custo dos meses completos</span>
+                            <strong id="cardCustoTotal">--</strong>
+                            <small id="variacaoCustoTotal">No intervalo selecionado</small>
+                        </div>
+                        <div class="card">
+                            <span class="card-title">Média diária observada</span>
+                            <strong id="cardConsumoDiario">--</strong>
+                            <small id="variacaoConsumoDiario">--</small>
+                        </div>
+                        <div class="card">
+                            <span class="card-title">Consumo no intervalo</span>
+                            <strong id="cardConsumoMensal">--</strong>
+                            <small id="variacaoConsumoMensal">--</small>
+                        </div>
+                    </section>
                 </section>
             </div>
 
-            <!-- Cada painel é exibido pela seleção correspondente na barra lateral. -->
-            <section class="chart-panel" id="secaoGraficoMensal" aria-labelledby="tituloGraficoMensal">
+            <!-- Painel inicial independente para um resumo rápido do estado do sistema. -->
+            <section class="chart-panel estado-atual" id="secaoEstadoAtual" aria-labelledby="tituloEstadoAtual">
+                <div class="estado-atual-cabecalho">
+                    <div>
+                        <h2 id="tituloEstadoAtual">Estado atual do sistema</h2>
+                        <p>Leituras instantâneas dos sensores e do controlador.</p>
+                    </div>
+                    <p class="ultima-atualizacao">Última atualização: <time id="ultimaAtualizacaoAtual">Aguardando dados</time></p>
+                </div>
+
+                <div class="estado-atual-grid">
+                    <article class="card estado-card">
+                        <span class="card-title">Luminosidade</span>
+                        <strong id="valorLuminosidadeAtual">--</strong>
+                        <small>Intensidade de luz ambiente</small>
+                    </article>
+                    <article class="card estado-card">
+                        <span class="card-title">Presença</span>
+                        <strong id="valorPresencaAtual">--</strong>
+                        <small id="detalhePresencaAtual">Estado do sensor</small>
+                    </article>
+                    <article class="card estado-card">
+                        <span class="card-title">Intensidade da iluminação</span>
+                        <strong id="valorIntensidadeAtual">--</strong>
+                        <small>Nível de brilho configurado</small>
+                    </article>
+                    <article class="card estado-card">
+                        <span class="card-title">Consumo atual</span>
+                        <strong id="valorConsumoAtual">--</strong>
+                        <small>Potência instantânea medida</small>
+                    </article>
+                </div>
+
+                <!-- Apresenta estados binários sem depender apenas de cor. -->
+                <div class="status-dispositivos" aria-label="Status dos dispositivos">
+                    <p>Status da iluminação <strong id="statusIluminacaoAtual" class="status-indicador">Aguardando</strong></p>
+                    <p>Conexão do ESP32 <strong id="statusEsp32Atual" class="status-indicador">Aguardando</strong></p>
+                </div>
+            </section>
+
+            <!-- Os gráficos compartilham o intervalo configurado no filtro global. -->
+            <section class="chart-panel" id="secaoGraficoMensal" aria-labelledby="tituloGraficoMensal" hidden>
                 <h2 id="tituloGraficoMensal">Consumo Mensal</h2>
+                <p id="periodoGraficoMensal" class="chart-period-status"></p>
                 <!-- Permite trocar a grandeza exibida no gráfico mensal. -->
                 <div class="chart-toolbar">
                     <label for="grandezaGraficoMensal">
@@ -146,16 +181,15 @@
 
             <section class="chart-panel" id="secaoGraficoDiario" aria-labelledby="tituloGraficoDiario" hidden>
                 <h2 id="tituloGraficoDiario">Consumo Diário</h2>
-                <!-- Filtros que definem o mês e o ano representados no gráfico diário. -->
-                <div class="filtros-diarios">
-                    <label for="filtroMesDiario">Mês
-                        <select id="filtroMesDiario"></select>
+                <p id="periodoGraficoDiario" class="chart-period-status"></p>
+                <!-- O mês é restrito ao intervalo global; grandeza permanece sincronizada com o gráfico mensal. -->
+                <div class="chart-toolbar">
+                    <label id="controleMesGraficoDiario" for="mesGraficoDiario" hidden>
+                        Mês do intervalo
+                        <select id="mesGraficoDiario" class="seletor-mes"></select>
                     </label>
-                    <label for="filtroAnoDiario">Ano
-                        <select id="filtroAnoDiario"></select>
-                    </label>
-                    <!-- Mantém a grandeza alinhada aos filtros de mês e ano. -->
-                    <label class="filtro-grandeza" for="grandezaGraficoDiario">
+                    <label for="grandezaGraficoDiario">
+                        Grandeza
                         <select id="grandezaGraficoDiario" class="seletor-grandeza">
                             <option value="consumo">Consumo (kWh)</option>
                             <option value="tensao">Tensão (V)</option>

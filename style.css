@@ -447,6 +447,90 @@ body.dashboard .api-status.is-demo {
     color: #596a60;
 }
 
+/* Agrupa o intervalo e os atalhos em controles que se reorganizam no celular. */
+body.dashboard .filtro-periodo {
+    margin: 0 0 22px;
+    padding: 18px;
+    border: 1px solid #e3e9e4;
+    border-radius: 10px;
+    background: var(--white);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.04);
+}
+
+body.dashboard .filtro-periodo-cabecalho,
+body.dashboard .filtro-periodo-controles {
+    display: flex;
+    align-items: end;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+body.dashboard .filtro-periodo-cabecalho {
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+body.dashboard .filtro-periodo h2 {
+    margin: 0;
+    color: var(--text);
+    font-size: 1.1rem;
+}
+
+body.dashboard .filtro-periodo p {
+    color: #596a60;
+    font-size: 0.85rem;
+}
+
+body.dashboard .filtro-periodo label {
+    display: grid;
+    flex: 1 1 160px;
+    gap: 4px;
+    color: #596a60;
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+body.dashboard .filtro-periodo select,
+body.dashboard .filtro-periodo input {
+    width: 100%;
+    min-height: 42px;
+    padding: 8px 10px;
+    border: 1px solid #cbd4cd;
+    border-radius: 6px;
+    background: var(--white);
+    color: var(--text);
+    font: inherit;
+}
+
+body.dashboard .filtro-periodo-cabecalho > label {
+    max-width: 220px;
+}
+
+body.dashboard .filtro-periodo-controles .btn-atualizar {
+    min-height: 42px;
+    background: #20382b;
+    color: #fff;
+}
+
+body.dashboard .filtro-periodo-controles .btn-atualizar:hover {
+    background: #365443;
+}
+
+body.dashboard .filtro-periodo-controles .btn-resetar-periodo {
+    background: #fff;
+    color: #26342c;
+}
+
+body.dashboard .filtro-periodo-controles .btn-resetar-periodo:hover {
+    background: #edf3ee;
+}
+
+body.dashboard .filtro-periodo-status {
+    min-height: 1.5em;
+    margin-top: 8px;
+}
+
 /* Agrupa as leituras instantâneas para distingui-las do resumo histórico. */
 body.dashboard .estado-atual {
     margin-bottom: 28px;
@@ -626,6 +710,13 @@ body.dashboard .chart-panel h2 {
     margin-bottom: 20px;
 }
 
+body.dashboard .chart-period-status {
+    min-height: 1.4em;
+    margin: -14px 0 14px;
+    color: #68776d;
+    font-size: 0.8rem;
+}
+
 /* Alinha o seletor mensal à direita, acima da área do gráfico. */
 body.dashboard .chart-toolbar {
     display: flex;
@@ -642,6 +733,23 @@ body.dashboard .chart-toolbar label {
     font-weight: 600;
 }
 
+/* Mantém mês e grandeza utilizáveis lado a lado ou empilhados no gráfico diário. */
+body.dashboard #secaoGraficoDiario .chart-toolbar {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+}
+
+body.dashboard #secaoGraficoDiario .chart-toolbar label {
+    display: grid;
+    flex: 1 1 180px;
+    gap: 4px;
+}
+
+body.dashboard #secaoGraficoDiario #controleMesGraficoDiario[hidden] {
+    display: none;
+}
+
 body.dashboard .seletor-grandeza {
     width: min(220px, 65vw);
     min-height: 40px;
@@ -653,36 +761,19 @@ body.dashboard .seletor-grandeza {
     font: inherit;
 }
 
-/* Alinha os seletores de período sem competir com o título do gráfico. */
-.filtros-diarios {
-    display: flex;
-    align-items: end;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin: -6px 0 18px;
+body.dashboard #secaoGraficoDiario .seletor-grandeza {
+    width: 100%;
 }
 
-.filtros-diarios label {
-    display: grid;
-    gap: 4px;
-    color: #666;
-    font-size: 0.85rem;
-    font-weight: 600;
-}
-
-.filtros-diarios select {
-    min-width: 140px;
+body.dashboard #secaoGraficoDiario .seletor-mes {
+    width: 100%;
+    min-height: 40px;
     padding: 8px 10px;
     border: 1px solid #ccc;
     border-radius: 6px;
     background: var(--white);
     color: var(--text);
     font: inherit;
-}
-
-/* Reserva o lado direito da linha para o seletor de grandeza. */
-body.dashboard .filtros-diarios .filtro-grandeza {
-    margin-left: auto;
 }
 
 /* Cria uma referência local para posicionar tooltips nos gráficos. */
@@ -873,6 +964,10 @@ body.dashboard .tabela-historico .historico-vazio {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
+    body.dashboard .filtro-periodo-cabecalho > label {
+        max-width: none;
+    }
+
     body.dashboard .estado-atual-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -947,6 +1042,15 @@ body.dashboard .tabela-historico .historico-vazio {
         grid-template-columns: 1fr;
     }
 
+    body.dashboard .filtro-periodo-controles {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    body.dashboard .filtro-periodo-controles .btn-atualizar {
+        width: 100%;
+    }
+
     body.dashboard .estado-atual {
         padding: 16px;
     }
@@ -1011,12 +1115,6 @@ body.dashboard .tabela-historico .historico-vazio {
         padding: 16px;
     }
 }
-
-
-
-
-
-
 
 
 

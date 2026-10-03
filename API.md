@@ -2,9 +2,13 @@
 
 ## Configuração
 
-Em `api-config.js`, informe a URL base do serviço em `baseUrl`. O dashboard fará uma requisição `GET` para `/api/dashboard?year=AAAA&month=M`, usando mês de 1 a 12. O caminho pode ser alterado em `dashboardPath`.
+Em `api-config.js`, informe a URL base do serviço em `baseUrl`. O dashboard fará requisições `GET` para `/api/dashboard?year=AAAA&month=M`, usando mês de 1 a 12. Ao aplicar um intervalo, consulta os meses sem histórico diário local e sempre atualiza o mês final selecionado. O botão **Atualizar** repete essa consulta. O caminho pode ser alterado em `dashboardPath`.
 
 Se a URL ficar vazia, a interface usa os dados demonstrativos que já existem no projeto e mostra esse estado na tela.
+
+## Filtros dos gráficos
+
+O filtro **Analisar período** atualiza os gráficos mensal e diário. O botão **Mês atual** redefine e aplica o intervalo do primeiro dia do mês atual até hoje. No gráfico diário, o seletor **Mês do intervalo** aparece quando o período aplicado abrange mais de um mês e lista somente os meses incluídos no intervalo. Para o primeiro e o último mês, o gráfico respeita os dias escolhidos no filtro; para os meses intermediários, exibe o mês inteiro. Dias sem medições permanecem como lacunas, sem valores estimados.
 
 ## Formato da resposta
 
@@ -63,6 +67,12 @@ O objeto `currentState` é opcional para manter compatibilidade com serviços ex
 - `lastUpdatedAt`: instante em que o dispositivo atualizou essas leituras, em formato de data reconhecido pelo JavaScript; se não vier, o dashboard mostra o horário em que recebeu a resposta.
 
 Campos ausentes aparecem como “Não informado”, em vez de valores presumidos. Sem API configurada, a interface apresenta valores demonstrativos explicitamente identificados como demonstração.
+
+## Filtro por período
+
+O painel **Analisar período** oferece mês atual, últimos 7, 30 ou 90 dias e intervalo personalizado com datas inicial e final. Ao aplicar, o dashboard consulta a API para cada mês que ainda não tenha histórico diário completo no navegador e atualiza o mês final do intervalo. Os cards de resumo e os gráficos usam os registros salvos que correspondem ao período. O gráfico mensal inclui cada mês do calendário entre as datas, mesmo quando a API não tem uma medição guardada para algum mês; nesses casos, a lacuna não é preenchida com um valor inventado. O gráfico diário mostra todos os dias do mês selecionado, com valores das medições disponíveis e lacunas para dias sem dados. A luminosidade, presença, iluminação, potência instantânea e conexão do ESP32 permanecem como estado atual e não são alteradas pelo filtro.
+
+O resumo informa quantos dias têm medições. O custo soma apenas meses completos dentro do intervalo; se não houver custo disponível para esses meses, mostra “—”. O gráfico mensal usa o total mensal registrado para cada mês que cruza o intervalo, enquanto o gráfico diário e os cards usam somente datas incluídas no intervalo. Como a API retorna dados diários de um mês por consulta, intervalos longos podem exigir uma consulta para cada mês ainda não guardado.
 
 ## Histórico no dashboard
 
