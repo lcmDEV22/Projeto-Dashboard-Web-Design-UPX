@@ -1570,6 +1570,35 @@ function atualizarEstadoAtual() {
     intensidade.textContent = estadoAtual.intensidadePercentual === null
         ? "Não informado"
         : `${formatarNumero(estadoAtual.intensidadePercentual, 0)}%`;
+        const nivelIluminacao = document.getElementById("nivelIluminacao");
+        const statusIluminacao = document.getElementById("statusIluminacao");
+        if (estadoAtual.intensidadePercentual !== null) {
+            const intensidadeAtual = Math.max(
+                0,
+                Math.min(100, estadoAtual.intensidadePercentual)
+            );
+            if (nivelIluminacao) {
+                nivelIluminacao.style.width = `${intensidadeAtual}%`;
+            }
+            if (statusIluminacao) {
+                if (intensidadeAtual === 0) {
+                    statusIluminacao.textContent = "Iluminação desligada";
+                } else if (intensidadeAtual < 30) {
+                    statusIluminacao.textContent = "Iluminação baixa";
+                } else if (intensidadeAtual < 70) {
+                    statusIluminacao.textContent = "Iluminação média";
+                } else {
+                    statusIluminacao.textContent = "Iluminação alta";
+                }
+            }
+        } else {
+            if (nivelIluminacao) {
+                nivelIluminacao.style.width = "0%";
+            }
+            if (statusIluminacao) {
+                statusIluminacao.textContent = "Aguardando leitura...";
+            }
+        }
     consumo.textContent = estadoAtual.potenciaWatts === null
         ? "Não informado"
         : `${formatarNumero(estadoAtual.potenciaWatts)} W`;
