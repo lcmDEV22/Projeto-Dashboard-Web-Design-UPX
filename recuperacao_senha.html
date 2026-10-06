@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <!-- Define codificação, viewport e informações da página de recuperação. -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Recupere o acesso à sua conta neste navegador.">
+    <meta name="robots" content="noindex, follow">
+    <title>Recuperar senha | Painel</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="Recuperacao">
+    <!-- Mantém o formulário centralizado e adaptável a telas pequenas. -->
+    <main class="recuperacao-form">
+        <h1 class="h2-login">Recuperar senha</h1>
+        <!-- A recuperação local valida o usuário e o e-mail já registrados. -->
+        <p class="auth-warning">Recuperação de demonstração: informe os dados cadastrados. Esta página não envia e-mail de verificação.</p>
+        <form id="recuperacaoForm" action="recuperacao_senha.html" method="post">
+            <!-- Usa os campos de login para manter rótulos acessíveis e responsivos. -->
+            <div class="input-login-form">
+                <label class="sr-only" for="usuarioRecuperacao">Usuário</label>
+                <input type="text" id="usuarioRecuperacao" name="usuario" placeholder="Usuário cadastrado" autocomplete="username" required>
+            </div>
+            <div class="input-login-form">
+                <label class="sr-only" for="emailRecuperacao">E-mail</label>
+                <input type="email" id="emailRecuperacao" name="email" placeholder="E-mail cadastrado" autocomplete="email" required>
+            </div>
+            <div class="input-login-form">
+                <label class="sr-only" for="novaSenha">Nova senha</label>
+                <input type="password" id="novaSenha" name="novaSenha" placeholder="Nova senha (mínimo 8 caracteres)" autocomplete="new-password" minlength="8" required>
+            </div>
+            <div class="input-login-form">
+                <label class="sr-only" for="confirmarNovaSenha">Confirmar nova senha</label>
+                <input type="password" id="confirmarNovaSenha" name="confirmarNovaSenha" placeholder="Confirme a nova senha" autocomplete="new-password" minlength="8" required>
+            </div>
+            <!-- Submete os dados ao fluxo local de redefinição no navegador. -->
+            <button type="submit" class="btn-entrar">Redefinir senha</button>
+        </form>
+        <p class="auth-message" id="authMessage" role="status" aria-live="polite"></p>
+        <!-- Oferece retorno direto à página de login. -->
+        <p class="auth-link"><a href="index.html">Voltar para o login</a></p>
+    </main>
+    <script src="auth.js"></script>
+</body>
+</html>

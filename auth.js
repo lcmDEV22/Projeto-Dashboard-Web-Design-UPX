@@ -121,6 +121,62 @@ function configurarLogin() {
     });
 }
 
+// Redefine a senha local apenas quando usuário e e-mail correspondem à mesma conta.
+function configurarRecuperacaoSenha() {
+    const form = document.getElementById("recuperacaoForm");
+    if (!form) return;
+
+    const message = document.getElementById("authMessage");
+    form.addEventListener("submit", async event => {
+        event.preventDefault();
+        mostrarMensagem(message, "", "");
+
+        const username = form.elements.usuario.value.trim().toLocaleLowerCase("pt-BR");
+        const email = form.elements.email.value.trim().toLocaleLowerCase("pt-BR");
+        const newPassword = form.elements.novaSenha.value;
+        const confirmedPassword = form.elements.confirmarNovaSenha.value;
+        const submitButton = form.querySelector('[type="submit"]');
+
+        if (newPassword !== confirmedPassword) {
+            mostrarMensagem(message, "As senhas informadas não coincidem.", "error");
+            return;
+        }
+
+        submitButton.disabled = true;
+        try {
+            const users = carregarUsuarios();
+            const user = users.find(savedUser =>
+                savedUser.normalizedUsername === username &&
+                savedUser.normalizedEmail === email
+            );
+
+            if (!user) {
+                mostrarMensagem(message, "Não encontramos uma conta com essa combinação de usuário e e-mail.", "error");
+                return;
+            }
+
+            // Mantém o hash e o salt atuais se a senha escolhida já estiver em uso.
+            const senhaAtualHash = await derivePassword(newPassword, fromBase64(user.salt));
+            if (senhaAtualHash === user.passwordHash) {
+                mostrarMensagem(message, "Essa senha já está sendo usada. Escolha uma senha diferente.", "error");
+                return;
+            }
+
+            const salt = crypto.getRandomValues(new Uint8Array(16));
+            user.salt = toBase64(salt);
+            user.passwordHash = await derivePassword(newPassword, salt);
+            localStorage.setItem(USERS_KEY, JSON.stringify(users));
+            sessionStorage.removeItem(SESSION_KEY);
+            form.reset();
+            mostrarMensagem(message, "Senha redefinida neste navegador. Você já pode entrar com a nova senha.", "success");
+        } catch {
+            mostrarMensagem(message, "Não foi possível salvar a nova senha neste navegador.", "error");
+        } finally {
+            submitButton.disabled = false;
+        }
+    });
+}
+
 // Exige uma sessão no dashboard e permite encerrar o acesso.
 function configurarDashboard() {
     if (!document.body.classList.contains("dashboard")) return;
@@ -146,4 +202,5 @@ function configurarDashboard() {
 
 configurarCadastro();
 configurarLogin();
+configurarRecuperacaoSenha();
 configurarDashboard();

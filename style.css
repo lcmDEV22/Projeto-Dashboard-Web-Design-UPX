@@ -10,6 +10,11 @@ body.Login {
     background-image: url('imagens/FundoLogin.avif'); /* Imagem de fundo */
 }
 
+/* Reutiliza o fundo do login na página local de recuperação. */
+body.Recuperacao {
+    background-image: url('imagens/FundoLogin.avif');
+}
+
 /* Cartão principal: organiza título, formulário e link no centro da tela. */
 .login-form {
     min-height: 350px;
@@ -91,6 +96,25 @@ body.Login {
     color: white;
 }
 
+/* Alinha o link de recuperação junto aos campos do formulário de login. */
+.login-recovery-link {
+    align-self: flex-end;
+    width: 100%;
+    margin: 2px 0 10px;
+    font-size: 0.9rem;
+    text-align: right;
+}
+
+/* Destaca que esta versão redefine a senha apenas no armazenamento local. */
+.auth-warning {
+    width: 100%;
+    margin: 0 0 12px;
+    color: #fff2c6;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    text-align: center;
+}
+
 /* Mostra o resultado das ações de cadastro e login. */
 .auth-message {
     min-height: 1.5em;
@@ -139,7 +163,8 @@ body.Login {
 
 /* Centraliza as telas de autenticação e adapta a largura ao dispositivo. */
 body.Login,
-body.Cadastro {
+body.Cadastro,
+body.Recuperacao {
     min-height: 100vh;
     width: 100%;
     margin: 0;
@@ -190,6 +215,35 @@ div.login-form {
     border-radius: 22px;
     width: min(100%, 380px);
     margin: 0 auto;
+}
+
+/* Apresenta a recuperação com o mesmo cartão translúcido das páginas de acesso. */
+.recuperacao-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: min(100%, 420px);
+    min-height: 350px;
+    margin: 0 auto;
+    padding: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 22px;
+    background: rgba(0, 0, 0, 0.72);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.416);
+    backdrop-filter: blur(7px);
+}
+
+.recuperacao-form form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.recuperacao-form .btn-entrar {
+    width: min(100%, 220px);
+    margin-top: 12px;
 }
 
 div.cadastro-form{
@@ -1020,14 +1074,16 @@ body.dashboard .tabela-historico .historico-vazio {
 /* Empilha os cards e reduz os gráficos em telas pequenas. */
 @media (max-width: 600px) {
     body.Login,
-    body.Cadastro {
+    body.Cadastro,
+    body.Recuperacao {
         padding: 16px;
     }
 
     .login-form,
     div.login-form,
     .cadastro-form,
-    div.cadastro-form {
+    div.cadastro-form,
+    .recuperacao-form {
         width: 100%;
         min-height: 0;
         padding: 24px 18px;
@@ -1175,7 +1231,6 @@ body.dashboard .tabela-historico .historico-vazio {
 #statusIluminacao {
     margin-top: 4px;
 }
-
 
 
 
