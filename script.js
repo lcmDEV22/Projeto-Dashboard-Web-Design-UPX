@@ -11,10 +11,134 @@ const dadosDemoDiarios = [
     575, 630, 590, 660, 620, 690, 645, 710, 675, 735, 700
 ];
 const CHAVE_HISTORICO = "dashboardHistoricalReadings";
-const LIMITE_REGISTROS_HISTORICO = 5000;
+const LIMITE_REGISTROS_HISTORICO = 200000;
+const ANO_INICIAL_DADOS_FICTICIOS = 2020;
 let registrosHistorico = [];
 let avisoHistorico = "";
 let intervaloPeriodoAplicado = null;
+
+function gerarDadosFicticiosHistorico() {
+    const hoje = new Date();
+    const ultimoAno = hoje.getFullYear();
+    const registros = [];
+    const capturadoEm = new Date().toISOString();
+
+    for (let ano = ANO_INICIAL_DADOS_FICTICIOS; ano <= ultimoAno; ano++) {
+        for (let mes = 0; mes < 12; mes++) {
+            const ultimoDiaMes = new Date(ano, mes + 1, 0);
+            const diasNoMes = ultimoDiaMes.getDate();
+            const consumoMensal = [];
+            const tensaoMensal = [];
+            const correnteMensal = [];
+            const potenciaMensal = [];
+
+            for (let dia = 1; dia <= diasNoMes; dia++) {
+                const data = formatarDataHistorico(ano, mes, dia);
+                const dataUtc = new Date(`${data}T00:00:00Z`);
+                if (dataUtc > hoje) {
+                    continue;
+                }
+
+                const picoSemanal = Math.sin((dia + mes + 1) * 0.82) * 0.55;
+                const variacaoAnual = (ano - ANO_INICIAL_DADOS_FICTICIOS) * 0.18;
+                const consumoDiario = Number((150 + (mes * 7.5) + picoSemanal * 65 + variacaoAnual * 18 + (dia % 7) * 8).toFixed(2));
+                const tensaoDiaria = Number((220 + Math.sin((dia + 1) * 0.9 + mes) * 9 + (mes % 3) * 1.8).toFixed(2));
+                const correnteDiaria = Number((4.9 + Math.cos((dia + mes) * 0.9) * 1.2 + (ano % 5) * 0.08).toFixed(2));
+                const potenciaDiaria = Number((980 + Math.sin((dia + 2) * 0.75) * 210 + (mes * 18)).toFixed(2));
+
+                consumoMensal.push(consumoDiario);
+                tensaoMensal.push(tensaoDiaria);
+                correnteMensal.push(correnteDiaria);
+                potenciaMensal.push(potenciaDiaria);
+
+                registros.push(
+                    { tipo: "diario", data, grandeza: "Consumo", chaveGrandeza: "consumo", valor: consumoDiario, unidade: "kWh", capturadoEm, origem: "Demonstração" },
+                    { tipo: "diario", data, grandeza: "Tensão", chaveGrandeza: "tensao", valor: tensaoDiaria, unidade: "V", capturadoEm, origem: "Demonstração" },
+                    { tipo: "diario", data, grandeza: "Corrente", chaveGrandeza: "corrente", valor: correnteDiaria, unidade: "A", capturadoEm, origem: "Demonstração" },
+                    { tipo: "diario", data, grandeza: "Potência", chaveGrandeza: "potencia", valor: potenciaDiaria, unidade: "W", capturadoEm, origem: "Demonstração" }
+                );
+            }
+
+            const totalConsumoMensal = consumoMensal.reduce((total, valor) => total + valor, 0);
+            const mediaTensaoMensal = tensaoMensal.reduce((total, valor) => total + valor, 0) / Math.max(tensaoMensal.length, 1);
+            const mediaCorrenteMensal = correnteMensal.reduce((total, valor) => total + valor, 0) / Math.max(correnteMensal.length, 1);
+            const mediaPotenciaMensal = potenciaMensal.reduce((total, valor) => total + valor, 0) / Math.max(potenciaMensal.length, 1);
+            const custoMensal = Number((totalConsumoMensal * (0.82 + (mes % 5) * 0.07 + (ano - ANO_INICIAL_DADOS_FICTICIOS) * 0.03)).toFixed(2));
+
+            registros.push(
+                { tipo: "mensal", data: formatarDataHistorico(ano, mes, 1), grandeza: "Consumo", chaveGrandeza: "consumo", valor: Number(totalConsumoMensal.toFixed(2)), unidade: "kWh", capturadoEm, origem: "Demonstração" },
+                { tipo: "mensal", data: formatarDataHistorico(ano, mes, 1), grandeza: "Tensão", chaveGrandeza: "tensao", valor: Number(mediaTensaoMensal.toFixed(2)), unidade: "V", capturadoEm, origem: "Demonstração" },
+                { tipo: "mensal", data: formatarDataHistorico(ano, mes, 1), grandeza: "Corrente", chaveGrandeza: "corrente", valor: Number(mediaCorrenteMensal.toFixed(2)), unidade: "A", capturadoEm, origem: "Demonstração" },
+                { tipo: "mensal", data: formatarDataHistorico(ano, mes, 1), grandeza: "Potência", chaveGrandeza: "potencia", valor: Number(mediaPotenciaMensal.toFixed(2)), unidade: "W", capturadoEm, origem: "Demonstração" },
+                { tipo: "resumo", data: formatarDataHistorico(ano, mes, 1), grandeza: "Custo total", chaveGrandeza: "custo", valor: custoMensal, unidade: "BRL", capturadoEm, origem: "Demonstração" }
+            );
+        }
+    }
+
+    return registros
+        .sort((primeiro, segundo) => primeiro.data.localeCompare(segundo.data))
+        .slice(0, LIMITE_REGISTROS_HISTORICO);
+}
+
+function atualizarSeriesDemoComHistorico() {
+    const hoje = new Date();
+    const mesAtual = hoje.getMonth();
+    const anoAtual = hoje.getFullYear();
+    const diasNoMesAtual = new Date(anoAtual, mesAtual + 1, 0).getDate();
+    const registrosMensais = registrosHistorico.filter((registro) => registro.tipo === "mensal");
+    const registrosDiarios = registrosHistorico.filter((registro) => registro.tipo === "diario" && registro.data.startsWith(`${anoAtual}-${String(mesAtual + 1).padStart(2, "0")}-`));
+
+    const montarSerie = (chaveGrandeza, nome, unidade) => {
+        const mensais = [];
+        const diarias = [];
+        const mesesUltimos12 = [];
+
+        for (let indice = 11; indice >= 0; indice--) {
+            const dataMes = new Date(anoAtual, mesAtual - indice, 1);
+            mesesUltimos12.push(`${dataMes.getFullYear()}-${String(dataMes.getMonth() + 1).padStart(2, "0")}`);
+        }
+
+        mesesUltimos12.forEach((periodo) => {
+            const registro = registrosMensais
+                .filter((item) => item.chaveGrandeza === chaveGrandeza && item.data.startsWith(periodo))
+                .sort((primeiro, segundo) => segundo.capturadoEm.localeCompare(primeiro.capturadoEm))[0];
+            mensais.push(registro ? Number(registro.valor) : 0);
+        });
+
+        for (let dia = 1; dia <= diasNoMesAtual; dia++) {
+            const data = formatarDataHistorico(anoAtual, mesAtual, dia);
+            const registro = registrosDiarios
+                .filter((item) => item.chaveGrandeza === chaveGrandeza && item.data === data)
+                .sort((primeiro, segundo) => segundo.capturadoEm.localeCompare(primeiro.capturadoEm))[0];
+            diarias.push(registro ? Number(registro.valor) : 0);
+        }
+
+        return { nome, unidade, mensal: mensais, diario: diarias };
+    };
+
+    const dadosDiaAtual = registrosHistorico.filter((registro) => registro.tipo === "diario" && registro.data === formatarDataHistorico(hoje.getFullYear(), hoje.getMonth(), hoje.getDate()));
+    const ultimoCusto = registrosHistorico
+        .filter((registro) => registro.tipo === "resumo" && registro.chaveGrandeza === "custo")
+        .sort((primeiro, segundo) => segundo.capturadoEm.localeCompare(primeiro.capturadoEm))[0];
+
+    Object.assign(seriesGrandezas, {
+        consumo: montarSerie("consumo", "Consumo", "kWh"),
+        tensao: montarSerie("tensao", "Tensão", "V"),
+        corrente: montarSerie("corrente", "Corrente", "A"),
+        potencia: montarSerie("potencia", "Potência", "W")
+    });
+
+    dadosConsumoMensal = seriesGrandezas.consumo.mensal;
+    dadosConsumoDiario = seriesGrandezas.consumo.diario;
+    const consumoHoje = dadosDiaAtual.find((registro) => registro.chaveGrandeza === "consumo")?.valor ?? 0;
+    resumoConsumo = {
+        totalCostBrl: ultimoCusto ? Number(ultimoCusto.valor) : 0,
+        dailyConsumptionKwh: consumoHoje,
+        monthlyConsumptionKwh: seriesGrandezas.consumo.mensal.at(-1) ?? 0,
+        dailyChangePercent: 0,
+        monthlyChangePercent: 0
+    };
+}
 
 // Gera valores de demonstração plausíveis para cada grandeza enquanto a API não está conectada.
 function criarSerieDemo(tamanho, media, amplitude, fase = 0) {
@@ -626,14 +750,29 @@ function carregarHistoricoSalvo() {
         if (quantidadeIgnorada) {
             avisoHistorico = `${quantidadeIgnorada.toLocaleString("pt-BR")} ${quantidadeIgnorada === 1 ? "registro inválido foi ignorado" : "registros inválidos foram ignorados"}.`;
         }
-        atualizarStatusHistorico(`${registrosHistorico.length.toLocaleString("pt-BR")} registros recuperados deste navegador.`);
-    } catch (erro) {
-        registrosHistorico = [];
-        avisoHistorico = `Não foi possível ler o histórico salvo: ${erro.message}`;
-        atualizarStatusHistorico("Nenhum registro anterior foi recuperado.");
-    }
 
-    renderizarHistorico();
+            if (registrosHistorico.length === 0) {
+            registrosHistorico = gerarDadosFicticiosHistorico();
+            localStorage.setItem(CHAVE_HISTORICO, JSON.stringify(registrosHistorico));
+            atualizarStatusHistorico(`${registrosHistorico.length.toLocaleString("pt-BR")} registros fictícios foram gerados para todos os dias e meses disponíveis.`);
+        } else {
+            atualizarStatusHistorico(`${registrosHistorico.length.toLocaleString("pt-BR")} registros recuperados deste navegador.`);
+        }
+
+            if (!API_CONFIG.baseUrl.trim()) {
+                atualizarSeriesDemoComHistorico();
+            }
+        } catch (erro) {
+            registrosHistorico = gerarDadosFicticiosHistorico();
+            localStorage.setItem(CHAVE_HISTORICO, JSON.stringify(registrosHistorico));
+            avisoHistorico = `Não foi possível ler o histórico salvo: ${erro.message}`;
+            atualizarStatusHistorico(`${registrosHistorico.length.toLocaleString("pt-BR")} registros fictícios foram gerados após a falha de leitura.`);
+            if (!API_CONFIG.baseUrl.trim()) {
+                atualizarSeriesDemoComHistorico();
+            }
+        }
+
+        renderizarHistorico();
 }
 
 // Converte uma data local em formato ISO sem deslocar o dia por fuso horário.
@@ -1144,6 +1283,7 @@ function atualizarEstadoAtual() {
 
 // Preenche o painel atual com leituras claramente demonstrativas quando não há API.
 function carregarEstadoDemonstrativo() {
+    atualizarSeriesDemoComHistorico();
     estadoAtual = {
         luminosidadeLux: 320,
         presencaDetectada: false,
