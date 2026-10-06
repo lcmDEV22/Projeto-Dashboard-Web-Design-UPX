@@ -518,6 +518,15 @@ function configurarInteracaoGraficos() {
     });
 }
 
+function atualizarVisibilidadeFiltroPeriodo(painelSelecionado) {
+    const filtroPeriodo = document.getElementById("filtroPeriodo");
+    if (!filtroPeriodo) {
+        return;
+    }
+
+    filtroPeriodo.hidden = painelSelecionado === "secaoHistorico";
+}
+
 // Alterna o painel selecionado e redesenha o canvas depois que ele fica visível.
 function configurarSelecaoGraficos() {
     const botoes = document.querySelectorAll("[data-chart-target]");
@@ -542,6 +551,8 @@ function configurarSelecaoGraficos() {
                 painel.hidden = painel.id !== painelSelecionado;
             });
 
+            atualizarVisibilidadeFiltroPeriodo(painelSelecionado);
+
             // O canvas precisa estar visível para medir sua largura antes de desenhar.
             const canvas = document.querySelector(`#${painelSelecionado} canvas`);
             if (canvas && (!API_CONFIG.baseUrl.trim() || dadosReaisCarregados || intervaloPeriodoAplicado)) {
@@ -557,6 +568,7 @@ function configurarSelecaoGraficos() {
         paineis.forEach((painel) => {
             painel.hidden = painel.id !== painelInicial;
         });
+        atualizarVisibilidadeFiltroPeriodo(painelInicial);
     }
 }
 
