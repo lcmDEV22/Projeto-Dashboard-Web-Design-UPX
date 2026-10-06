@@ -11,6 +11,8 @@ const dadosDemoDiarios = [
     575, 630, 590, 660, 620, 690, 645, 710, 675, 735, 700
 ];
 const CHAVE_HISTORICO = "dashboardHistoricalReadings";
+const CHAVE_VERSAO_DEMO = "dashboardDemoHistoryVersion";
+const VERSAO_DEMO_HISTORICO = "2";
 const LIMITE_REGISTROS_HISTORICO = 200000;
 const ANO_INICIAL_DADOS_FICTICIOS = 2020;
 let registrosHistorico = [];
@@ -20,11 +22,15 @@ let intervaloPeriodoAplicado = null;
 function gerarDadosFicticiosHistorico() {
     const hoje = new Date();
     const ultimoAno = hoje.getFullYear();
+    const hojeFormatado = formatarDataHistorico(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
     const registros = [];
     const capturadoEm = new Date().toISOString();
 
     for (let ano = ANO_INICIAL_DADOS_FICTICIOS; ano <= ultimoAno; ano++) {
         for (let mes = 0; mes < 12; mes++) {
+            if (formatarDataHistorico(ano, mes, 1) > hojeFormatado) {
+                continue;
+            }
             const ultimoDiaMes = new Date(ano, mes + 1, 0);
             const diasNoMes = ultimoDiaMes.getDate();
             const consumoMensal = [];
@@ -34,8 +40,7 @@ function gerarDadosFicticiosHistorico() {
 
             for (let dia = 1; dia <= diasNoMes; dia++) {
                 const data = formatarDataHistorico(ano, mes, dia);
-                const dataUtc = new Date(`${data}T00:00:00Z`);
-                if (dataUtc > hoje) {
+                if (data > hojeFormatado) {
                     continue;
                 }
 
@@ -87,6 +92,22 @@ function atualizarSeriesDemoComHistorico() {
     const diasNoMesAtual = new Date(anoAtual, mesAtual + 1, 0).getDate();
     const registrosMensais = registrosHistorico.filter((registro) => registro.tipo === "mensal");
     const registrosDiarios = registrosHistorico.filter((registro) => registro.tipo === "diario" && registro.data.startsWith(`${anoAtual}-${String(mesAtual + 1).padStart(2, "0")}-`));
+    const mensaisPorPeriodo = new Map();
+    const diariosPorData = new Map();
+    registrosMensais.forEach((registro) => {
+        const chave = `${registro.chaveGrandeza}|${registro.data.slice(0, 7)}`;
+        const atual = mensaisPorPeriodo.get(chave);
+        if (!atual || registro.capturadoEm > atual.capturadoEm) {
+            mensaisPorPeriodo.set(chave, registro);
+        }
+    });
+    registrosDiarios.forEach((registro) => {
+        const chave = `${registro.chaveGrandeza}|${registro.data}`;
+        const atual = diariosPorData.get(chave);
+        if (!atual || registro.capturadoEm > atual.capturadoEm) {
+            diariosPorData.set(chave, registro);
+        }
+    });
 
     const montarSerie = (chaveGrandeza, nome, unidade) => {
         const mensais = [];
@@ -99,18 +120,14 @@ function atualizarSeriesDemoComHistorico() {
         }
 
         mesesUltimos12.forEach((periodo) => {
-            const registro = registrosMensais
-                .filter((item) => item.chaveGrandeza === chaveGrandeza && item.data.startsWith(periodo))
-                .sort((primeiro, segundo) => segundo.capturadoEm.localeCompare(primeiro.capturadoEm))[0];
-            mensais.push(registro ? Number(registro.valor) : 0);
+            const registro = mensaisPorPeriodo.get(`${chaveGrandeza}|${periodo}`);
+            mensais.push(registro ? Number(registro.valor) : null);
         });
 
         for (let dia = 1; dia <= diasNoMesAtual; dia++) {
             const data = formatarDataHistorico(anoAtual, mesAtual, dia);
-            const registro = registrosDiarios
-                .filter((item) => item.chaveGrandeza === chaveGrandeza && item.data === data)
-                .sort((primeiro, segundo) => segundo.capturadoEm.localeCompare(primeiro.capturadoEm))[0];
-            diarias.push(registro ? Number(registro.valor) : 0);
+            const registro = diariosPorData.get(`${chaveGrandeza}|${data}`);
+            diarias.push(registro ? Number(registro.valor) : null);
         }
 
         return { nome, unidade, mensal: mensais, diario: diarias };
@@ -119,7 +136,10 @@ function atualizarSeriesDemoComHistorico() {
     const dadosDiaAtual = registrosHistorico.filter((registro) => registro.tipo === "diario" && registro.data === formatarDataHistorico(hoje.getFullYear(), hoje.getMonth(), hoje.getDate()));
     const ultimoCusto = registrosHistorico
         .filter((registro) => registro.tipo === "resumo" && registro.chaveGrandeza === "custo")
-        .sort((primeiro, segundo) => segundo.capturadoEm.localeCompare(primeiro.capturadoEm))[0];
+        .sort((primeiro, segundo) =>
+            segundo.data.localeCompare(primeiro.data) ||
+            segundo.capturadoEm.localeCompare(primeiro.capturadoEm)
+        )[0];
 
     Object.assign(seriesGrandezas, {
         consumo: montarSerie("consumo", "Consumo", "kWh"),
@@ -751,28 +771,44 @@ function carregarHistoricoSalvo() {
             avisoHistorico = `${quantidadeIgnorada.toLocaleString("pt-BR")} ${quantidadeIgnorada === 1 ? "registro inválido foi ignorado" : "registros inválidos foram ignorados"}.`;
         }
 
-            if (registrosHistorico.length === 0) {
-            registrosHistorico = gerarDadosFicticiosHistorico();
+        const demoDesatualizada = registrosHistorico.some((registro) =>
+            registro.origem === "Demonstração" && registro.valor === 0
+        );
+        const precisaAtualizarDemo = !API_CONFIG.baseUrl.trim() && (
+            localStorage.getItem(CHAVE_VERSAO_DEMO) !== VERSAO_DEMO_HISTORICO ||
+            demoDesatualizada ||
+            !registrosHistorico.some((registro) => registro.origem === "Demonstração")
+        );
+
+        if (precisaAtualizarDemo || registrosHistorico.length === 0) {
+            if (precisaAtualizarDemo) {
+                registrosHistorico = registrosHistorico.filter((registro) => registro.origem !== "Demonstração");
+            }
+            registrosHistorico.push(...gerarDadosFicticiosHistorico());
             localStorage.setItem(CHAVE_HISTORICO, JSON.stringify(registrosHistorico));
-            atualizarStatusHistorico(`${registrosHistorico.length.toLocaleString("pt-BR")} registros fictícios foram gerados para todos os dias e meses disponíveis.`);
+            if (!API_CONFIG.baseUrl.trim()) {
+                localStorage.setItem(CHAVE_VERSAO_DEMO, VERSAO_DEMO_HISTORICO);
+            }
+            atualizarStatusHistorico(`${registrosHistorico.length.toLocaleString("pt-BR")} registros fictícios foram gerados ou corrigidos para os dias e meses disponíveis.`);
         } else {
             atualizarStatusHistorico(`${registrosHistorico.length.toLocaleString("pt-BR")} registros recuperados deste navegador.`);
         }
 
-            if (!API_CONFIG.baseUrl.trim()) {
-                atualizarSeriesDemoComHistorico();
-            }
-        } catch (erro) {
-            registrosHistorico = gerarDadosFicticiosHistorico();
-            localStorage.setItem(CHAVE_HISTORICO, JSON.stringify(registrosHistorico));
-            avisoHistorico = `Não foi possível ler o histórico salvo: ${erro.message}`;
-            atualizarStatusHistorico(`${registrosHistorico.length.toLocaleString("pt-BR")} registros fictícios foram gerados após a falha de leitura.`);
-            if (!API_CONFIG.baseUrl.trim()) {
-                atualizarSeriesDemoComHistorico();
-            }
+        if (!API_CONFIG.baseUrl.trim()) {
+            atualizarSeriesDemoComHistorico();
         }
+    } catch (erro) {
+        registrosHistorico = gerarDadosFicticiosHistorico();
+        localStorage.setItem(CHAVE_HISTORICO, JSON.stringify(registrosHistorico));
+        if (!API_CONFIG.baseUrl.trim()) {
+            localStorage.setItem(CHAVE_VERSAO_DEMO, VERSAO_DEMO_HISTORICO);
+            atualizarSeriesDemoComHistorico();
+        }
+        avisoHistorico = `Não foi possível ler o histórico salvo: ${erro.message}`;
+        atualizarStatusHistorico(`${registrosHistorico.length.toLocaleString("pt-BR")} registros fictícios foram gerados após a falha de leitura.`);
+    }
 
-        renderizarHistorico();
+    renderizarHistorico();
 }
 
 // Converte uma data local em formato ISO sem deslocar o dia por fuso horário.
@@ -789,6 +825,9 @@ function registrarHistorico(mes, ano, origem, atualizarInterface = true) {
 
     Object.entries(seriesGrandezas).forEach(([chave, serie]) => {
         serie.mensal.forEach((valor, indice) => {
+            if (!Number.isFinite(valor)) {
+                return;
+            }
             const data = formatarDataHistorico(ano, indice, 1);
             if (origem === "Demonstração" && data > limiteDemo) {
                 return;
@@ -818,6 +857,9 @@ function registrarHistorico(mes, ano, origem, atualizarInterface = true) {
         });
 
         serie.diario.forEach((valor, indice) => {
+            if (!Number.isFinite(valor)) {
+                return;
+            }
             const data = formatarDataHistorico(ano, mes, indice + 1);
             if (origem === "Demonstração" && data > limiteDemo) {
                 return;
@@ -867,6 +909,18 @@ function registrarHistorico(mes, ano, origem, atualizarInterface = true) {
     }
 }
 
+function inicializarFiltrosHistorico() {
+    const filtroGrandeza = document.getElementById("filtroHistoricoGrandeza");
+    const filtroData = document.getElementById("filtroHistoricoData");
+    if (!filtroGrandeza || !filtroData) {
+        return;
+    }
+
+    filtroGrandeza.value = "todas";
+    filtroData.value = "todas";
+    atualizarOpcoesFiltrosHistorico();
+}
+
 // Atualiza o texto de estado da área de histórico.
 function atualizarStatusHistorico(mensagem) {
     const status = document.getElementById("statusHistorico");
@@ -882,15 +936,6 @@ function obterConsumosMensaisHistoricos() {
         .filter((registro) => registro.tipo === "mensal" && registro.chaveGrandeza === "consumo")
         .forEach((registro) => {
             const periodo = registro.data.slice(0, 7);
-            const [ano, mes] = periodo.split("-").map(Number);
-            const primeiroDia = formatarDataHistorico(ano, mes - 1, 1);
-            const ultimoDia = formatarDataHistorico(ano, mes - 1, new Date(ano, mes, 0).getDate());
-            if (intervaloPeriodoAplicado && (
-                ultimoDia < intervaloPeriodoAplicado.inicio ||
-                primeiroDia > intervaloPeriodoAplicado.fim
-            )) {
-                return;
-            }
             const atual = porPeriodo.get(periodo);
             if (!atual || registro.capturadoEm > atual.capturadoEm) {
                 porPeriodo.set(periodo, registro);
@@ -987,6 +1032,65 @@ function renderizarComparacaoHistorico(periodos) {
     });
 }
 
+function atualizarOpcoesFiltrosHistorico() {
+    const filtroGrandeza = document.getElementById("filtroHistoricoGrandeza");
+    const filtroData = document.getElementById("filtroHistoricoData");
+
+    if (!filtroGrandeza || !filtroData) {
+        return;
+    }
+
+    const valoresGrandeza = [...new Set(registrosHistorico.map((registro) => registro.grandeza).filter(Boolean))].sort();
+    const valoresData = [...new Set(registrosHistorico.map((registro) => registro.data.slice(0, 7)).filter(Boolean))].sort().reverse();
+    const valorGrandezaAnterior = filtroGrandeza.value;
+    const valorDataAnterior = filtroData.value;
+
+    filtroGrandeza.replaceChildren();
+    const opcaoTodasGrandezas = document.createElement("option");
+    opcaoTodasGrandezas.value = "todas";
+    opcaoTodasGrandezas.textContent = "Todas";
+    filtroGrandeza.appendChild(opcaoTodasGrandezas);
+    valoresGrandeza.forEach((grandeza) => {
+        const opcao = document.createElement("option");
+        opcao.value = grandeza;
+        opcao.textContent = grandeza;
+        filtroGrandeza.appendChild(opcao);
+    });
+    filtroGrandeza.value = valoresGrandeza.includes(valorGrandezaAnterior) ? valorGrandezaAnterior : "todas";
+
+    filtroData.replaceChildren();
+    const opcaoTodasDatas = document.createElement("option");
+    opcaoTodasDatas.value = "todas";
+    opcaoTodasDatas.textContent = "Todas";
+    filtroData.appendChild(opcaoTodasDatas);
+    valoresData.forEach((data) => {
+        const opcao = document.createElement("option");
+        const [ano, mes] = data.split("-").map(Number);
+        opcao.value = data;
+        opcao.textContent = new Date(ano, mes - 1, 1).toLocaleDateString("pt-BR", {
+            month: "long",
+            year: "numeric"
+        });
+        filtroData.appendChild(opcao);
+    });
+    filtroData.value = valoresData.includes(valorDataAnterior) ? valorDataAnterior : "todas";
+}
+
+function obterRegistrosHistoricoFiltrados() {
+    const filtroGrandeza = document.getElementById("filtroHistoricoGrandeza");
+    const filtroData = document.getElementById("filtroHistoricoData");
+    const grandezaSelecionada = filtroGrandeza?.value || "todas";
+    const dataSelecionada = filtroData?.value || "todas";
+
+    return [...registrosHistorico]
+        .filter((registro) => grandezaSelecionada === "todas" || registro.grandeza === grandezaSelecionada)
+        .filter((registro) => dataSelecionada === "todas" || registro.data.startsWith(dataSelecionada))
+        .sort((primeiro, segundo) =>
+            segundo.data.localeCompare(primeiro.data) ||
+            segundo.capturadoEm.localeCompare(primeiro.capturadoEm)
+        );
+}
+
 // Renderiza uma amostra recente e os dados de comparação a partir do histórico local.
 function renderizarHistorico() {
     const tabela = document.getElementById("listaHistorico");
@@ -997,22 +1101,26 @@ function renderizarHistorico() {
     const periodos = obterConsumosMensaisHistoricos();
     const legenda = document.getElementById("legendaHistorico");
     atualizarOpcoesComparacao(periodos);
+    atualizarOpcoesFiltrosHistorico();
     renderizarComparacaoHistorico(periodos);
     tabela.replaceChildren();
 
-    const registrosRecentes = [...registrosHistorico]
-        .sort((primeiro, segundo) => segundo.capturadoEm.localeCompare(primeiro.capturadoEm))
-        .slice(0, 50);
-    legenda.textContent = registrosHistorico.length > registrosRecentes.length
-        ? `Registros mais recentes (50 de ${registrosHistorico.length.toLocaleString("pt-BR")})`
-        : "Registros mais recentes";
+    const registrosFiltrados = obterRegistrosHistoricoFiltrados();
+    const registrosRecentes = registrosFiltrados.slice(0, 50);
+    const filtroGrandeza = document.getElementById("filtroHistoricoGrandeza")?.value || "todas";
+    const filtroData = document.getElementById("filtroHistoricoData")?.value || "todas";
+    const nomeFiltroGrandeza = filtroGrandeza === "todas" ? "todos os registros" : filtroGrandeza;
+    const nomeFiltroData = filtroData === "todas" ? "todas as datas" : new Date(`${filtroData}-01T00:00:00`).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+    legenda.textContent = registrosFiltrados.length > registrosRecentes.length
+        ? `Registros mais recentes (${registrosRecentes.length.toLocaleString("pt-BR")} de ${registrosFiltrados.length.toLocaleString("pt-BR")}) · ${nomeFiltroGrandeza} · ${nomeFiltroData}`
+        : `Registros mais recentes · ${nomeFiltroGrandeza} · ${nomeFiltroData}`;
 
     if (registrosRecentes.length === 0) {
         const linha = document.createElement("tr");
         const celula = document.createElement("td");
         celula.className = "historico-vazio";
         celula.colSpan = 5;
-        celula.textContent = "Nenhum registro guardado ainda. Atualize os dados para iniciar o histórico.";
+        celula.textContent = "Nenhum registro encontrado para os filtros selecionados.";
         linha.appendChild(celula);
         tabela.appendChild(linha);
         return;
@@ -1046,6 +1154,15 @@ function configurarComparacaoHistorico() {
         document.getElementById(id).addEventListener("change", () => {
             renderizarComparacaoHistorico(obterConsumosMensaisHistoricos());
         });
+    });
+
+    ["filtroHistoricoGrandeza", "filtroHistoricoData"].forEach((id) => {
+        const campo = document.getElementById(id);
+        if (campo) {
+            campo.addEventListener("change", () => {
+                renderizarHistorico();
+            });
+        }
     });
 }
 
@@ -1558,12 +1675,6 @@ async function carregarDadosDashboard() {
     if (!baseUrl) {
         atualizarStatusApi("Exibindo dados de demonstração. Configure a URL em api-config.js para conectar a API.", "demo");
         carregarEstadoDemonstrativo();
-        const [anoSelecionado, mesSelecionado] = intervaloPeriodoAplicado.fim.split("-").map(Number);
-        registrarHistorico(
-            mesSelecionado - 1,
-            anoSelecionado,
-            "Demonstração"
-        );
         atualizarIndicadores();
         desenharGraficos();
         return;
@@ -1711,6 +1822,7 @@ document.addEventListener("DOMContentLoaded", () => {
     configurarSelecaoGrandeza();
     configurarExportacaoHistorico();
     configurarComparacaoHistorico();
+    inicializarFiltrosHistorico();
     carregarHistoricoSalvo();
     aplicarFiltroPeriodo();
     document.getElementById("btnAtualizarDados").addEventListener("click", carregarDadosDashboard);

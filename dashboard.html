@@ -210,6 +210,19 @@
                 <p class="historico-intro">Consulte medições guardadas neste navegador e compare o consumo mensal entre períodos.</p>
                 <p id="statusHistorico" class="historico-status" role="status" aria-live="polite"></p>
 
+                <div class="comparacao-controles historico-filtros" aria-label="Filtrar histórico por grandeza e data">
+                    <label for="filtroHistoricoGrandeza">Grandeza
+                        <select id="filtroHistoricoGrandeza">
+                            <option value="todas">Todas</option>
+                        </select>
+                    </label>
+                    <label for="filtroHistoricoData">Data
+                        <select id="filtroHistoricoData">
+                            <option value="todas">Todas</option>
+                        </select>
+                    </label>
+                </div>
+
                 <!-- Compara duas medições mensais e representa visualmente os valores. -->
                 <section class="comparacao-historico" aria-labelledby="tituloComparacao">
                     <h3 id="tituloComparacao">Comparar períodos</h3>

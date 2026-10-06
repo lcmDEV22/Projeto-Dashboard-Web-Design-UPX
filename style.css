@@ -828,6 +828,34 @@ body.dashboard .historico-status {
     font-size: 0.85rem;
 }
 
+body.dashboard .historico-filtros {
+    margin-bottom: 20px;
+    padding: 16px;
+    border: 1px solid #e3e9e4;
+    border-radius: 8px;
+    background: #f9fbf9;
+}
+
+body.dashboard .historico-filtros label {
+    flex-basis: 220px;
+    color: #53665a;
+}
+
+body.dashboard .historico-filtros select {
+    min-height: 42px;
+    padding: 8px 12px;
+    border: 1px solid #cbd5cd;
+    border-radius: 6px;
+    background: var(--white);
+    color: var(--text);
+    font: inherit;
+}
+
+body.dashboard .historico-filtros select:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
 body.dashboard .comparacao-historico {
     margin-bottom: 24px;
     padding: 18px;
@@ -1122,7 +1150,6 @@ body.dashboard .tabela-historico .historico-vazio {
         padding: 16px;
     }
 }
-
 
 
 
