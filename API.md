@@ -80,7 +80,7 @@ Cada consulta bem-sucedida salva no armazenamento local do navegador as séries 
 
 A seção **Histórico** permite comparar o consumo mensal entre períodos guardados e consultar os 50 registros capturados mais recentemente. O histórico é local a este navegador e não substitui o armazenamento persistente do serviço; para compartilhar dados entre dispositivos ou usuários, a API deve manter seu próprio histórico.
 
-O botão **Exportar histórico** baixa todos os registros locais em CSV, incluindo data, horário de captura e origem.
+O botão **Exportar planilha** baixa todos os registros locais em um arquivo Excel (`.xlsx`) com uma tabela geral na aba **Todos os dados** e uma tabela separada para cada ano disponível. Todas as abas incluem os campos ano, data do período, periodicidade, grandeza, valor, unidade, data e hora da coleta e origem, além de filtros nativos para pesquisar e ordenar os registros. As planilhas têm cabeçalho congelado, larguras padronizadas, formatação de datas e valores numéricos e proteção contra edição acidental, mantendo os filtros e a ordenação disponíveis. A proteção de planilha do Excel não é criptografia e não impede alterações feitas por usuários que saibam removê-la. A exportação inclui o histórico completo, independentemente dos filtros selecionados no dashboard, e recebe a data da exportação no nome do arquivo.
 
 ## Atualização e erros
 

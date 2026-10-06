@@ -1166,42 +1166,249 @@ function configurarComparacaoHistorico() {
     });
 }
 
-// Exporta todos os registros guardados, incluindo os horários e a origem dos dados.
+function escaparTextoXml(valor) {
+    return String(valor)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&apos;");
+}
+
+function calcularCrc32(bytes) {
+    let crc = 0xffffffff;
+    for (const byte of bytes) {
+        crc ^= byte;
+        for (let bit = 0; bit < 8; bit++) {
+            crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0);
+        }
+    }
+    return (crc ^ 0xffffffff) >>> 0;
+}
+
+function empacotarArquivoZip(arquivos) {
+    const codificador = new TextEncoder();
+    const partesLocais = [];
+    const partesDiretorio = [];
+    let deslocamento = 0;
+
+    arquivos.forEach(({ nome, conteudo }) => {
+        const nomeBytes = codificador.encode(nome);
+        const dados = codificador.encode(conteudo);
+        const crc32 = calcularCrc32(dados);
+        const cabecalhoLocal = new Uint8Array(30 + nomeBytes.length);
+        const vistaLocal = new DataView(cabecalhoLocal.buffer);
+        vistaLocal.setUint32(0, 0x04034b50, true);
+        vistaLocal.setUint16(4, 20, true);
+        vistaLocal.setUint16(6, 0x0800, true);
+        vistaLocal.setUint16(8, 0, true);
+        vistaLocal.setUint32(14, crc32, true);
+        vistaLocal.setUint32(18, dados.length, true);
+        vistaLocal.setUint32(22, dados.length, true);
+        vistaLocal.setUint16(26, nomeBytes.length, true);
+        cabecalhoLocal.set(nomeBytes, 30);
+        partesLocais.push(cabecalhoLocal, dados);
+
+        const cabecalhoDiretorio = new Uint8Array(46 + nomeBytes.length);
+        const vistaDiretorio = new DataView(cabecalhoDiretorio.buffer);
+        vistaDiretorio.setUint32(0, 0x02014b50, true);
+        vistaDiretorio.setUint16(4, 20, true);
+        vistaDiretorio.setUint16(6, 20, true);
+        vistaDiretorio.setUint16(8, 0x0800, true);
+        vistaDiretorio.setUint16(10, 0, true);
+        vistaDiretorio.setUint32(16, crc32, true);
+        vistaDiretorio.setUint32(20, dados.length, true);
+        vistaDiretorio.setUint32(24, dados.length, true);
+        vistaDiretorio.setUint16(28, nomeBytes.length, true);
+        vistaDiretorio.setUint32(42, deslocamento, true);
+        cabecalhoDiretorio.set(nomeBytes, 46);
+        partesDiretorio.push(cabecalhoDiretorio);
+        deslocamento += cabecalhoLocal.length + dados.length;
+    });
+
+    const tamanhoDiretorio = partesDiretorio.reduce((total, parte) => total + parte.length, 0);
+    const fimDiretorio = new Uint8Array(22);
+    const vistaFim = new DataView(fimDiretorio.buffer);
+    vistaFim.setUint32(0, 0x06054b50, true);
+    vistaFim.setUint16(8, arquivos.length, true);
+    vistaFim.setUint16(10, arquivos.length, true);
+    vistaFim.setUint32(12, tamanhoDiretorio, true);
+    vistaFim.setUint32(16, deslocamento, true);
+
+    return new Blob([...partesLocais, ...partesDiretorio, fimDiretorio], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    });
+}
+
+function criarXmlFolhaExcel(registros, opcoes) {
+    const colunas = opcoes.colunas;
+    const linhas = [colunas];
+    registros.forEach((registro) => linhas.push(opcoes.mapearRegistro(registro)));
+
+    const gerarCelula = (valor, coluna, linha) => {
+        const referencia = `${String.fromCharCode(64 + coluna)}${linha}`;
+        const estilo = opcoes.estiloColuna?.[coluna - 1] || 0;
+        const atributoEstilo = estilo ? ` s="${estilo}"` : "";
+        if (typeof valor === "number" && Number.isFinite(valor)) {
+            return `<c r="${referencia}"${atributoEstilo}><v>${valor}</v></c>`;
+        }
+        return `<c r="${referencia}" t="inlineStr"${atributoEstilo}><is><t xml:space="preserve">${escaparTextoXml(valor ?? "")}</t></is></c>`;
+    };
+    const xmlLinhas = linhas.map((valores, indice) =>
+        `<row r="${indice + 1}">${valores.map((valor, coluna) => gerarCelula(valor, coluna + 1, indice + 1)).join("")}</row>`
+    ).join("");
+    const ultimaColuna = String.fromCharCode(64 + colunas.length);
+    const largurasColunas = opcoes.larguras
+        .map((largura, indice) => `<col min="${indice + 1}" max="${indice + 1}" width="${largura}" customWidth="1"/>`)
+        .join("");
+    const protecao = `<sheetProtection sheet="1" objects="1" scenarios="1" formatCells="1" formatColumns="1" formatRows="1" insertColumns="1" insertRows="1" insertHyperlinks="1" deleteColumns="1" deleteRows="1" selectLockedCells="0" selectUnlockedCells="0" sort="0" autoFilter="0"/>`;
+
+    return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheetViews><sheetView showGridLines="0" workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft" activeCell="A2" sqref="A2"/></sheetView></sheetViews><sheetFormatPr defaultRowHeight="18"/><cols>${largurasColunas}</cols><sheetData>${xmlLinhas}</sheetData>${protecao}<pageMargins left="0.3" right="0.3" top="0.5" bottom="0.5" header="0.2" footer="0.2"/><tableParts count="1"><tablePart r:id="rId1"/></tableParts></worksheet>`;
+}
+
+function criarXmlTabelaExcel(tabelaId, nome, quantidadeLinhas, colunas) {
+    const ultimaColuna = String.fromCharCode(64 + colunas.length);
+    const referencia = `A1:${ultimaColuna}${quantidadeLinhas + 1}`;
+    const nomesColunas = colunas.map((coluna, indice) =>
+        `<tableColumn id="${indice + 1}" name="${escaparTextoXml(coluna)}"/>`
+    ).join("");
+    return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><table xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" id="${tabelaId}" name="${nome}" displayName="${nome}" ref="${referencia}" totalsRowShown="0"><autoFilter ref="${referencia}"/><tableColumns count="${colunas.length}">${nomesColunas}</tableColumns><tableStyleInfo name="TableStyleMedium2" showFirstColumn="0" showLastColumn="0" showRowStripes="1" showColumnStripes="0"/></table>`;
+}
+
+function serialDataExcel(data) {
+    const [ano, mes, dia] = data.split("-").map(Number);
+    return (Date.UTC(ano, mes - 1, dia) - Date.UTC(1899, 11, 30)) / 86400000;
+}
+
+function serialDataHoraExcel(instante) {
+    const data = new Date(instante);
+    const dia = serialDataExcel(`${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}-${String(data.getDate()).padStart(2, "0")}`);
+    const segundos = data.getHours() * 3600 + data.getMinutes() * 60 + data.getSeconds();
+    return dia + segundos / 86400;
+}
+
+function criarPastaTrabalhoHistorico() {
+    const colunas = ["Ano", "Data do período", "Periodicidade", "Grandeza", "Valor", "Unidade", "Data e hora da coleta", "Origem"];
+    const tipoRegistro = { diario: "Diário", mensal: "Mensal", resumo: "Resumo" };
+    const ordenarRegistros = (registros) => [...registros].sort((primeiro, segundo) =>
+        segundo.data.localeCompare(primeiro.data) ||
+        (tipoRegistro[primeiro.tipo] || primeiro.tipo).localeCompare(tipoRegistro[segundo.tipo] || segundo.tipo) ||
+        primeiro.grandeza.localeCompare(segundo.grandeza) ||
+        segundo.capturadoEm.localeCompare(primeiro.capturadoEm)
+    );
+    const mapearRegistro = (registro) => [
+        Number(registro.data.slice(0, 4)),
+        serialDataExcel(registro.data),
+        tipoRegistro[registro.tipo] || registro.tipo,
+        registro.grandeza,
+        registro.valor,
+        registro.unidade,
+        serialDataHoraExcel(registro.capturadoEm),
+        registro.origem
+    ];
+    const larguras = [10, 16, 16, 22, 16, 12, 24, 18];
+    const arquivos = [];
+    const folhas = [{
+        nome: "Todos os dados",
+        tabela: "TabelaHistoricoCompleto",
+        registros: ordenarRegistros(registrosHistorico)
+    }];
+    const anos = [...new Set(registrosHistorico.map((registro) => Number(registro.data.slice(0, 4))))].sort((a, b) => b - a);
+    anos.forEach((ano) => {
+        folhas.push({
+            nome: String(ano),
+            tabela: `TabelaHistorico${ano}`,
+            registros: ordenarRegistros(registrosHistorico.filter((registro) => registro.data.startsWith(`${ano}-`)))
+        });
+    });
+
+    const workbookSheets = [];
+    const workbookRelationships = [];
+    const contentTypes = ['<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>', '<Default Extension="xml" ContentType="application/xml"/>'];
+    const estilosColunas = [0, 2, 0, 0, 3, 0, 4, 0];
+
+    folhas.forEach((folha, indice) => {
+        const numero = indice + 1;
+        const relId = `rId${numero}`;
+        const tabelaRelId = "rId1";
+        workbookSheets.push(`<sheet name="${escaparTextoXml(folha.nome)}" sheetId="${numero}" r:id="${relId}"/>`);
+        workbookRelationships.push(`<Relationship Id="${relId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${numero}.xml"/>`);
+        contentTypes.push(`<Override PartName="/xl/worksheets/sheet${numero}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`);
+        contentTypes.push(`<Override PartName="/xl/tables/table${numero}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.table+xml"/>`);
+        arquivos.push({
+            nome: `xl/worksheets/sheet${numero}.xml`,
+            conteudo: criarXmlFolhaExcel(folha.registros, {
+                colunas,
+                larguras,
+                estiloColuna: estilosColunas,
+                mapearRegistro
+            })
+        });
+        arquivos.push({
+            nome: `xl/worksheets/_rels/sheet${numero}.xml.rels`,
+            conteudo: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="${tabelaRelId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/table" Target="../tables/table${numero}.xml"/></Relationships>`
+        });
+        arquivos.push({
+            nome: `xl/tables/table${numero}.xml`,
+            conteudo: criarXmlTabelaExcel(numero, folha.tabela, folha.registros.length, colunas)
+        });
+    });
+
+    contentTypes.push('<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>');
+    contentTypes.push('<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>');
+    arquivos.unshift(
+        {
+            nome: "[Content_Types].xml",
+            conteudo: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">${contentTypes.join("")}</Types>`
+        },
+        {
+            nome: "_rels/.rels",
+            conteudo: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'
+        },
+        {
+            nome: "xl/workbook.xml",
+            conteudo: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><bookViews><workbookView activeTab="0"/></bookViews><sheets>${workbookSheets.join("")}</sheets><definedNames><definedName name="_xlnm.Print_Titles" localSheetId="0">'Todos os dados'!$1:$1</definedName></definedNames><calcPr calcId="191029"/></workbook>`
+        },
+        {
+            nome: "xl/_rels/workbook.xml.rels",
+            conteudo: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${workbookRelationships.join("")}<Relationship Id="rIdStyles" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`
+        },
+        {
+            nome: "xl/styles.xml",
+            conteudo: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="2"><numFmt numFmtId="164" formatCode="dd/mm/yyyy"/><numFmt numFmtId="165" formatCode="dd/mm/yyyy hh:mm:ss"/></numFmts><fonts count="2"><font><sz val="11"/><color theme="1"/><name val="Aptos"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Aptos"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="5"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="4" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="165" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'
+        }
+    );
+
+    return empacotarArquivoZip(arquivos);
+}
+
+// Exporta o histórico em tabelas Excel formatadas e protegidas contra edição acidental.
 function exportarHistorico() {
+    const status = document.getElementById("statusExportacao");
     if (registrosHistorico.length === 0) {
-        document.getElementById("statusExportacao").textContent = "Não há registros históricos para exportar.";
+        status.textContent = "Não há registros históricos para exportar.";
         return;
     }
 
-    const linhas = [["Tipo", "Data do período", "Grandeza", "Valor", "Unidade", "Coletado em", "Origem"]];
-    [...registrosHistorico]
-        .sort((primeiro, segundo) => primeiro.data.localeCompare(segundo.data))
-        .forEach((registro) => {
-            linhas.push([
-                registro.tipo,
-                registro.data,
-                registro.grandeza,
-                String(registro.valor),
-                registro.unidade,
-                registro.capturadoEm,
-                registro.origem
-            ]);
-        });
+    try {
+        const arquivo = criarPastaTrabalhoHistorico();
+        const enderecoArquivo = URL.createObjectURL(arquivo);
+        const linkDownload = document.createElement("a");
+        const hoje = new Date();
+        const doisDigitos = (valor) => String(valor).padStart(2, "0");
+        const dataArquivo = `${hoje.getFullYear()}-${doisDigitos(hoje.getMonth() + 1)}-${doisDigitos(hoje.getDate())}`;
 
-    // Usa ponto e vírgula e BOM para abrir acentos corretamente em planilhas locais.
-    const conteudoCsv = `\uFEFF${linhas.map((linha) => linha.join(";")).join("\r\n")}`;
-    const arquivo = new Blob([conteudoCsv], { type: "text/csv;charset=utf-8;" });
-    const enderecoArquivo = URL.createObjectURL(arquivo);
-    const linkDownload = document.createElement("a");
-    const status = document.getElementById("statusExportacao");
-
-    linkDownload.href = enderecoArquivo;
-    linkDownload.download = "historico-consumo.csv";
-    document.body.appendChild(linkDownload);
-    linkDownload.click();
-    linkDownload.remove();
-    window.setTimeout(() => URL.revokeObjectURL(enderecoArquivo), 1000);
-    status.textContent = "Histórico completo exportado em CSV.";
+        linkDownload.href = enderecoArquivo;
+        linkDownload.download = `historico-consumo-${dataArquivo}.xlsx`;
+        document.body.appendChild(linkDownload);
+        linkDownload.click();
+        linkDownload.remove();
+        window.setTimeout(() => URL.revokeObjectURL(enderecoArquivo), 1000);
+        status.textContent = `${registrosHistorico.length.toLocaleString("pt-BR")} registros exportados em planilha protegida.`;
+    } catch (erro) {
+        console.error("Não foi possível gerar a planilha do histórico.", erro);
+        status.textContent = `Não foi possível gerar a planilha: ${erro.message}`;
+    }
 }
 
 // Liga o comando da barra lateral à geração do arquivo CSV.
