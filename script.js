@@ -18,7 +18,7 @@ const dadosDemoDiarios = [
 ];
 const CHAVE_HISTORICO = "dashboardHistoricalReadings";
 const CHAVE_VERSAO_DEMO = "dashboardDemoHistoryVersion";
-const VERSAO_DEMO_HISTORICO = "5";
+const VERSAO_DEMO_HISTORICO = "6";
 const LIMITE_REGISTROS_HISTORICO = 200000;
 const ANO_INICIAL_DADOS_FICTICIOS = 2020;
 let registrosHistorico = [];
@@ -74,6 +74,33 @@ function gerarDadosFicticiosHistorico() {
 
                 // Cria amostras horárias somente para o mês atual, sem aumentar o histórico antigo.
                 if (ano === hoje.getFullYear() && mes === hoje.getMonth()) {
+                    // Os dados demonstrativos mostram uma curva acumulada; não alteram o total diário já salvo.
+                    for (let hora = 0; hora < 24; hora++) {
+                        if (data === hojeFormatado && hora > hoje.getHours()) {
+                            break;
+                        }
+                        const instanteLeitura = new Date(ano, mes, dia, hora).toISOString();
+                        const variacaoHora = Math.sin((hora / 24) * Math.PI * 2);
+                        [
+                            ["consumo", "Consumo", consumoDiario * ((hora + 1) / 24), "kWh"],
+                            ["tensao", "Tensão", tensaoDiaria + variacaoHora * 2, "V"],
+                            ["corrente", "Corrente", correnteDiaria + variacaoHora * 0.2, "A"],
+                            ["potencia", "Potência", potenciaDiaria + variacaoHora * 60, "W"]
+                        ].forEach(([chaveGrandeza, grandeza, valor, unidade]) => {
+                            registros.push({
+                                tipo: "diario",
+                                data,
+                                grandeza,
+                                chaveGrandeza,
+                                valor: Number(valor.toFixed(2)),
+                                unidade,
+                                capturadoEm,
+                                instanteLeitura,
+                                origem: "Demonstração"
+                            });
+                        });
+                    }
+
                     const intensidadeBase = 50 + Math.sin((dia + mes * 2) * 0.72) * 32;
                     const luminosidadeBase = 320 + Math.sin((dia + mes) * 0.68) * 210 + Math.cos(dia * 0.31) * 95;
                     for (let hora = 0; hora < 24; hora++) {
@@ -275,6 +302,14 @@ function atualizarStatusGrafico(canvasId, quantidadePontos, totalPeriodos = quan
         return;
     }
 
+    if (canvasId === "meuGrafico2" && document.getElementById("modoGraficoDiario").value === "horas") {
+        const dataSelecionada = document.getElementById("dataGraficoDiario").value;
+        const dia = dataSelecionada ? dataSelecionada.split("-").reverse().join("/") : "sem dia com amostras";
+        const amostras = quantidadePontos === 1 ? "1 amostra horária" : `${quantidadePontos} amostras horárias`;
+        document.getElementById("periodoGraficoDiario").textContent = `${dia} · ${amostras}.`;
+        return;
+    }
+
     const idStatus = canvasId === "meuGrafico2" ? "periodoGraficoDiario" : "periodoGraficoMensal";
     const status = document.getElementById(idStatus);
     const eDiario = canvasId === "meuGrafico2";
@@ -343,8 +378,51 @@ function atualizarMesesGraficoDiario() {
         ? valorAnterior
         : meses[0]?.periodo || "";
 
-    // Oculta a escolha mensal quando o intervalo contém somente um mês.
-    document.getElementById("controleMesGraficoDiario").hidden = meses.length <= 1;
+    // A escolha mensal só se aplica à série por dia e some quando há apenas um mês.
+    document.getElementById("controleMesGraficoDiario").hidden =
+        document.getElementById("modoGraficoDiario").value === "horas" || meses.length <= 1;
+    atualizarDiasGraficoDiario();
+}
+
+// Preenche as datas que realmente possuem amostras de consumo com horário.
+function atualizarDiasGraficoDiario() {
+    const seletor = document.getElementById("dataGraficoDiario");
+    const modo = document.getElementById("modoGraficoDiario").value;
+    const valorAnterior = seletor.value;
+    const datas = [...new Set(
+        registrosHistorico
+            .filter((registro) =>
+                registro.tipo === "diario" &&
+                registro.chaveGrandeza === grandezaSelecionada &&
+                registro.instanteLeitura &&
+                registro.data >= intervaloPeriodoAplicado.inicio &&
+                registro.data <= intervaloPeriodoAplicado.fim
+            )
+            .map((registro) => registro.data)
+    )].sort();
+
+    seletor.replaceChildren();
+    datas.forEach((data) => {
+        const opcao = document.createElement("option");
+        opcao.value = data;
+        opcao.textContent = new Date(`${data}T00:00:00`).toLocaleDateString("pt-BR", {
+            day: "numeric",
+            month: "long",
+            year: "numeric"
+        });
+        seletor.appendChild(opcao);
+    });
+
+    if (datas.includes(valorAnterior)) {
+        seletor.value = valorAnterior;
+    } else if (datas.length) {
+        seletor.value = datas[datas.length - 1];
+    }
+
+    document.getElementById("controleDataGraficoDiario").hidden = modo !== "horas";
+    seletor.disabled = datas.length === 0;
+    document.getElementById("controleMesGraficoDiario").hidden =
+        modo === "horas" || document.getElementById("mesGraficoDiario").options.length <= 1;
 }
 
 // Expande as medições existentes para cada dia do mês limitado pelo período global.
@@ -376,6 +454,29 @@ function obterSerieDiariaMensal(chaveGrandeza) {
     return serie;
 }
 
+// Retorna os registros de consumo acumulado capturados ao longo de uma data específica.
+function obterSerieConsumoPorHora(data) {
+    if (!data) {
+        return [];
+    }
+
+    return registrosHistorico
+        .filter((registro) =>
+            registro.tipo === "diario" &&
+            registro.chaveGrandeza === grandezaSelecionada &&
+            registro.data === data &&
+            registro.data >= intervaloPeriodoAplicado.inicio &&
+            registro.data <= intervaloPeriodoAplicado.fim &&
+            registro.instanteLeitura
+        )
+        .map((registro) => ({
+            data: registro.data,
+            periodo: registro.instanteLeitura,
+            valor: registro.valor
+        }))
+        .sort((primeiro, segundo) => primeiro.periodo.localeCompare(segundo.periodo));
+}
+
 // Desenha um dos gráficos no canvas recebido.
 function criarGrafico(canvas) {
     // Prepara o canvas para alta densidade de pixels sem alterar seu tamanho visual.
@@ -393,11 +494,16 @@ function criarGrafico(canvas) {
     const isGraficoIntensidade = canvas.id === "meuGraficoIntensidade";
     const isGraficoLuminosidade = canvas.id === "meuGraficoLuminosidade";
     const isGraficoSensorLuz = isGraficoIntensidade || isGraficoLuminosidade;
+    const modoConsumoDiario = isGraficoDiario
+        ? document.getElementById("modoGraficoDiario").value
+        : null;
+    const eixoPorHorario = (isGraficoSensorLuz && document.getElementById(
+        isGraficoIntensidade ? "modoGraficoIntensidade" : "modoGraficoLuminosidade"
+    ).value === "horas") || (isGraficoDiario && modoConsumoDiario === "horas");
     const configuracaoSensor = seletoresSensoresLuz.find(({ canvasId }) => canvasId === canvas.id);
     const modoSensor = isGraficoSensorLuz
         ? document.getElementById(configuracaoSensor.modoId).value
         : null;
-    const eixoPorHorario = isGraficoSensorLuz && modoSensor === "horas";
     const serieSelecionada = isGraficoSensorLuz
         ? {
             nome: isGraficoIntensidade ? "Intensidade da iluminação" : "Luminosidade ambiente (LDR)",
@@ -421,11 +527,13 @@ function criarGrafico(canvas) {
                 ? obterSerieSensorPorHora(configuracaoSensor.chave, document.getElementById(configuracaoSensor.dataId).value)
                 : obterSerieSensorPorDia(configuracaoSensor.chave)
             : isGraficoDiario
-                ? obterSerieDiariaMensal(grandezaSelecionada)
+                ? modoConsumoDiario === "horas"
+                    ? obterSerieConsumoPorHora(document.getElementById("dataGraficoDiario").value)
+                    : obterSerieDiariaMensal(grandezaSelecionada)
                 : obterSerieHistoricaAgrupada(grandezaSelecionada);
         pontosHistoricos = leituras;
         labels = leituras.map((registro) => {
-            if (isGraficoSensorLuz && modoSensor === "horas") {
+            if (eixoPorHorario) {
                 return new Date(registro.periodo).toLocaleTimeString("pt-BR", {
                     hour: "2-digit",
                     minute: "2-digit"
@@ -504,7 +612,7 @@ function criarGrafico(canvas) {
         ctx.fillStyle = "#68776d";
         ctx.font = "14px Poppins, sans-serif";
         ctx.textAlign = "center";
-        ctx.fillText(modoSensor === "horas"
+        ctx.fillText(eixoPorHorario
             ? "Sem leituras horárias neste dia."
             : "Sem medições nesta faixa de datas.", largura / 2, altura / 2);
         atualizarStatusGrafico(canvas.id, 0, labels.length);
@@ -530,9 +638,9 @@ function criarGrafico(canvas) {
             indice: index,
             dia: index + 1,
             periodo: pontosHistoricos
-                ? isGraficoSensorLuz
+                ? eixoPorHorario
                     ? pontosHistoricos[index].periodo
-                    : isGraficoDiario ? pontosHistoricos[index].data : pontosHistoricos[index].periodo
+                    : isGraficoSensorLuz || isGraficoDiario ? pontosHistoricos[index].data : pontosHistoricos[index].periodo
                 : null
         };
     });
@@ -545,23 +653,32 @@ function criarGrafico(canvas) {
         unidade: serieSelecionada.unidade,
         mes: mesSelecionado,
         ano: anoSelecionado,
-        periodicidade: isGraficoSensorLuz && modoSensor === "horas"
+        periodicidade: eixoPorHorario
             ? "horario"
             : isGraficoDiario || isGraficoSensorLuz ? "diario" : "mensal"
     });
     if (isGraficoDiario && intervaloPeriodoAplicado) {
-        const limites = obterLimitesMesDiario();
         const diasComDados = valores.filter(Number.isFinite).length;
-        const totalDias = labels.length;
-        const nomeMes = new Date(limites.ano, limites.mes - 1, 1).toLocaleDateString("pt-BR", {
-            month: "long",
-            year: "numeric"
-        });
-        const faixa = limites.inicio === limites.fim
-            ? limites.inicio.split("-").reverse().join("/")
-            : `${limites.inicio.split("-").reverse().join("/")} a ${limites.fim.split("-").reverse().join("/")}`;
-        document.getElementById("periodoGraficoDiario").textContent =
-            `${nomeMes} · ${faixa} · dados em ${diasComDados} de ${totalDias} dias.`;
+        if (eixoPorHorario) {
+            const dataSelecionada = document.getElementById("dataGraficoDiario").value;
+            const rotuloData = dataSelecionada
+                ? new Date(`${dataSelecionada}T00:00:00`).toLocaleDateString("pt-BR")
+                : "sem dia com amostras";
+            document.getElementById("periodoGraficoDiario").textContent =
+                `${rotuloData} · ${diasComDados} ${diasComDados === 1 ? "amostra horária" : "amostras horárias"}.`;
+        } else {
+            const limites = obterLimitesMesDiario();
+            const totalDias = labels.length;
+            const nomeMes = new Date(limites.ano, limites.mes - 1, 1).toLocaleDateString("pt-BR", {
+                month: "long",
+                year: "numeric"
+            });
+            const faixa = limites.inicio === limites.fim
+                ? limites.inicio.split("-").reverse().join("/")
+                : `${limites.inicio.split("-").reverse().join("/")} a ${limites.fim.split("-").reverse().join("/")}`;
+            document.getElementById("periodoGraficoDiario").textContent =
+                `${nomeMes} · ${faixa} · dados em ${diasComDados} de ${totalDias} dias.`;
+        }
     } else {
         atualizarStatusGrafico(canvas.id, valores.filter(Number.isFinite).length, labels.length);
     }
@@ -887,6 +1004,7 @@ function configurarSelecaoGrandeza() {
             seletores.forEach((outroSeletor) => {
                 outroSeletor.value = grandezaSelecionada;
             });
+            atualizarDiasGraficoDiario();
             desenharGraficos();
         });
     });
@@ -1028,6 +1146,13 @@ function registrarHistorico(mes, ano, origem, atualizarInterface = true, estadoL
             if (origem === "Demonstração" && data > limiteDemo) {
                 return;
             }
+            const instanteLeitura = estadoLeitura.atualizadoEm || capturadoEm;
+            const dataInstanteLeitura = new Date(instanteLeitura);
+            const dataLeitura = formatarDataHistorico(
+                dataInstanteLeitura.getFullYear(),
+                dataInstanteLeitura.getMonth(),
+                dataInstanteLeitura.getDate()
+            );
             novosRegistros.push({
                 tipo: "diario",
                 data,
@@ -1036,6 +1161,7 @@ function registrarHistorico(mes, ano, origem, atualizarInterface = true, estadoL
                 valor,
                 unidade: serie.unidade,
                 capturadoEm,
+                ...(data === dataLeitura ? { instanteLeitura } : {}),
                 origem
             });
         });
@@ -1077,9 +1203,7 @@ function registrarHistorico(mes, ano, origem, atualizarInterface = true, estadoL
 
     // Atualiza a leitura mais recente do mesmo dia, métrica e origem sem duplicar a tabela.
     const criarChaveRegistro = (registro) => {
-        const leituraPorHorario = ["intensidade", "luminosidade"].includes(registro.chaveGrandeza)
-            ? registro.instanteLeitura || "dia"
-            : "";
+        const leituraPorHorario = registro.instanteLeitura || "";
         return `${registro.tipo}|${registro.data}|${registro.chaveGrandeza}|${registro.origem}|${leituraPorHorario}`;
     };
     const registrosPorChave = new Map(registrosHistorico
@@ -1102,6 +1226,7 @@ function registrarHistorico(mes, ano, origem, atualizarInterface = true, estadoL
     }
 
     if (atualizarInterface) {
+        atualizarMesesGraficoDiario();
         atualizarControlesGraficosSensores();
         renderizarHistorico();
         if (intervaloPeriodoAplicado) {
@@ -2178,6 +2303,19 @@ function configurarFiltroPeriodo() {
             criarGrafico(graficoDiario);
         }
     });
+    document.getElementById("modoGraficoDiario").addEventListener("change", () => {
+        atualizarMesesGraficoDiario();
+        const graficoDiario = document.getElementById("meuGrafico2");
+        if (graficoDiario.clientWidth > 0) {
+            criarGrafico(graficoDiario);
+        }
+    });
+    document.getElementById("dataGraficoDiario").addEventListener("change", () => {
+        const graficoDiario = document.getElementById("meuGrafico2");
+        if (graficoDiario.clientWidth > 0) {
+            criarGrafico(graficoDiario);
+        }
+    });
 
     // Inicializa o estado aplicado com o mês atual para manter os cards sincronizados.
     intervaloPeriodoAplicado = {
@@ -2319,6 +2457,7 @@ async function carregarDadosDashboard() {
         periodoDadosCarregados = ultimoMes;
         atualizarEstadoAtual();
         atualizarIndicadores();
+        atualizarMesesGraficoDiario();
         atualizarControlesGraficosSensores();
         desenharGraficos();
         botaoExportar.disabled = false;

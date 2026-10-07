@@ -772,7 +772,8 @@ body.dashboard .chart-panel h2 {
 }
 
 /* Coloca os gráficos dos sensores lado a lado em telas largas. */
-body.dashboard .graficos-iluminacao-grid {
+body.dashboard .graficos-iluminacao-grid,
+body.dashboard .graficos-consumo-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 20px;
@@ -790,6 +791,31 @@ body.dashboard .grafico-sensor h3 {
     margin-bottom: 14px;
     color: var(--text);
     font-size: 1rem;
+}
+
+/* Mantém as duas leituras de consumo alinhadas sem alterar seus valores ou filtros. */
+body.dashboard .painel-consumo .controles-consumo {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0 0 12px;
+}
+
+body.dashboard .painel-consumo .controles-consumo label {
+    display: grid;
+    flex: 1 1 140px;
+    gap: 4px;
+}
+
+body.dashboard .painel-consumo .controles-consumo label[hidden] {
+    display: none;
+}
+
+body.dashboard .painel-consumo .controles-consumo .seletor-temporal,
+body.dashboard .painel-consumo .controles-consumo .seletor-mes,
+body.dashboard .painel-consumo .controles-consumo .seletor-grandeza {
+    width: 100%;
+    min-height: 40px;
 }
 
 /* Mantém os controles de período fáceis de usar em desktop e celular. */
@@ -851,19 +877,20 @@ body.dashboard .chart-toolbar label {
 }
 
 /* Mantém mês e grandeza utilizáveis lado a lado ou empilhados no gráfico diário. */
-body.dashboard #secaoGraficoDiario .chart-toolbar {
+body.dashboard #secaoGraficosConsumo .controles-consumo {
     justify-content: flex-start;
     flex-wrap: wrap;
     gap: 10px 16px;
 }
 
-body.dashboard #secaoGraficoDiario .chart-toolbar label {
+body.dashboard #secaoGraficosConsumo .controles-consumo label {
     display: grid;
     flex: 1 1 180px;
     gap: 4px;
 }
 
-body.dashboard #secaoGraficoDiario #controleMesGraficoDiario[hidden] {
+body.dashboard #secaoGraficosConsumo #controleMesGraficoDiario[hidden],
+body.dashboard #secaoGraficosConsumo #controleDataGraficoDiario[hidden] {
     display: none;
 }
 
@@ -878,11 +905,11 @@ body.dashboard .seletor-grandeza {
     font: inherit;
 }
 
-body.dashboard #secaoGraficoDiario .seletor-grandeza {
+body.dashboard #secaoGraficosConsumo .seletor-grandeza {
     width: 100%;
 }
 
-body.dashboard #secaoGraficoDiario .seletor-mes {
+body.dashboard #secaoGraficosConsumo .seletor-mes {
     width: 100%;
     min-height: 40px;
     padding: 8px 10px;
@@ -1119,7 +1146,8 @@ body.dashboard .tabela-historico .historico-vazio {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    body.dashboard .graficos-iluminacao-grid {
+    body.dashboard .graficos-iluminacao-grid,
+    body.dashboard .graficos-consumo-grid {
         grid-template-columns: 1fr;
     }
 }
@@ -1299,7 +1327,6 @@ body.dashboard .tabela-historico .historico-vazio {
 #statusIluminacao {
     margin-top: 4px;
 }
-
 
 
 

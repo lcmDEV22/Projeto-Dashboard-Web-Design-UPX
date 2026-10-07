@@ -24,13 +24,9 @@
                     <span class="sidebar-link-icon" aria-hidden="true">R</span>
                     Resumo atual
                 </button>
-                <button class="sidebar-link" type="button" data-chart-target="secaoGraficoMensal" aria-controls="secaoGraficoMensal" aria-pressed="false">
+                <button class="sidebar-link" type="button" data-chart-target="secaoGraficosConsumo" aria-controls="secaoGraficosConsumo" aria-pressed="false">
                     <span class="sidebar-link-icon" aria-hidden="true">M</span>
-                    Consumo mensal
-                </button>
-                <button class="sidebar-link" type="button" data-chart-target="secaoGraficoDiario" aria-controls="secaoGraficoDiario" aria-pressed="false">
-                    <span class="sidebar-link-icon" aria-hidden="true">D</span>
-                    Consumo diário
+                    Consumo
                 </button>
                 <button class="sidebar-link" type="button" data-chart-target="secaoGraficosIluminacao" aria-controls="secaoGraficosIluminacao" aria-pressed="false">
                     <span class="sidebar-link-icon" aria-hidden="true">L</span>
@@ -165,49 +161,65 @@
                 </div>
             </section>
 
-            <!-- Os gráficos compartilham o intervalo configurado no filtro global. -->
-            <section class="chart-panel" id="secaoGraficoMensal" aria-labelledby="tituloGraficoMensal" hidden>
-                <h2 id="tituloGraficoMensal">Consumo Mensal</h2>
-                <p id="periodoGraficoMensal" class="chart-period-status"></p>
-                <!-- Permite trocar a grandeza exibida no gráfico mensal. -->
-                <div class="chart-toolbar">
-                    <label for="grandezaGraficoMensal">
-                        <select id="grandezaGraficoMensal" class="seletor-grandeza">
-                            <option value="consumo">Consumo (kWh)</option>
-                            <option value="tensao">Tensão (V)</option>
-                            <option value="corrente">Corrente (A)</option>
-                            <option value="potencia">Potência (W)</option>
-                        </select>
-                    </label>
-                </div>
-                <div class="grafico-wrapper">
-                    <canvas id="meuGrafico" aria-label="Gráfico de consumo mensal"></canvas>
-                    <div id="tooltipGraficoMensal" class="tooltip-grafico" role="status" aria-live="polite" hidden></div>
-                </div>
-            </section>
+            <!-- Reúne os dois períodos de consumo; o seletor temporal existe apenas no gráfico diário. -->
+            <section class="chart-panel painel-consumo" id="secaoGraficosConsumo" aria-labelledby="tituloGraficosConsumo" hidden>
+                <h2 id="tituloGraficosConsumo">Consumo de energia</h2>
+                <div class="graficos-consumo-grid">
+                    <section class="grafico-sensor" aria-labelledby="tituloGraficoMensal">
+                        <h3 id="tituloGraficoMensal">Consumo Mensal</h3>
+                        <p id="periodoGraficoMensal" class="chart-period-status"></p>
+                        <!-- Mantém a seleção de grandeza disponível como antes. -->
+                        <div class="chart-toolbar">
+                            <label for="grandezaGraficoMensal">
+                                <select id="grandezaGraficoMensal" class="seletor-grandeza">
+                                    <option value="consumo">Consumo (kWh)</option>
+                                    <option value="tensao">Tensão (V)</option>
+                                    <option value="corrente">Corrente (A)</option>
+                                    <option value="potencia">Potência (W)</option>
+                                </select>
+                            </label>
+                        </div>
+                        <div class="grafico-wrapper">
+                            <canvas id="meuGrafico" aria-label="Gráfico de consumo mensal"></canvas>
+                            <div class="tooltip-grafico" role="status" aria-live="polite" hidden></div>
+                        </div>
+                    </section>
 
-            <section class="chart-panel" id="secaoGraficoDiario" aria-labelledby="tituloGraficoDiario" hidden>
-                <h2 id="tituloGraficoDiario">Consumo Diário</h2>
-                <p id="periodoGraficoDiario" class="chart-period-status"></p>
-                <!-- O mês é restrito ao intervalo global; grandeza permanece sincronizada com o gráfico mensal. -->
-                <div class="chart-toolbar">
-                    <label id="controleMesGraficoDiario" for="mesGraficoDiario" hidden>
-                        Mês do intervalo
-                        <select id="mesGraficoDiario" class="seletor-mes"></select>
-                    </label>
-                    <label for="grandezaGraficoDiario">
-                        Grandeza
-                        <select id="grandezaGraficoDiario" class="seletor-grandeza">
-                            <option value="consumo">Consumo (kWh)</option>
-                            <option value="tensao">Tensão (V)</option>
-                            <option value="corrente">Corrente (A)</option>
-                            <option value="potencia">Potência (W)</option>
-                        </select>
-                    </label>
-                </div>
-                <div class="grafico-wrapper">
-                    <canvas id="meuGrafico2" aria-label="Gráfico de consumo diário"></canvas>
-                    <div id="tooltipGraficoDiario" class="tooltip-grafico" role="status" aria-live="polite" hidden></div>
+                    <section class="grafico-sensor" aria-labelledby="tituloGraficoDiario">
+                        <h3 id="tituloGraficoDiario">Consumo Diário</h3>
+                        <p id="periodoGraficoDiario" class="chart-period-status"></p>
+                        <!-- O gráfico diário pode alternar entre o total por dia e as amostras ao longo do dia. -->
+                        <div class="chart-toolbar controles-consumo">
+                            <label for="modoGraficoDiario">Visualizar
+                                <select id="modoGraficoDiario" class="seletor-temporal">
+                                    <option value="dias">Por dia</option>
+                                    <option value="horas">Por horário</option>
+                                </select>
+                            </label>
+                            <label id="controleDataGraficoDiario" for="dataGraficoDiario" hidden>
+                                Dia
+                                <select id="dataGraficoDiario" class="seletor-temporal"></select>
+                            </label>
+                            <label id="controleMesGraficoDiario" for="mesGraficoDiario" hidden>
+                                Mês do intervalo
+                                <select id="mesGraficoDiario" class="seletor-mes"></select>
+                            </label>
+                            <label for="grandezaGraficoDiario">
+                                Grandeza
+                                <select id="grandezaGraficoDiario" class="seletor-grandeza">
+                                    <option value="consumo">Consumo (kWh)</option>
+                                    <option value="tensao">Tensão (V)</option>
+                                    <option value="corrente">Corrente (A)</option>
+                                    <option value="potencia">Potência (W)</option>
+                                </select>
+                            </label>
+                        </div>
+                        <p class="chart-period-status">No modo por horário, o gráfico mostra amostras registradas ao longo do dia.</p>
+                        <div class="grafico-wrapper">
+                            <canvas id="meuGrafico2" aria-label="Gráfico diário com opção de visualizar por dia ou horário"></canvas>
+                            <div class="tooltip-grafico" role="status" aria-live="polite" hidden></div>
+                        </div>
+                    </section>
                 </div>
             </section>
 
