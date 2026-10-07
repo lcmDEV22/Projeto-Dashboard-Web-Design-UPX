@@ -1,6 +1,8 @@
 const canvases = [
     document.getElementById("meuGrafico"),
-    document.getElementById("meuGrafico2")
+    document.getElementById("meuGrafico2"),
+    document.getElementById("meuGraficoIntensidade"),
+    document.getElementById("meuGraficoLuminosidade")
 ].filter(Boolean);
 const dadosGraficos = new Map();
 const nomesMeses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
@@ -12,7 +14,7 @@ const dadosDemoDiarios = [
 ];
 const CHAVE_HISTORICO = "dashboardHistoricalReadings";
 const CHAVE_VERSAO_DEMO = "dashboardDemoHistoryVersion";
-const VERSAO_DEMO_HISTORICO = "2";
+const VERSAO_DEMO_HISTORICO = "4";
 const LIMITE_REGISTROS_HISTORICO = 200000;
 const ANO_INICIAL_DADOS_FICTICIOS = 2020;
 let registrosHistorico = [];
@@ -60,7 +62,10 @@ function gerarDadosFicticiosHistorico() {
                     { tipo: "diario", data, grandeza: "Consumo", chaveGrandeza: "consumo", valor: consumoDiario, unidade: "kWh", capturadoEm, origem: "Demonstração" },
                     { tipo: "diario", data, grandeza: "Tensão", chaveGrandeza: "tensao", valor: tensaoDiaria, unidade: "V", capturadoEm, origem: "Demonstração" },
                     { tipo: "diario", data, grandeza: "Corrente", chaveGrandeza: "corrente", valor: correnteDiaria, unidade: "A", capturadoEm, origem: "Demonstração" },
-                    { tipo: "diario", data, grandeza: "Potência", chaveGrandeza: "potencia", valor: potenciaDiaria, unidade: "W", capturadoEm, origem: "Demonstração" }
+                    { tipo: "diario", data, grandeza: "Potência", chaveGrandeza: "potencia", valor: potenciaDiaria, unidade: "W", capturadoEm, origem: "Demonstração" },
+                    // Os exemplos mantêm históricos demonstrativos separados para os dois sensores de luz.
+                    { tipo: "diario", data, grandeza: "Intensidade da iluminação", chaveGrandeza: "intensidade", valor: Number((50 + Math.sin((dia + mes * 2) * 0.72) * 32).toFixed(1)), unidade: "%", capturadoEm, origem: "Demonstração" },
+                    { tipo: "diario", data, grandeza: "Luminosidade ambiente (LDR)", chaveGrandeza: "luminosidade", valor: Number((320 + Math.sin((dia + mes) * 0.68) * 210 + Math.cos(dia * 0.31) * 95).toFixed(1)), unidade: "lux", capturadoEm, origem: "Demonstração" }
                 );
             }
 
@@ -203,6 +208,26 @@ function atualizarStatusGrafico(canvasId, quantidadePontos, totalPeriodos = quan
         return;
     }
 
+    if (canvasId === "meuGraficoIntensidade") {
+        const status = document.getElementById("periodoGraficoIntensidade");
+        const periodo = `${intervaloPeriodoAplicado.inicio.split("-").reverse().join("/")} a ${intervaloPeriodoAplicado.fim.split("-").reverse().join("/")}`;
+        const leituras = quantidadePontos === 1
+            ? "1 leitura registrada"
+            : `${quantidadePontos} leituras registradas`;
+        status.textContent = `${periodo} · ${leituras} no intervalo.`;
+        return;
+    }
+
+    if (canvasId === "meuGraficoLuminosidade") {
+        const status = document.getElementById("periodoGraficoLuminosidade");
+        const periodo = `${intervaloPeriodoAplicado.inicio.split("-").reverse().join("/")} a ${intervaloPeriodoAplicado.fim.split("-").reverse().join("/")}`;
+        const leituras = quantidadePontos === 1
+            ? "1 leitura do LDR"
+            : `${quantidadePontos} leituras do LDR`;
+        status.textContent = `${periodo} · ${leituras} no intervalo.`;
+        return;
+    }
+
     const idStatus = canvasId === "meuGrafico2" ? "periodoGraficoDiario" : "periodoGraficoMensal";
     const status = document.getElementById(idStatus);
     const eDiario = canvasId === "meuGrafico2";
@@ -317,7 +342,17 @@ function criarGrafico(canvas) {
     ctx.scale(proporcao, proporcao);
 
     const isGraficoDiario = canvas.id === "meuGrafico2";
-    const serieSelecionada = seriesGrandezas[grandezaSelecionada];
+    // A intensidade usa leituras diárias e mantém a escala percentual fixa entre 0 e 100.
+    const isGraficoIntensidade = canvas.id === "meuGraficoIntensidade";
+    const isGraficoLuminosidade = canvas.id === "meuGraficoLuminosidade";
+    const serieSelecionada = isGraficoIntensidade || isGraficoLuminosidade
+        ? {
+            nome: isGraficoIntensidade ? "Intensidade da iluminação" : "Luminosidade ambiente (LDR)",
+            unidade: isGraficoIntensidade ? "%" : "lux",
+            mensal: [],
+            diario: []
+        }
+        : seriesGrandezas[grandezaSelecionada];
     let dias = [];
     let valoresDiarios = serieSelecionada.diario;
     let labels;
@@ -326,15 +361,28 @@ function criarGrafico(canvas) {
     let mesSelecionado = null;
     let anoSelecionado = null;
 
-    if (intervaloPeriodoAplicado) {
-        // O gráfico diário mostra todos os dias do mês escolhido, com lacunas sem dados preservadas.
-        const leituras = isGraficoDiario
-            ? obterSerieDiariaMensal(grandezaSelecionada)
-            : obterSerieHistoricaAgrupada(grandezaSelecionada);
+    if (intervaloPeriodoAplicado || isGraficoIntensidade) {
+        // Seleciona leituras do intervalo; os gráficos diários preservam as datas sem medição.
+        const leituras = isGraficoIntensidade || isGraficoLuminosidade
+            ? obterRegistrosDiariosFiltrados(isGraficoIntensidade ? "intensidade" : "luminosidade").map((registro) => ({
+                data: registro.data,
+                valor: registro.valor
+            }))
+            : isGraficoDiario
+                ? obterSerieDiariaMensal(grandezaSelecionada)
+                : obterSerieHistoricaAgrupada(grandezaSelecionada);
         pontosHistoricos = leituras;
         labels = leituras.map((registro) => {
-            const data = isGraficoDiario ? registro.data : `${registro.periodo}-01`;
+            const data = isGraficoDiario || isGraficoIntensidade || isGraficoLuminosidade
+                ? registro.data
+                : `${registro.periodo}-01`;
             const [ano, mes, dia] = data.split("-").map(Number);
+            if (isGraficoIntensidade || isGraficoLuminosidade) {
+                const incluirAno = intervaloPeriodoAplicado.inicio.slice(0, 4) !== intervaloPeriodoAplicado.fim.slice(0, 4);
+                return incluirAno
+                    ? `${String(dia).padStart(2, "0")}/${String(mes).padStart(2, "0")}/${String(ano).slice(-2)}`
+                    : `${String(dia).padStart(2, "0")}/${String(mes).padStart(2, "0")}`;
+            }
             return isGraficoDiario
                 ? String(dia).padStart(2, "0")
                 : largura < 520
@@ -360,7 +408,7 @@ function criarGrafico(canvas) {
     }
 
     const intervaloRotulos = intervaloPeriodoAplicado
-        ? isGraficoDiario ? Math.max(1, Math.ceil(labels.length / 8)) : 1
+        ? isGraficoDiario || isGraficoIntensidade || isGraficoLuminosidade ? Math.max(1, Math.ceil(labels.length / 8)) : 1
         : isGraficoDiario ? 5 : 1;
 
     // Reserva espaço para os eixos e calcula a escala vertical do gráfico.
@@ -370,7 +418,18 @@ function criarGrafico(canvas) {
     const margemInferior = 45;
     const larguraGrafico = largura - margemEsquerda - margemDireita;
     const alturaGrafico = altura - margemSuperior - margemInferior;
-    const maiorValor = Math.max(1, ...valores.filter(Number.isFinite));
+    const valoresValidos = valores.filter(Number.isFinite);
+    let maiorValor = Math.max(1, ...valoresValidos);
+    if (isGraficoIntensidade) {
+        maiorValor = 100;
+    } else if (isGraficoLuminosidade) {
+        // Arredonda o teto do eixo em intervalos legíveis, de acordo com os lux registrados.
+        const passoBruto = Math.max(5, maiorValor) / 5;
+        const ordem = 10 ** Math.floor(Math.log10(passoBruto));
+        const passoNormalizado = passoBruto / ordem;
+        const passo = (passoNormalizado <= 1 ? 1 : passoNormalizado <= 2 ? 2 : passoNormalizado <= 5 ? 5 : 10) * ordem;
+        maiorValor = Math.ceil(maiorValor / (passo * 5)) * passo * 5;
+    }
     const quantidadeLinhas = 5;
 
     // Informa com clareza quando o intervalo ainda não tem medições guardadas.
@@ -403,7 +462,9 @@ function criarGrafico(canvas) {
         valor,
         indice: index,
         dia: index + 1,
-        periodo: pontosHistoricos ? (isGraficoDiario ? pontosHistoricos[index].data : pontosHistoricos[index].periodo) : null
+        periodo: pontosHistoricos
+            ? (isGraficoDiario || isGraficoIntensidade || isGraficoLuminosidade ? pontosHistoricos[index].data : pontosHistoricos[index].periodo)
+            : null
     }));
 
     // Armazena os dados e a posição de cada canvas para alimentar seu tooltip.
@@ -414,7 +475,7 @@ function criarGrafico(canvas) {
         unidade: serieSelecionada.unidade,
         mes: mesSelecionado,
         ano: anoSelecionado,
-        periodicidade: isGraficoDiario ? "diario" : "mensal"
+        periodicidade: isGraficoDiario || isGraficoIntensidade || isGraficoLuminosidade ? "diario" : "mensal"
     });
     if (isGraficoDiario && intervaloPeriodoAplicado) {
         const limites = obterLimitesMesDiario();
@@ -463,7 +524,7 @@ function criarGrafico(canvas) {
     }
 
     // Distribui os rótulos do eixo horizontal e omite alguns dias para evitar sobreposição.
-    if (intervaloPeriodoAplicado && !isGraficoDiario && labels.length > 8) {
+    if (intervaloPeriodoAplicado && !isGraficoDiario && !isGraficoIntensidade && !isGraficoLuminosidade && labels.length > 8) {
         ctx.font = "8px Poppins, sans-serif";
     }
     ctx.textAlign = "center";
@@ -581,7 +642,7 @@ function localizarPontoProximo(x, y, dadosGrafico) {
     return resultado;
 }
 
-// Exibe o período e o consumo corretos para a série mensal ou diária.
+// Exibe a data e o valor corretos para séries diárias ou mensais.
 function atualizarTooltipGrafico(evento) {
     const canvas = evento.currentTarget;
     const tooltip = canvas.parentElement.querySelector(".tooltip-grafico");
@@ -817,7 +878,7 @@ function formatarDataHistorico(ano, mes, dia) {
 }
 
 // Guarda snapshots mensais e diários com a data consultada e a hora da captura.
-function registrarHistorico(mes, ano, origem, atualizarInterface = true) {
+function registrarHistorico(mes, ano, origem, atualizarInterface = true, estadoLeitura = estadoAtual) {
     const capturadoEm = new Date().toISOString();
     const hoje = new Date();
     const limiteDemo = formatarDataHistorico(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
@@ -876,6 +937,36 @@ function registrarHistorico(mes, ano, origem, atualizarInterface = true) {
             });
         });
     });
+
+    // Salva a intensidade recebida com a data real da leitura para alimentar a série temporal.
+    if (Number.isFinite(estadoLeitura.intensidadePercentual)) {
+        const dataLeitura = new Date(estadoLeitura.atualizadoEm || capturadoEm);
+        novosRegistros.push({
+            tipo: "diario",
+            data: formatarDataHistorico(dataLeitura.getFullYear(), dataLeitura.getMonth(), dataLeitura.getDate()),
+            grandeza: "Intensidade da iluminação",
+            chaveGrandeza: "intensidade",
+            valor: estadoLeitura.intensidadePercentual,
+            unidade: "%",
+            capturadoEm,
+            origem
+        });
+    }
+
+    // Salva cada leitura do LDR usando a data informada pelo dispositivo, quando disponível.
+    if (Number.isFinite(estadoLeitura.luminosidadeLux)) {
+        const dataLeitura = new Date(estadoLeitura.atualizadoEm || capturadoEm);
+        novosRegistros.push({
+            tipo: "diario",
+            data: formatarDataHistorico(dataLeitura.getFullYear(), dataLeitura.getMonth(), dataLeitura.getDate()),
+            grandeza: "Luminosidade ambiente (LDR)",
+            chaveGrandeza: "luminosidade",
+            valor: estadoLeitura.luminosidadeLux,
+            unidade: "lux",
+            capturadoEm,
+            origem
+        });
+    }
 
     // Atualiza a leitura mais recente do mesmo dia, métrica e origem sem duplicar a tabela.
     const registrosPorChave = new Map(registrosHistorico
@@ -1985,7 +2076,7 @@ async function carregarDadosDashboard() {
                 const dados = normalizarRespostaApi(await respostaHttp.json(), mes, ano);
                 Object.assign(seriesGrandezas, dados.metricas);
                 resumoConsumo = dados.resumo;
-                registrarHistorico(mes, ano, "API", false);
+                registrarHistorico(mes, ano, "API", false, dados.estadoAtual);
                 if (ano === ultimoMes.ano && mes === ultimoMes.mes) {
                     dadosMesFinal = dados;
                 }

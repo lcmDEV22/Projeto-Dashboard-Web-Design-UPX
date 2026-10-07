@@ -76,7 +76,9 @@ O resumo informa quantos dias têm medições. O custo soma apenas meses complet
 
 ## Histórico no dashboard
 
-Cada consulta bem-sucedida salva no armazenamento local do navegador as séries mensais do ano e as séries diárias do mês consultado, com a data do período, horário de captura, grandeza e origem (API ou demonstração). Uma nova consulta atualiza a leitura correspondente à mesma data, grandeza e origem; o dashboard mantém até 5.000 registros por navegador.
+Cada consulta bem-sucedida salva no armazenamento local do navegador as séries mensais do ano e as séries diárias do mês consultado, com a data do período, horário de captura, grandeza e origem (API ou demonstração). A intensidade percentual e a luminosidade ambiente de `currentState` também são registradas como leituras diárias sempre que uma consulta bem-sucedida as fornece. Uma nova consulta atualiza a leitura correspondente à mesma data, grandeza e origem; o dashboard mantém até 5.000 registros por navegador.
+
+O painel **Intensidade da iluminação** plota as leituras registradas em porcentagem ao longo do intervalo selecionado, com escala de 0% a 100%. O painel **Luminosidade ambiente (LDR)** plota as leituras históricas em lux, usando datas no eixo horizontal e uma escala vertical ajustada aos valores registrados. Os históricos reais desses gráficos são atualizados a cada consulta bem-sucedida que inclui os campos correspondentes; sem API configurada, são exibidos valores diários demonstrativos.
 
 A seção **Histórico** permite comparar o consumo mensal entre períodos guardados e consultar os 50 registros capturados mais recentemente. O histórico é local a este navegador e não substitui o armazenamento persistente do serviço; para compartilhar dados entre dispositivos ou usuários, a API deve manter seu próprio histórico.
 

@@ -32,6 +32,14 @@
                     <span class="sidebar-link-icon" aria-hidden="true">D</span>
                     Consumo diário
                 </button>
+                <button class="sidebar-link" type="button" data-chart-target="secaoGraficoIntensidade" aria-controls="secaoGraficoIntensidade" aria-pressed="false">
+                    <span class="sidebar-link-icon" aria-hidden="true">I</span>
+                    Intensidade da iluminação
+                </button>
+                <button class="sidebar-link" type="button" data-chart-target="secaoGraficoLuminosidade" aria-controls="secaoGraficoLuminosidade" aria-pressed="false">
+                    <span class="sidebar-link-icon" aria-hidden="true">L</span>
+                    Luminosidade (LDR)
+                </button>
                 <button class="sidebar-link" type="button" data-chart-target="secaoHistorico" aria-controls="secaoHistorico" aria-pressed="false">
                     <span class="sidebar-link-icon" aria-hidden="true">H</span>
                     Histórico
@@ -204,6 +212,26 @@
                 <div class="grafico-wrapper">
                     <canvas id="meuGrafico2" aria-label="Gráfico de consumo diário"></canvas>
                     <div id="tooltipGraficoDiario" class="tooltip-grafico" role="status" aria-live="polite" hidden></div>
+                </div>
+            </section>
+
+            <!-- Relaciona as leituras percentuais de iluminação às datas do período global. -->
+            <section class="chart-panel" id="secaoGraficoIntensidade" aria-labelledby="tituloGraficoIntensidade" hidden>
+                <h2 id="tituloGraficoIntensidade">Intensidade da iluminação</h2>
+                <p id="periodoGraficoIntensidade" class="chart-period-status" role="status" aria-live="polite"></p>
+                <div class="grafico-wrapper">
+                    <canvas id="meuGraficoIntensidade" aria-label="Gráfico da intensidade da iluminação em porcentagem"></canvas>
+                    <div id="tooltipGraficoIntensidade" class="tooltip-grafico" role="status" aria-live="polite" hidden></div>
+                </div>
+            </section>
+
+            <!-- Mostra as medições históricas do sensor LDR em lux ao longo do período. -->
+            <section class="chart-panel" id="secaoGraficoLuminosidade" aria-labelledby="tituloGraficoLuminosidade" hidden>
+                <h2 id="tituloGraficoLuminosidade">Luminosidade ambiente (LDR)</h2>
+                <p id="periodoGraficoLuminosidade" class="chart-period-status" role="status" aria-live="polite"></p>
+                <div class="grafico-wrapper">
+                    <canvas id="meuGraficoLuminosidade" aria-label="Gráfico histórico da luminosidade ambiente em lux"></canvas>
+                    <div id="tooltipGraficoLuminosidade" class="tooltip-grafico" role="status" aria-live="polite" hidden></div>
                 </div>
             </section>
 

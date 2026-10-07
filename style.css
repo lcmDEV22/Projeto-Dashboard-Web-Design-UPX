@@ -1029,9 +1029,11 @@ body.dashboard .tabela-historico .historico-vazio {
     white-space: normal;
 }
 
-/* Define a área de desenho dos gráficos. */
+/* Mantém todos os gráficos, inclusive intensidade, fluidos e legíveis. */
 #meuGrafico,
-#meuGrafico2 {
+#meuGrafico2,
+#meuGraficoIntensidade,
+#meuGraficoLuminosidade {
     width: 100%;
     height: 350px;
     display: block;
@@ -1178,7 +1180,9 @@ body.dashboard .tabela-historico .historico-vazio {
     }
 
     #meuGrafico,
-    #meuGrafico2 {
+    #meuGrafico2,
+    #meuGraficoIntensidade,
+    #meuGraficoLuminosidade {
         height: 260px;
     }
 }
@@ -1231,10 +1235,6 @@ body.dashboard .tabela-historico .historico-vazio {
 #statusIluminacao {
     margin-top: 4px;
 }
-
-
-
-
 
 
 
