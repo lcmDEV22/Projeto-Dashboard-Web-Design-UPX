@@ -5,6 +5,10 @@ const canvases = [
     document.getElementById("meuGraficoLuminosidade")
 ].filter(Boolean);
 const dadosGraficos = new Map();
+const seletoresSensoresLuz = [
+    { chave: "intensidade", modoId: "modoGraficoIntensidade", dataId: "dataGraficoIntensidade", controleDataId: "controleDataIntensidade", canvasId: "meuGraficoIntensidade" },
+    { chave: "luminosidade", modoId: "modoGraficoLuminosidade", dataId: "dataGraficoLuminosidade", controleDataId: "controleDataLuminosidade", canvasId: "meuGraficoLuminosidade" }
+];
 const nomesMeses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 const dadosDemoMensais = [4200, 5100, 4800, 6200, 5900, 7100, 6800, 7900, 8300, 9100, 8700, 9800];
 const dadosDemoDiarios = [
@@ -14,7 +18,7 @@ const dadosDemoDiarios = [
 ];
 const CHAVE_HISTORICO = "dashboardHistoricalReadings";
 const CHAVE_VERSAO_DEMO = "dashboardDemoHistoryVersion";
-const VERSAO_DEMO_HISTORICO = "4";
+const VERSAO_DEMO_HISTORICO = "5";
 const LIMITE_REGISTROS_HISTORICO = 200000;
 const ANO_INICIAL_DADOS_FICTICIOS = 2020;
 let registrosHistorico = [];
@@ -67,6 +71,43 @@ function gerarDadosFicticiosHistorico() {
                     { tipo: "diario", data, grandeza: "Intensidade da iluminação", chaveGrandeza: "intensidade", valor: Number((50 + Math.sin((dia + mes * 2) * 0.72) * 32).toFixed(1)), unidade: "%", capturadoEm, origem: "Demonstração" },
                     { tipo: "diario", data, grandeza: "Luminosidade ambiente (LDR)", chaveGrandeza: "luminosidade", valor: Number((320 + Math.sin((dia + mes) * 0.68) * 210 + Math.cos(dia * 0.31) * 95).toFixed(1)), unidade: "lux", capturadoEm, origem: "Demonstração" }
                 );
+
+                // Cria amostras horárias somente para o mês atual, sem aumentar o histórico antigo.
+                if (ano === hoje.getFullYear() && mes === hoje.getMonth()) {
+                    const intensidadeBase = 50 + Math.sin((dia + mes * 2) * 0.72) * 32;
+                    const luminosidadeBase = 320 + Math.sin((dia + mes) * 0.68) * 210 + Math.cos(dia * 0.31) * 95;
+                    for (let hora = 0; hora < 24; hora++) {
+                        if (data === hojeFormatado && hora > hoje.getHours()) {
+                            break;
+                        }
+                        const instanteLeitura = new Date(ano, mes, dia, hora).toISOString();
+                        const curvaDoDia = Math.sin((hora / 24) * Math.PI * 2);
+                        registros.push(
+                            {
+                                tipo: "diario",
+                                data,
+                                grandeza: "Intensidade da iluminação",
+                                chaveGrandeza: "intensidade",
+                                valor: Number((intensidadeBase + curvaDoDia * 12).toFixed(1)),
+                                unidade: "%",
+                                capturadoEm,
+                                instanteLeitura,
+                                origem: "Demonstração"
+                            },
+                            {
+                                tipo: "diario",
+                                data,
+                                grandeza: "Luminosidade ambiente (LDR)",
+                                chaveGrandeza: "luminosidade",
+                                valor: Number((luminosidadeBase + curvaDoDia * Math.min(150, luminosidadeBase * 0.5)).toFixed(1)),
+                                unidade: "lux",
+                                capturadoEm,
+                                instanteLeitura,
+                                origem: "Demonstração"
+                            }
+                        );
+                    }
+                }
             }
 
             const totalConsumoMensal = consumoMensal.reduce((total, valor) => total + valor, 0);
@@ -211,20 +252,26 @@ function atualizarStatusGrafico(canvasId, quantidadePontos, totalPeriodos = quan
     if (canvasId === "meuGraficoIntensidade") {
         const status = document.getElementById("periodoGraficoIntensidade");
         const periodo = `${intervaloPeriodoAplicado.inicio.split("-").reverse().join("/")} a ${intervaloPeriodoAplicado.fim.split("-").reverse().join("/")}`;
-        const leituras = quantidadePontos === 1
-            ? "1 leitura registrada"
-            : `${quantidadePontos} leituras registradas`;
-        status.textContent = `${periodo} · ${leituras} no intervalo.`;
+        const modo = document.getElementById("modoGraficoIntensidade").value;
+        const leituras = quantidadePontos === 1 ? "1 leitura" : `${quantidadePontos} leituras`;
+        const dataSelecionada = document.getElementById("dataGraficoIntensidade").value;
+        const descricao = modo === "horas"
+            ? `ao longo do dia ${dataSelecionada ? dataSelecionada.split("-").reverse().join("/") : "sem dia selecionado"}`
+            : "por dia no intervalo";
+        status.textContent = `${periodo} · ${leituras} ${descricao}.`;
         return;
     }
 
     if (canvasId === "meuGraficoLuminosidade") {
         const status = document.getElementById("periodoGraficoLuminosidade");
         const periodo = `${intervaloPeriodoAplicado.inicio.split("-").reverse().join("/")} a ${intervaloPeriodoAplicado.fim.split("-").reverse().join("/")}`;
-        const leituras = quantidadePontos === 1
-            ? "1 leitura do LDR"
-            : `${quantidadePontos} leituras do LDR`;
-        status.textContent = `${periodo} · ${leituras} no intervalo.`;
+        const modo = document.getElementById("modoGraficoLuminosidade").value;
+        const leituras = quantidadePontos === 1 ? "1 leitura" : `${quantidadePontos} leituras`;
+        const dataSelecionada = document.getElementById("dataGraficoLuminosidade").value;
+        const descricao = modo === "horas"
+            ? `ao longo do dia ${dataSelecionada ? dataSelecionada.split("-").reverse().join("/") : "sem dia selecionado"}`
+            : "por dia no intervalo";
+        status.textContent = `${periodo} · ${leituras} ${descricao}.`;
         return;
     }
 
@@ -342,10 +389,16 @@ function criarGrafico(canvas) {
     ctx.scale(proporcao, proporcao);
 
     const isGraficoDiario = canvas.id === "meuGrafico2";
-    // A intensidade usa leituras diárias e mantém a escala percentual fixa entre 0 e 100.
+    // Os dois gráficos de luz compartilham a seleção por horário ou por dia.
     const isGraficoIntensidade = canvas.id === "meuGraficoIntensidade";
     const isGraficoLuminosidade = canvas.id === "meuGraficoLuminosidade";
-    const serieSelecionada = isGraficoIntensidade || isGraficoLuminosidade
+    const isGraficoSensorLuz = isGraficoIntensidade || isGraficoLuminosidade;
+    const configuracaoSensor = seletoresSensoresLuz.find(({ canvasId }) => canvasId === canvas.id);
+    const modoSensor = isGraficoSensorLuz
+        ? document.getElementById(configuracaoSensor.modoId).value
+        : null;
+    const eixoPorHorario = isGraficoSensorLuz && modoSensor === "horas";
+    const serieSelecionada = isGraficoSensorLuz
         ? {
             nome: isGraficoIntensidade ? "Intensidade da iluminação" : "Luminosidade ambiente (LDR)",
             unidade: isGraficoIntensidade ? "%" : "lux",
@@ -361,27 +414,30 @@ function criarGrafico(canvas) {
     let mesSelecionado = null;
     let anoSelecionado = null;
 
-    if (intervaloPeriodoAplicado || isGraficoIntensidade) {
+    if (intervaloPeriodoAplicado || isGraficoSensorLuz) {
         // Seleciona leituras do intervalo; os gráficos diários preservam as datas sem medição.
-        const leituras = isGraficoIntensidade || isGraficoLuminosidade
-            ? obterRegistrosDiariosFiltrados(isGraficoIntensidade ? "intensidade" : "luminosidade").map((registro) => ({
-                data: registro.data,
-                valor: registro.valor
-            }))
+        const leituras = isGraficoSensorLuz
+            ? modoSensor === "horas"
+                ? obterSerieSensorPorHora(configuracaoSensor.chave, document.getElementById(configuracaoSensor.dataId).value)
+                : obterSerieSensorPorDia(configuracaoSensor.chave)
             : isGraficoDiario
                 ? obterSerieDiariaMensal(grandezaSelecionada)
                 : obterSerieHistoricaAgrupada(grandezaSelecionada);
         pontosHistoricos = leituras;
         labels = leituras.map((registro) => {
-            const data = isGraficoDiario || isGraficoIntensidade || isGraficoLuminosidade
-                ? registro.data
-                : `${registro.periodo}-01`;
+            if (isGraficoSensorLuz && modoSensor === "horas") {
+                return new Date(registro.periodo).toLocaleTimeString("pt-BR", {
+                    hour: "2-digit",
+                    minute: "2-digit"
+                });
+            }
+
+            const data = isGraficoSensorLuz || isGraficoDiario ? registro.data : `${registro.periodo}-01`;
             const [ano, mes, dia] = data.split("-").map(Number);
-            if (isGraficoIntensidade || isGraficoLuminosidade) {
-                const incluirAno = intervaloPeriodoAplicado.inicio.slice(0, 4) !== intervaloPeriodoAplicado.fim.slice(0, 4);
-                return incluirAno
-                    ? `${String(dia).padStart(2, "0")}/${String(mes).padStart(2, "0")}/${String(ano).slice(-2)}`
-                    : `${String(dia).padStart(2, "0")}/${String(mes).padStart(2, "0")}`;
+            if (isGraficoSensorLuz) {
+                return largura < 520
+                    ? `${String(dia).padStart(2, "0")}/${String(mes).padStart(2, "0")}`
+                    : `${String(dia).padStart(2, "0")}/${String(mes).padStart(2, "0")}/${ano}`;
             }
             return isGraficoDiario
                 ? String(dia).padStart(2, "0")
@@ -408,7 +464,7 @@ function criarGrafico(canvas) {
     }
 
     const intervaloRotulos = intervaloPeriodoAplicado
-        ? isGraficoDiario || isGraficoIntensidade || isGraficoLuminosidade ? Math.max(1, Math.ceil(labels.length / 8)) : 1
+        ? isGraficoDiario || isGraficoSensorLuz ? Math.max(1, Math.ceil(labels.length / 8)) : 1
         : isGraficoDiario ? 5 : 1;
 
     // Reserva espaço para os eixos e calcula a escala vertical do gráfico.
@@ -448,24 +504,38 @@ function criarGrafico(canvas) {
         ctx.fillStyle = "#68776d";
         ctx.font = "14px Poppins, sans-serif";
         ctx.textAlign = "center";
-        ctx.fillText("Sem medições nesta faixa de datas.", largura / 2, altura / 2);
+        ctx.fillText(modoSensor === "horas"
+            ? "Sem leituras horárias neste dia."
+            : "Sem medições nesta faixa de datas.", largura / 2, altura / 2);
         atualizarStatusGrafico(canvas.id, 0, labels.length);
         return;
     }
 
     // Guarda as coordenadas de cada dado para localizar o trecho sob o ponteiro.
-    const pontos = valores.map((valor, index) => ({
-        x: labels.length === 1
-            ? margemEsquerda + larguraGrafico / 2
-            : margemEsquerda + (larguraGrafico / (labels.length - 1)) * index,
-        y: Number.isFinite(valor) ? margemSuperior + alturaGrafico - (valor / maiorValor) * alturaGrafico : null,
-        valor,
-        indice: index,
-        dia: index + 1,
-        periodo: pontosHistoricos
-            ? (isGraficoDiario || isGraficoIntensidade || isGraficoLuminosidade ? pontosHistoricos[index].data : pontosHistoricos[index].periodo)
-            : null
-    }));
+    const pontos = valores.map((valor, index) => {
+        const instante = eixoPorHorario ? new Date(pontosHistoricos[index].periodo) : null;
+        const minutosDoDia = instante
+            ? instante.getHours() * 60 + instante.getMinutes() + instante.getSeconds() / 60
+            : null;
+        const posicaoX = eixoPorHorario
+            ? margemEsquerda + (minutosDoDia / (24 * 60)) * larguraGrafico
+            : labels.length === 1
+                ? margemEsquerda + larguraGrafico / 2
+                : margemEsquerda + (larguraGrafico / (labels.length - 1)) * index;
+
+        return {
+            x: posicaoX,
+            y: Number.isFinite(valor) ? margemSuperior + alturaGrafico - (valor / maiorValor) * alturaGrafico : null,
+            valor,
+            indice: index,
+            dia: index + 1,
+            periodo: pontosHistoricos
+                ? isGraficoSensorLuz
+                    ? pontosHistoricos[index].periodo
+                    : isGraficoDiario ? pontosHistoricos[index].data : pontosHistoricos[index].periodo
+                : null
+        };
+    });
 
     // Armazena os dados e a posição de cada canvas para alimentar seu tooltip.
     dadosGraficos.set(canvas.id, {
@@ -475,7 +545,9 @@ function criarGrafico(canvas) {
         unidade: serieSelecionada.unidade,
         mes: mesSelecionado,
         ano: anoSelecionado,
-        periodicidade: isGraficoDiario || isGraficoIntensidade || isGraficoLuminosidade ? "diario" : "mensal"
+        periodicidade: isGraficoSensorLuz && modoSensor === "horas"
+            ? "horario"
+            : isGraficoDiario || isGraficoSensorLuz ? "diario" : "mensal"
     });
     if (isGraficoDiario && intervaloPeriodoAplicado) {
         const limites = obterLimitesMesDiario();
@@ -513,6 +585,23 @@ function criarGrafico(canvas) {
         ctx.stroke();
     }
 
+    // Mostra marcas fixas no eixo X para posicionar as amostras na hora real.
+    if (eixoPorHorario) {
+        [0, 6, 12, 18, 24].forEach((hora) => {
+            const x = margemEsquerda + (hora / 24) * larguraGrafico;
+            ctx.beginPath();
+            ctx.moveTo(x, margemSuperior);
+            ctx.lineTo(x, margemSuperior + alturaGrafico);
+            ctx.strokeStyle = "#eef0ee";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            ctx.fillStyle = "#777";
+            ctx.font = "11px Poppins, sans-serif";
+            ctx.textAlign = hora === 0 ? "left" : hora === 24 ? "right" : "center";
+            ctx.fillText(`${String(hora).padStart(2, "0")}h`, x, altura - 15);
+        });
+    }
+
     // Mostra os valores correspondentes às linhas da grade no eixo vertical.
     ctx.fillStyle = "#777";
     ctx.font = "12px Poppins, sans-serif";
@@ -524,19 +613,21 @@ function criarGrafico(canvas) {
     }
 
     // Distribui os rótulos do eixo horizontal e omite alguns dias para evitar sobreposição.
-    if (intervaloPeriodoAplicado && !isGraficoDiario && !isGraficoIntensidade && !isGraficoLuminosidade && labels.length > 8) {
+    if (intervaloPeriodoAplicado && !isGraficoDiario && !isGraficoSensorLuz && labels.length > 8) {
         ctx.font = "8px Poppins, sans-serif";
     }
-    ctx.textAlign = "center";
-    labels.forEach((label, index) => {
-        if (index % intervaloRotulos !== 0 && index !== labels.length - 1) {
-            return;
-        }
-        const posicaoX = labels.length === 1
-            ? margemEsquerda + larguraGrafico / 2
-            : margemEsquerda + (larguraGrafico / (labels.length - 1)) * index;
-        ctx.fillText(label, posicaoX, altura - 15);
-    });
+    if (!eixoPorHorario) {
+        ctx.textAlign = "center";
+        labels.forEach((label, index) => {
+            if (index % intervaloRotulos !== 0 && index !== labels.length - 1) {
+                return;
+            }
+            const posicaoX = labels.length === 1
+                ? margemEsquerda + larguraGrafico / 2
+                : margemEsquerda + (larguraGrafico / (labels.length - 1)) * index;
+            ctx.fillText(label, posicaoX, altura - 15);
+        });
+    }
 
     if (!valores.some(Number.isFinite)) {
         ctx.fillStyle = "#68776d";
@@ -661,7 +752,15 @@ function atualizarTooltipGrafico(evento) {
     const { ponto } = proximidade;
     let periodo;
 
-    if (dadosGrafico.tipo === "intervalo" && dadosGrafico.periodicidade === "diario") {
+    if (dadosGrafico.tipo === "intervalo" && dadosGrafico.periodicidade === "horario") {
+        periodo = new Date(ponto.periodo).toLocaleString("pt-BR", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+    } else if (dadosGrafico.tipo === "intervalo" && dadosGrafico.periodicidade === "diario") {
         const [ano, mes, dia] = ponto.periodo.split("-").map(Number);
         periodo = new Date(ano, mes - 1, dia).toLocaleDateString("pt-BR", {
             day: "numeric",
@@ -759,9 +858,9 @@ function configurarSelecaoGraficos() {
             atualizarVisibilidadeFiltroPeriodo(painelSelecionado);
 
             // O canvas precisa estar visível para medir sua largura antes de desenhar.
-            const canvas = document.querySelector(`#${painelSelecionado} canvas`);
-            if (canvas && (!API_CONFIG.baseUrl.trim() || dadosReaisCarregados || intervaloPeriodoAplicado)) {
-                criarGrafico(canvas);
+            const canvasesDoPainel = document.querySelectorAll(`#${painelSelecionado} canvas`);
+            if (!API_CONFIG.baseUrl.trim() || dadosReaisCarregados || intervaloPeriodoAplicado) {
+                canvasesDoPainel.forEach(criarGrafico);
             }
         });
     });
@@ -803,9 +902,12 @@ function registroHistoricoValido(registro) {
         /^\d{4}-\d{2}-\d{2}$/.test(registro.data) &&
         Number.isFinite(Date.parse(`${registro.data}T00:00:00Z`)) &&
         new Date(`${registro.data}T00:00:00Z`).toISOString().slice(0, 10) === registro.data;
+    const instanteLeituraValido = registro.instanteLeitura === undefined ||
+        (typeof registro.instanteLeitura === "string" && Number.isFinite(Date.parse(registro.instanteLeitura)));
 
     return ["diario", "mensal", "resumo"].includes(registro.tipo) &&
         dataValida &&
+        instanteLeituraValido &&
         typeof registro.grandeza === "string" &&
         typeof registro.chaveGrandeza === "string" &&
         typeof registro.unidade === "string" &&
@@ -869,6 +971,7 @@ function carregarHistoricoSalvo() {
         atualizarStatusHistorico(`${registrosHistorico.length.toLocaleString("pt-BR")} registros fictícios foram gerados após a falha de leitura.`);
     }
 
+    atualizarControlesGraficosSensores();
     renderizarHistorico();
 }
 
@@ -940,7 +1043,8 @@ function registrarHistorico(mes, ano, origem, atualizarInterface = true, estadoL
 
     // Salva a intensidade recebida com a data real da leitura para alimentar a série temporal.
     if (Number.isFinite(estadoLeitura.intensidadePercentual)) {
-        const dataLeitura = new Date(estadoLeitura.atualizadoEm || capturadoEm);
+        const instanteLeitura = estadoLeitura.atualizadoEm || capturadoEm;
+        const dataLeitura = new Date(instanteLeitura);
         novosRegistros.push({
             tipo: "diario",
             data: formatarDataHistorico(dataLeitura.getFullYear(), dataLeitura.getMonth(), dataLeitura.getDate()),
@@ -949,13 +1053,15 @@ function registrarHistorico(mes, ano, origem, atualizarInterface = true, estadoL
             valor: estadoLeitura.intensidadePercentual,
             unidade: "%",
             capturadoEm,
+            instanteLeitura,
             origem
         });
     }
 
     // Salva cada leitura do LDR usando a data informada pelo dispositivo, quando disponível.
     if (Number.isFinite(estadoLeitura.luminosidadeLux)) {
-        const dataLeitura = new Date(estadoLeitura.atualizadoEm || capturadoEm);
+        const instanteLeitura = estadoLeitura.atualizadoEm || capturadoEm;
+        const dataLeitura = new Date(instanteLeitura);
         novosRegistros.push({
             tipo: "diario",
             data: formatarDataHistorico(dataLeitura.getFullYear(), dataLeitura.getMonth(), dataLeitura.getDate()),
@@ -964,19 +1070,23 @@ function registrarHistorico(mes, ano, origem, atualizarInterface = true, estadoL
             valor: estadoLeitura.luminosidadeLux,
             unidade: "lux",
             capturadoEm,
+            instanteLeitura,
             origem
         });
     }
 
     // Atualiza a leitura mais recente do mesmo dia, métrica e origem sem duplicar a tabela.
+    const criarChaveRegistro = (registro) => {
+        const leituraPorHorario = ["intensidade", "luminosidade"].includes(registro.chaveGrandeza)
+            ? registro.instanteLeitura || "dia"
+            : "";
+        return `${registro.tipo}|${registro.data}|${registro.chaveGrandeza}|${registro.origem}|${leituraPorHorario}`;
+    };
     const registrosPorChave = new Map(registrosHistorico
         .filter((registro) => !(registro.origem === "Demonstração" && registro.data > limiteDemo))
-        .map((registro) => [
-            `${registro.tipo}|${registro.data}|${registro.chaveGrandeza}|${registro.origem}`,
-            registro
-        ]));
+        .map((registro) => [criarChaveRegistro(registro), registro]));
     novosRegistros.forEach((registro) => {
-        const chave = `${registro.tipo}|${registro.data}|${registro.chaveGrandeza}|${registro.origem}`;
+        const chave = criarChaveRegistro(registro);
         registrosPorChave.set(chave, registro);
     });
 
@@ -992,6 +1102,7 @@ function registrarHistorico(mes, ano, origem, atualizarInterface = true, estadoL
     }
 
     if (atualizarInterface) {
+        atualizarControlesGraficosSensores();
         renderizarHistorico();
         if (intervaloPeriodoAplicado) {
             atualizarIndicadores();
@@ -1765,6 +1876,113 @@ function obterRegistrosDiariosFiltrados(chaveGrandeza, intervalo = intervaloPeri
     return Array.from(porData.values()).sort((primeiro, segundo) => primeiro.data.localeCompare(segundo.data));
 }
 
+// Retorna todas as amostras do sensor no intervalo, sem juntar as leituras do mesmo dia.
+function obterLeiturasSensorNoIntervalo(chaveGrandeza) {
+    if (!intervaloPeriodoAplicado) {
+        return [];
+    }
+
+    return registrosHistorico
+        .filter((registro) =>
+            registro.tipo === "diario" &&
+            registro.chaveGrandeza === chaveGrandeza &&
+            registro.data >= intervaloPeriodoAplicado.inicio &&
+            registro.data <= intervaloPeriodoAplicado.fim
+        )
+        .sort((primeiro, segundo) =>
+            (primeiro.instanteLeitura || primeiro.capturadoEm)
+                .localeCompare(segundo.instanteLeitura || segundo.capturadoEm)
+        );
+}
+
+// Agrupa as amostras pela data e calcula a média diária sem inventar leituras ausentes.
+function obterSerieSensorPorDia(chaveGrandeza) {
+    const leiturasPorData = new Map();
+    obterLeiturasSensorNoIntervalo(chaveGrandeza).forEach((registro) => {
+        if (!leiturasPorData.has(registro.data)) {
+            leiturasPorData.set(registro.data, []);
+        }
+        leiturasPorData.get(registro.data).push(registro);
+    });
+
+    return Array.from(leiturasPorData, ([data, leituras]) => {
+        // Se há amostras com horário, elas representam o dia melhor que o resumo diário antigo.
+        const amostrasHorarias = leituras.filter((registro) => registro.instanteLeitura);
+        const valores = (amostrasHorarias.length ? amostrasHorarias : leituras)
+            .map((registro) => registro.valor);
+        return {
+            data,
+            periodo: data,
+            valor: valores.reduce((soma, valor) => soma + valor, 0) / valores.length
+        };
+    });
+}
+
+// Retorna as amostras de uma data na ordem em que foram medidas.
+function obterSerieSensorPorHora(chaveGrandeza, data) {
+    if (!data) {
+        return [];
+    }
+
+    return obterLeiturasSensorNoIntervalo(chaveGrandeza)
+        .filter((registro) => registro.data === data && registro.instanteLeitura)
+        .map((registro) => ({
+            data: registro.data,
+            periodo: registro.instanteLeitura,
+            valor: registro.valor
+        }))
+        .sort((primeiro, segundo) => primeiro.periodo.localeCompare(segundo.periodo));
+}
+
+// Atualiza as datas disponíveis e mostra o seletor de dia somente no modo por horário.
+function atualizarControlesGraficosSensores() {
+    seletoresSensoresLuz.forEach(({ chave, modoId, dataId, controleDataId }) => {
+        const modo = document.getElementById(modoId);
+        const seletorData = document.getElementById(dataId);
+        const controleData = document.getElementById(controleDataId);
+        const dataAnterior = seletorData.value;
+        const datas = [...new Set(
+            obterLeiturasSensorNoIntervalo(chave)
+                .filter((registro) => registro.instanteLeitura)
+                .map((registro) => registro.data)
+        )].sort();
+
+        seletorData.replaceChildren();
+        datas.forEach((data) => {
+            const opcao = document.createElement("option");
+            opcao.value = data;
+            opcao.textContent = new Date(`${data}T00:00:00`).toLocaleDateString("pt-BR", {
+                day: "numeric",
+                month: "long",
+                year: "numeric"
+            });
+            seletorData.appendChild(opcao);
+        });
+
+        if (datas.includes(dataAnterior)) {
+            seletorData.value = dataAnterior;
+        } else if (datas.length) {
+            seletorData.value = datas[datas.length - 1];
+        }
+        controleData.hidden = modo.value !== "horas";
+        seletorData.disabled = datas.length === 0;
+    });
+}
+
+// Liga os combos dos sensores aos gráficos e mantém as datas válidas no intervalo.
+function configurarControlesGraficosSensores() {
+    seletoresSensoresLuz.forEach(({ modoId, dataId, canvasId }) => {
+        document.getElementById(modoId).addEventListener("change", () => {
+            atualizarControlesGraficosSensores();
+            criarGrafico(document.getElementById(canvasId));
+        });
+        document.getElementById(dataId).addEventListener("change", () => {
+            criarGrafico(document.getElementById(canvasId));
+        });
+    });
+    atualizarControlesGraficosSensores();
+}
+
 // Cria um ponto para cada mês do intervalo, sem remover meses que ainda não têm dados.
 function obterSerieHistoricaAgrupada(chaveGrandeza) {
     const leiturasPorMes = new Map();
@@ -1914,6 +2132,7 @@ function aplicarFiltroPeriodo() {
 
     intervaloPeriodoAplicado = { inicio, fim };
     atualizarMesesGraficoDiario();
+    atualizarControlesGraficosSensores();
     atualizarIndicadoresFiltrados();
     renderizarComparacaoHistorico(obterConsumosMensaisHistoricos());
     desenharGraficos();
@@ -2100,6 +2319,7 @@ async function carregarDadosDashboard() {
         periodoDadosCarregados = ultimoMes;
         atualizarEstadoAtual();
         atualizarIndicadores();
+        atualizarControlesGraficosSensores();
         desenharGraficos();
         botaoExportar.disabled = false;
         atualizarStatusApi(`Dados do intervalo atualizados às ${new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}.`, "success");
@@ -2147,6 +2367,7 @@ document.addEventListener("DOMContentLoaded", () => {
     configurarInteracaoGraficos();
     configurarSelecaoGraficos();
     configurarSelecaoGrandeza();
+    configurarControlesGraficosSensores();
     configurarExportacaoHistorico();
     configurarComparacaoHistorico();
     inicializarFiltrosHistorico();
