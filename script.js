@@ -18,12 +18,21 @@ const dadosDemoDiarios = [
 ];
 const CHAVE_HISTORICO = "dashboardHistoricalReadings";
 const CHAVE_VERSAO_DEMO = "dashboardDemoHistoryVersion";
+const CHAVE_ENERGIA_ACUMULADA = "dashboardAccumulatedEnergy";
 const VERSAO_DEMO_HISTORICO = "6";
 const LIMITE_REGISTROS_HISTORICO = 200000;
+const LIMITE_AMOSTRAS_ENERGIA = 10000;
+const INTERVALO_MAXIMO_INTEGRACAO_MS = 5 * 60 * 1000;
 const ANO_INICIAL_DADOS_FICTICIOS = 2020;
 let registrosHistorico = [];
 let avisoHistorico = "";
 let intervaloPeriodoAplicado = null;
+let energiaAcumulada = {
+    totalKwh: 0,
+    ultimaLeitura: null,
+    amostras: [],
+    disponivel: true
+};
 
 function gerarDadosFicticiosHistorico() {
     const hoje = new Date();
@@ -477,6 +486,209 @@ function obterSerieConsumoPorHora(data) {
         .sort((primeiro, segundo) => primeiro.periodo.localeCompare(segundo.periodo));
 }
 
+// Carrega o total e as amostras para preservar o acompanhamento entre sessões no mesmo navegador.
+function carregarEnergiaAcumulada() {
+    const status = document.getElementById("statusEnergiaAcumulada");
+    try {
+        const salvo = localStorage.getItem(CHAVE_ENERGIA_ACUMULADA);
+        if (salvo) {
+            const dados = JSON.parse(salvo);
+            const leituraValida = (leitura) =>
+                leitura === null ||
+                (leitura &&
+                    Number.isFinite(leitura.potenciaWatts) &&
+                    leitura.potenciaWatts >= 0 &&
+                    typeof leitura.instante === "string" &&
+                    Number.isFinite(Date.parse(leitura.instante)));
+            if (
+                !dados ||
+                !Number.isFinite(dados.totalKwh) ||
+                dados.totalKwh < 0 ||
+                !leituraValida(dados.ultimaLeitura) ||
+                !Array.isArray(dados.amostras) ||
+                !dados.amostras.every((amostra) =>
+                    amostra &&
+                    Number.isFinite(amostra.kwh) &&
+                    amostra.kwh >= 0 &&
+                    typeof amostra.instante === "string" &&
+                    Number.isFinite(Date.parse(amostra.instante))
+                )
+            ) {
+                throw new Error("Os dados de energia acumulada salvos estão inválidos.");
+            }
+            energiaAcumulada = {
+                totalKwh: dados.totalKwh,
+                ultimaLeitura: dados.ultimaLeitura,
+                amostras: dados.amostras.slice(-LIMITE_AMOSTRAS_ENERGIA),
+                disponivel: true
+            };
+            status.textContent = energiaAcumulada.ultimaLeitura
+                ? "Total preservado neste navegador"
+                : "Aguardando leituras de potência";
+        }
+    } catch (erro) {
+        energiaAcumulada.disponivel = false;
+        status.textContent = `Não foi possível ler o histórico de energia: ${erro.message}`;
+    }
+    atualizarIndicadorEnergiaAcumulada();
+    desenharGraficoEnergiaAcumulada();
+}
+
+// Calcula kWh pela potência média entre leituras válidas, ignorando lacunas longas sem dados.
+function registrarLeituraEnergia(estado) {
+    if (!energiaAcumulada.disponivel || estado.potenciaWatts === null) {
+        return;
+    }
+
+    const instante = estado.atualizadoEm || new Date().toISOString();
+    const instanteMs = Date.parse(instante);
+    const anterior = energiaAcumulada.ultimaLeitura;
+    if (!Number.isFinite(instanteMs)) {
+        return;
+    }
+    if (anterior && instanteMs <= Date.parse(anterior.instante)) {
+        return;
+    }
+    let intervaloIgnorado = false;
+    if (anterior) {
+        const duracaoMs = instanteMs - Date.parse(anterior.instante);
+        if (duracaoMs > 0 && duracaoMs <= INTERVALO_MAXIMO_INTEGRACAO_MS) {
+            const potenciaMediaWatts = (anterior.potenciaWatts + estado.potenciaWatts) / 2;
+            energiaAcumulada.totalKwh += potenciaMediaWatts * (duracaoMs / 3600000) / 1000;
+        } else if (duracaoMs > INTERVALO_MAXIMO_INTEGRACAO_MS) {
+            intervaloIgnorado = true;
+        }
+    }
+
+    energiaAcumulada.ultimaLeitura = {
+        instante: new Date(instanteMs).toISOString(),
+        potenciaWatts: estado.potenciaWatts
+    };
+
+    // Mantém uma amostra por hora para que o gráfico histórico permaneça leve.
+    const chaveHora = energiaAcumulada.ultimaLeitura.instante.slice(0, 13);
+    const ultimaAmostra = energiaAcumulada.amostras.at(-1);
+    const amostra = {
+        instante: energiaAcumulada.ultimaLeitura.instante,
+        kwh: energiaAcumulada.totalKwh,
+        lacuna: intervaloIgnorado || Boolean(ultimaAmostra && ultimaAmostra.lacuna)
+    };
+    if (ultimaAmostra && ultimaAmostra.instante.slice(0, 13) === chaveHora) {
+        energiaAcumulada.amostras[energiaAcumulada.amostras.length - 1] = amostra;
+    } else {
+        energiaAcumulada.amostras.push(amostra);
+        energiaAcumulada.amostras = energiaAcumulada.amostras.slice(-LIMITE_AMOSTRAS_ENERGIA);
+    }
+
+    try {
+        localStorage.setItem(CHAVE_ENERGIA_ACUMULADA, JSON.stringify(energiaAcumulada));
+        document.getElementById("statusEnergiaAcumulada").textContent = intervaloIgnorado
+            ? "Lacuna acima de 5 min ignorada · salvo neste navegador"
+            : "Integrado pela potência medida · salvo neste navegador";
+    } catch (erro) {
+        document.getElementById("statusEnergiaAcumulada").textContent =
+            `Acúmulo em memória; falha ao salvar no navegador: ${erro.message}`;
+    }
+    atualizarIndicadorEnergiaAcumulada();
+    desenharGraficoEnergiaAcumulada();
+}
+
+// Atualiza o card com precisão suficiente para tornar visíveis pequenos incrementos de energia.
+function atualizarIndicadorEnergiaAcumulada() {
+    const valor = document.getElementById("valorEnergiaAcumulada");
+    if (valor) {
+        valor.textContent = `${energiaAcumulada.totalKwh.toLocaleString("pt-BR", {
+            minimumFractionDigits: 4,
+            maximumFractionDigits: 4
+        })} kWh`;
+    }
+}
+
+// Desenha a série acumulada no intervalo aplicado, ajustando a escala ao tamanho responsivo do canvas.
+function desenharGraficoEnergiaAcumulada() {
+    const canvas = document.getElementById("graficoEnergiaAcumulada");
+    if (!canvas || canvas.clientWidth === 0 || canvas.clientHeight === 0) {
+        return;
+    }
+
+    const contexto = canvas.getContext("2d");
+    const largura = canvas.clientWidth;
+    const altura = canvas.clientHeight;
+    const proporcao = window.devicePixelRatio || 1;
+    canvas.width = largura * proporcao;
+    canvas.height = altura * proporcao;
+    contexto.scale(proporcao, proporcao);
+    contexto.clearRect(0, 0, largura, altura);
+
+    const leituras = energiaAcumulada.amostras.filter((amostra) => {
+        const data = amostra.instante.slice(0, 10);
+        return !intervaloPeriodoAplicado ||
+            (data >= intervaloPeriodoAplicado.inicio && data <= intervaloPeriodoAplicado.fim);
+    });
+    const descricao = document.getElementById("descricaoGraficoEnergia");
+    if (!leituras.length) {
+        descricao.textContent = energiaAcumulada.ultimaLeitura
+            ? "Não há amostras de energia acumulada no intervalo selecionado."
+            : "O gráfico será preenchido após novas leituras de potência.";
+        contexto.fillStyle = "#68776d";
+        contexto.font = "14px Poppins, sans-serif";
+        contexto.textAlign = "center";
+        contexto.fillText("Sem amostras no período.", largura / 2, altura / 2);
+        return;
+    }
+
+    descricao.textContent = `${leituras.length.toLocaleString("pt-BR")} amostras horárias · total acumulado em kWh`;
+    const margem = { topo: 16, direita: 18, base: 38, esquerda: 74 };
+    const larguraGrafico = largura - margem.esquerda - margem.direita;
+    const alturaGrafico = altura - margem.topo - margem.base;
+    const maximo = Math.max(...leituras.map((leitura) => leitura.kwh), 0.001);
+    const passo = maximo / 4;
+
+    contexto.font = "11px Poppins, sans-serif";
+    contexto.textAlign = "right";
+    contexto.textBaseline = "middle";
+    for (let linha = 0; linha <= 4; linha++) {
+        const y = margem.topo + alturaGrafico - (linha / 4) * alturaGrafico;
+        contexto.strokeStyle = "#e5ebe6";
+        contexto.beginPath();
+        contexto.moveTo(margem.esquerda, y);
+        contexto.lineTo(largura - margem.direita, y);
+        contexto.stroke();
+        contexto.fillStyle = "#68776d";
+        contexto.fillText((passo * linha).toLocaleString("pt-BR", { maximumFractionDigits: 3 }), margem.esquerda - 8, y);
+    }
+
+    contexto.strokeStyle = "#31805a";
+    contexto.lineWidth = 2.5;
+    contexto.beginPath();
+    leituras.forEach((leitura, indice) => {
+        const x = margem.esquerda + (leituras.length === 1 ? larguraGrafico / 2 : (indice / (leituras.length - 1)) * larguraGrafico);
+        const y = margem.topo + alturaGrafico - (leitura.kwh / maximo) * alturaGrafico;
+        if (indice === 0 || leitura.lacuna) {
+            contexto.moveTo(x, y);
+        } else {
+            contexto.lineTo(x, y);
+        }
+    });
+    contexto.stroke();
+
+    const intervaloRotulos = Math.max(1, Math.ceil(leituras.length / 6));
+    contexto.fillStyle = "#68776d";
+    contexto.textAlign = "center";
+    contexto.textBaseline = "top";
+    leituras.forEach((leitura, indice) => {
+        if (indice % intervaloRotulos !== 0 && indice !== leituras.length - 1) {
+            return;
+        }
+        const x = margem.esquerda + (leituras.length === 1 ? larguraGrafico / 2 : (indice / (leituras.length - 1)) * larguraGrafico);
+        const data = new Date(leitura.instante);
+        const rotulo = largura < 520
+            ? data.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })
+            : data.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit" });
+        contexto.fillText(rotulo, x, altura - margem.base + 10);
+    });
+}
+
 // Desenha um dos gráficos no canvas recebido.
 function criarGrafico(canvas) {
     // Prepara o canvas para alta densidade de pixels sem alterar seu tamanho visual.
@@ -511,6 +723,7 @@ function criarGrafico(canvas) {
             mensal: [],
             diario: []
         }
+
         : seriesGrandezas[grandezaSelecionada];
     let dias = [];
     let valoresDiarios = serieSelecionada.diario;
@@ -978,6 +1191,7 @@ function configurarSelecaoGraficos() {
             const canvasesDoPainel = document.querySelectorAll(`#${painelSelecionado} canvas`);
             if (!API_CONFIG.baseUrl.trim() || dadosReaisCarregados || intervaloPeriodoAplicado) {
                 canvasesDoPainel.forEach(criarGrafico);
+                desenharGraficoEnergiaAcumulada();
             }
         });
     });
@@ -1974,6 +2188,7 @@ function carregarEstadoDemonstrativo() {
         atualizadoEm: new Date().toISOString(),
         origemHorario: "Demonstração atualizada"
     };
+    registrarLeituraEnergia(estadoAtual);
     atualizarEstadoAtual();
 }
 
@@ -2261,6 +2476,7 @@ function aplicarFiltroPeriodo() {
     atualizarIndicadoresFiltrados();
     renderizarComparacaoHistorico(obterConsumosMensaisHistoricos());
     desenharGraficos();
+    desenharGraficoEnergiaAcumulada();
     return true;
 }
 
@@ -2453,6 +2669,7 @@ async function carregarDadosDashboard() {
         dadosConsumoDiario = dadosMesFinal.metricas.consumo.diario;
         resumoConsumo = dadosMesFinal.resumo;
         estadoAtual = dadosMesFinal.estadoAtual;
+        registrarLeituraEnergia(estadoAtual);
         dadosReaisCarregados = true;
         periodoDadosCarregados = ultimoMes;
         atualizarEstadoAtual();
@@ -2510,9 +2727,19 @@ document.addEventListener("DOMContentLoaded", () => {
     configurarExportacaoHistorico();
     configurarComparacaoHistorico();
     inicializarFiltrosHistorico();
+    carregarEnergiaAcumulada();
     carregarHistoricoSalvo();
     aplicarFiltroPeriodo();
     document.getElementById("btnAtualizarDados").addEventListener("click", carregarDadosDashboard);
     carregarDadosDashboard();
+    // Consulta a API periodicamente para acompanhar o consumo sem depender de atualização manual.
+    window.setInterval(() => {
+        if (!document.hidden) {
+            carregarDadosDashboard();
+        }
+    }, 60_000);
 });
-window.addEventListener("resize", desenharGraficos);
+window.addEventListener("resize", () => {
+    desenharGraficos();
+    desenharGraficoEnergiaAcumulada();
+});

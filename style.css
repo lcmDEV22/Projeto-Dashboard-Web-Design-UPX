@@ -628,10 +628,10 @@ body.dashboard .ultima-atualizacao {
     padding-top: 4px;
 }
 
-/* Distribui quatro indicadores em telas largas e permite quebrar em telas menores. */
+/* Distribui os indicadores em telas largas e permite quebrar em telas menores. */
 body.dashboard .estado-atual-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
     gap: 14px;
 }
 
@@ -777,6 +777,28 @@ body.dashboard .graficos-consumo-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 20px;
+}
+
+/* Mantém o histórico acumulado em largura total e adapta o canvas a telas menores. */
+body.dashboard .grafico-energia {
+    min-width: 0;
+    margin-top: 20px;
+    padding: 18px;
+    border: 1px solid #e3e9e4;
+    border-radius: 10px;
+    background: #fbfcfb;
+}
+
+body.dashboard .grafico-energia h3 {
+    margin-bottom: 10px;
+    color: var(--text);
+    font-size: 1rem;
+}
+
+body.dashboard #graficoEnergiaAcumulada {
+    display: block;
+    width: 100%;
+    height: 300px;
 }
 
 body.dashboard .grafico-sensor {
@@ -1159,6 +1181,12 @@ body.dashboard .tabela-historico .historico-vazio {
         justify-self: center;
         width: calc((100% - 20px) / 2);
     }
+
+    body.dashboard .estado-atual-grid .estado-card:last-child:nth-child(odd) {
+        grid-column: 1 / -1;
+        justify-self: center;
+        width: calc((100% - 14px) / 2);
+    }
 }
 
 /* Empilha os cards e reduz os gráficos em telas pequenas. */
@@ -1277,6 +1305,10 @@ body.dashboard .tabela-historico .historico-vazio {
     #meuGraficoLuminosidade {
         height: 260px;
     }
+
+    body.dashboard #graficoEnergiaAcumulada {
+        height: 240px;
+    }
 }
 
 /* Evita que os números dos cards fiquem grandes demais no celular. */
@@ -1327,8 +1359,6 @@ body.dashboard .tabela-historico .historico-vazio {
 #statusIluminacao {
     margin-top: 4px;
 }
-
-
 
 
 

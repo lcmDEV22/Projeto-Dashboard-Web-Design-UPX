@@ -152,6 +152,11 @@
                         <strong id="valorConsumoAtual">--</strong>
                         <small>Potência instantânea medida</small>
                     </article>
+                    <article class="card estado-card">
+                        <span class="card-title">Energia acumulada</span>
+                        <strong id="valorEnergiaAcumulada">0,0000 kWh</strong>
+                        <small id="statusEnergiaAcumulada">Aguardando leituras de potência</small>
+                    </article>
                 </div>
 
                 <!-- Apresenta estados binários sem depender apenas de cor. -->
@@ -221,6 +226,13 @@
                         </div>
                     </section>
                 </div>
+                <section class="grafico-energia" aria-labelledby="tituloGraficoEnergia">
+                    <h3 id="tituloGraficoEnergia">Energia acumulada ao longo do tempo</h3>
+                    <p id="descricaoGraficoEnergia" class="chart-period-status" aria-live="polite">
+                        Valores calculados a partir da potência medida e do tempo entre leituras.
+                    </p>
+                    <canvas id="graficoEnergiaAcumulada" role="img" aria-label="Gráfico de energia acumulada em quilowatt-hora"></canvas>
+                </section>
             </section>
 
             <!-- Agrupa os dois sensores de luz e permite escolher a escala temporal de cada gráfico. -->
