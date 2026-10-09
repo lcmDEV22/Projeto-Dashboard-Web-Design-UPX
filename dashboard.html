@@ -242,7 +242,10 @@
                     <p id="descricaoGraficoEnergia" class="chart-period-status" aria-live="polite">
                         Valores calculados a partir da potência medida e do tempo entre leituras.
                     </p>
-                    <canvas id="graficoEnergiaAcumulada" role="img" aria-label="Gráfico de energia acumulada em quilowatt-hora"></canvas>
+                    <div class="grafico-wrapper">
+                        <canvas id="graficoEnergiaAcumulada" role="img" aria-label="Gráfico de energia acumulada em quilowatt-hora"></canvas>
+                        <div class="tooltip-grafico" role="status" aria-live="polite" hidden></div>
+                    </div>
                 </section>
             </section>
 

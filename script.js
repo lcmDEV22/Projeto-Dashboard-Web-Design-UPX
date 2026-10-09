@@ -553,9 +553,15 @@ function registrarLeituraEnergia(estado) {
     if (anterior) {
         const duracaoMs = instanteMs - Date.parse(anterior.instante);
         if (duracaoMs > 0 && duracaoMs <= INTERVALO_MAXIMO_INTEGRACAO_MS) {
+            // Cálculo exato do consumo acumulado em kWh:
+            // kWh = ((potenciaAnterior + potenciaAtual) / 2) * (Δt em horas) / 1000
+            // Isso integra a potência instantânea ao longo do intervalo entre duas leituras, usando
+            // a média aritmética dos extremos como aproximação da potência no período.
             const potenciaMediaWatts = (anterior.potenciaWatts + estado.potenciaWatts) / 2;
             energiaAcumulada.totalKwh += potenciaMediaWatts * (duracaoMs / 3600000) / 1000;
         } else if (duracaoMs > INTERVALO_MAXIMO_INTEGRACAO_MS) {
+            // Qualquer intervalo maior que 5 minutos é descartado por segurança para evitar que
+            // lacunas longas inventem consumo acumulado no gráfico e no total do card.
             intervaloIgnorado = true;
         }
     }
@@ -612,11 +618,16 @@ function desenharGraficoEnergiaAcumulada() {
     }
 
     const contexto = canvas.getContext("2d");
-    const largura = canvas.clientWidth;
-    const altura = canvas.clientHeight;
+    if (!contexto) {
+        return;
+    }
+
+    const largura = canvas.clientWidth || 600;
+    const altura = canvas.clientHeight || 300;
     const proporcao = window.devicePixelRatio || 1;
-    canvas.width = largura * proporcao;
-    canvas.height = altura * proporcao;
+    canvas.width = Math.max(1, largura * proporcao);
+    canvas.height = Math.max(1, altura * proporcao);
+    contexto.setTransform(1, 0, 0, 1, 0, 0);
     contexto.scale(proporcao, proporcao);
     contexto.clearRect(0, 0, largura, altura);
 
@@ -630,6 +641,7 @@ function desenharGraficoEnergiaAcumulada() {
     );
     const descricao = document.getElementById("descricaoGraficoEnergia");
     if (!leituras.length) {
+        dadosGraficos.delete("graficoEnergiaAcumulada");
         descricao.textContent = energiaAcumulada.ultimaLeitura
             ? "Não há amostras de energia acumulada no intervalo selecionado."
             : "O gráfico será preenchido após novas leituras de potência.";
@@ -640,12 +652,26 @@ function desenharGraficoEnergiaAcumulada() {
         return;
     }
 
-    descricao.textContent = `${leituras.length.toLocaleString("pt-BR")} amostras horárias · total acumulado em kWh`;
     const margem = { topo: 16, direita: 18, base: 38, esquerda: 74 };
     const larguraGrafico = largura - margem.esquerda - margem.direita;
     const alturaGrafico = altura - margem.topo - margem.base;
     const maximo = Math.max(...leituras.map((leitura) => leitura.kwh), 0.001);
     const passo = maximo / 4;
+
+    const pontos = leituras.map((leitura, indice) => {
+        const x = margem.esquerda + (leituras.length === 1 ? larguraGrafico / 2 : (indice / (leituras.length - 1)) * larguraGrafico);
+        const y = margem.topo + alturaGrafico - (leitura.kwh / maximo) * alturaGrafico;
+        return { x, y, valor: leitura.kwh, indice, periodo: leitura.instante };
+    });
+
+    dadosGraficos.set("graficoEnergiaAcumulada", {
+        pontos,
+        tipo: "intervalo",
+        periodicidade: "horario",
+        unidade: "kWh"
+    });
+
+    descricao.textContent = `${leituras.length.toLocaleString("pt-BR")} amostras horárias · total acumulado em kWh`;
 
     contexto.font = "11px Poppins, sans-serif";
     contexto.textAlign = "right";
@@ -1163,6 +1189,27 @@ function configurarInteracaoGraficos() {
             tooltip.hidden = true;
         });
     });
+
+    const graficoEnergia = document.getElementById("graficoEnergiaAcumulada");
+    if (graficoEnergia) {
+        const tooltipEnergia = graficoEnergia.parentElement.querySelector(".tooltip-grafico");
+        if (tooltipEnergia) {
+            graficoEnergia.addEventListener("pointermove", atualizarTooltipGrafico);
+            graficoEnergia.addEventListener("pointerdown", (evento) => {
+                if (evento.pointerType === "touch") {
+                    atualizarTooltipGrafico(evento);
+                }
+            });
+            graficoEnergia.addEventListener("pointerleave", (evento) => {
+                if (evento.pointerType !== "touch") {
+                    tooltipEnergia.hidden = true;
+                }
+            });
+            graficoEnergia.addEventListener("pointercancel", () => {
+                tooltipEnergia.hidden = true;
+            });
+        }
+    }
 }
 
 function atualizarVisibilidadeFiltroPeriodo(painelSelecionado) {
