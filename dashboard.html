@@ -228,6 +228,17 @@
                 </div>
                 <section class="grafico-energia" aria-labelledby="tituloGraficoEnergia">
                     <h3 id="tituloGraficoEnergia">Energia acumulada ao longo do tempo</h3>
+                    <div class="chart-toolbar">
+                        <label for="periodoEnergiaAcumulada">Período
+                            <select id="periodoEnergiaAcumulada" class="seletor-temporal">
+                                <option value="24">Últimas 24 horas</option>
+                                <option value="7">Últimos 7 dias</option>
+                                <option value="30" selected>Últimos 30 dias</option>
+                                <option value="90">Últimos 90 dias</option>
+                                <option value="total">Todo o histórico</option>
+                            </select>
+                        </label>
+                    </div>
                     <p id="descricaoGraficoEnergia" class="chart-period-status" aria-live="polite">
                         Valores calculados a partir da potência medida e do tempo entre leituras.
                     </p>

@@ -620,11 +620,14 @@ function desenharGraficoEnergiaAcumulada() {
     contexto.scale(proporcao, proporcao);
     contexto.clearRect(0, 0, largura, altura);
 
-    const leituras = energiaAcumulada.amostras.filter((amostra) => {
-        const data = amostra.instante.slice(0, 10);
-        return !intervaloPeriodoAplicado ||
-            (data >= intervaloPeriodoAplicado.inicio && data <= intervaloPeriodoAplicado.fim);
-    });
+    // Usa o combo box deste gráfico, sem acoplar seu intervalo ao filtro geral do dashboard.
+    const periodoSelecionado = document.getElementById("periodoEnergiaAcumulada").value;
+    const inicioPeriodoMs = periodoSelecionado === "total"
+        ? -Infinity
+        : Date.now() - Number(periodoSelecionado) * (periodoSelecionado === "24" ? 3600000 : 86400000);
+    const leituras = energiaAcumulada.amostras.filter((amostra) =>
+        Date.parse(amostra.instante) >= inicioPeriodoMs
+    );
     const descricao = document.getElementById("descricaoGraficoEnergia");
     if (!leituras.length) {
         descricao.textContent = energiaAcumulada.ultimaLeitura
@@ -671,6 +674,16 @@ function desenharGraficoEnergiaAcumulada() {
         }
     });
     contexto.stroke();
+
+    // Desenha pontos para que até uma única amostra seja visível como dado no gráfico.
+    contexto.fillStyle = "#31805a";
+    leituras.forEach((leitura, indice) => {
+        const x = margem.esquerda + (leituras.length === 1 ? larguraGrafico / 2 : (indice / (leituras.length - 1)) * larguraGrafico);
+        const y = margem.topo + alturaGrafico - (leitura.kwh / maximo) * alturaGrafico;
+        contexto.beginPath();
+        contexto.arc(x, y, 3, 0, Math.PI * 2);
+        contexto.fill();
+    });
 
     const intervaloRotulos = Math.max(1, Math.ceil(leituras.length / 6));
     contexto.fillStyle = "#68776d";
@@ -1188,9 +1201,12 @@ function configurarSelecaoGraficos() {
             atualizarVisibilidadeFiltroPeriodo(painelSelecionado);
 
             // O canvas precisa estar visível para medir sua largura antes de desenhar.
-            const canvasesDoPainel = document.querySelectorAll(`#${painelSelecionado} canvas`);
+            // O canvas acumulado tem renderizador próprio e não deve receber a série dos gráficos genéricos.
+            const canvasesDoPainel = Array.from(canvases).filter((canvas) =>
+                canvas.closest(`#${painelSelecionado}`)
+            );
             if (!API_CONFIG.baseUrl.trim() || dadosReaisCarregados || intervaloPeriodoAplicado) {
-                canvasesDoPainel.forEach(criarGrafico);
+                canvasesDoPainel.forEach((canvas) => criarGrafico(canvas));
                 desenharGraficoEnergiaAcumulada();
             }
         });
@@ -2720,6 +2736,8 @@ function desenharGraficos() {
 // Prepara os filtros antes do primeiro desenho para que já usem o período atual.
 document.addEventListener("DOMContentLoaded", () => {
     configurarFiltroPeriodo();
+    // Redesenha o acumulado imediatamente quando o usuário escolhe outro intervalo.
+    document.getElementById("periodoEnergiaAcumulada").addEventListener("change", desenharGraficoEnergiaAcumulada);
     configurarInteracaoGraficos();
     configurarSelecaoGraficos();
     configurarSelecaoGrandeza();

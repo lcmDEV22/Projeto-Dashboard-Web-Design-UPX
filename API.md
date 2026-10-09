@@ -68,7 +68,7 @@ O objeto `currentState` é opcional para manter compatibilidade com serviços ex
 
 Campos ausentes aparecem como “Não informado”, em vez de valores presumidos. Sem API configurada, a interface apresenta valores demonstrativos explicitamente identificados como demonstração.
 
-O card **Energia acumulada** integra a potência de `powerWatts` pelo tempo entre leituras consecutivas e exibe o resultado em kWh. A aproximação usa a potência média dos extremos do intervalo; leituras repetidas ou atrasadas não são integradas e intervalos acima de cinco minutos são ignorados por segurança. A consulta automática ocorre a cada minuto enquanto a página está visível, além do botão **Atualizar**. O total e uma amostra por hora ficam salvos no navegador atual; a medição começa após a primeira leitura válida e não recupera períodos em que o dashboard não coletou dados.
+O card **Energia acumulada** integra a potência de `powerWatts` pelo tempo entre leituras consecutivas e exibe o resultado em kWh. A aproximação usa a potência média dos extremos do intervalo; leituras repetidas ou atrasadas não são integradas e intervalos acima de cinco minutos são ignorados por segurança. A consulta automática ocorre a cada minuto enquanto a página está visível, além do botão **Atualizar**. O total e uma amostra por hora ficam salvos no navegador atual; a medição começa após a primeira leitura válida e não recupera períodos em que o dashboard não coletou dados. O gráfico acumulado tem um seletor independente para visualizar as últimas 24 horas, 7, 30 ou 90 dias, ou todo o histórico salvo.
 
 ## Filtro por período
 

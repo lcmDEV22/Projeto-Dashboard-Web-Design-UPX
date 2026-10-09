@@ -795,6 +795,22 @@ body.dashboard .grafico-energia h3 {
     font-size: 1rem;
 }
 
+body.dashboard .grafico-energia .chart-toolbar {
+    justify-content: flex-start;
+    margin: 0 0 12px;
+}
+
+body.dashboard .grafico-energia .seletor-temporal {
+    width: min(240px, 70vw);
+    min-height: 40px;
+    padding: 8px 10px;
+    border: 1px solid #cbd5cd;
+    border-radius: 6px;
+    background: var(--white);
+    color: var(--text);
+    font: inherit;
+}
+
 body.dashboard #graficoEnergiaAcumulada {
     display: block;
     width: 100%;
@@ -1359,7 +1375,6 @@ body.dashboard .tabela-historico .historico-vazio {
 #statusIluminacao {
     margin-top: 4px;
 }
-
 
 
 
