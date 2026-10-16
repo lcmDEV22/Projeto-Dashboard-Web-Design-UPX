@@ -32,6 +32,10 @@
                     <span class="sidebar-link-icon" aria-hidden="true">L</span>
                     Iluminação e luminosidade
                 </button>
+                <button class="sidebar-link" type="button" data-chart-target="secaoDispositivos" aria-controls="secaoDispositivos" aria-pressed="false">
+                    <span class="sidebar-link-icon" aria-hidden="true">D</span>
+                    Dispositivos
+                </button>
                 <button class="sidebar-link" type="button" data-chart-target="secaoHistorico" aria-controls="secaoHistorico" aria-pressed="false">
                     <span class="sidebar-link-icon" aria-hidden="true">H</span>
                     Histórico
@@ -293,6 +297,17 @@
                         </div>
                     </section>
                 </div>
+            </section>
+
+            <section class="chart-panel dispositivos-panel" id="secaoDispositivos" aria-labelledby="tituloDispositivos" hidden>
+                <h2 id="tituloDispositivos">Dispositivos</h2>
+                <p class="dispositivos-intro">Estado de conexão informado pelo serviço do dashboard.</p>
+                <ul id="listaDispositivos" class="lista-dispositivos" aria-live="polite">
+                    <li class="dispositivo-item">
+                        <span class="dispositivo-nome">Controlador ESP32</span>
+                        <span class="status-indicador">Aguardando dados</span>
+                    </li>
+                </ul>
             </section>
 
             <!-- Mantém as consultas anteriores separadas dos indicadores atuais. -->

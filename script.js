@@ -272,6 +272,7 @@ let estadoAtual = {
     potenciaWatts: null,
     iluminacaoLigada: null,
     esp32Conectado: null,
+    dispositivos: [],
     atualizadoEm: null,
     origemHorario: ""
 };
@@ -1214,11 +1215,17 @@ function configurarInteracaoGraficos() {
 
 function atualizarVisibilidadeFiltroPeriodo(painelSelecionado) {
     const filtroPeriodo = document.getElementById("filtroPeriodo");
-    if (!filtroPeriodo) {
-        return;
+    const resumoPeriodo = document.querySelector(".resumo-periodo");
+
+    // Os filtros e indicadores de período não pertencem à seção de dispositivos.
+    if (filtroPeriodo) {
+        filtroPeriodo.hidden = painelSelecionado === "secaoHistorico" || painelSelecionado === "secaoDispositivos";
     }
 
-    filtroPeriodo.hidden = painelSelecionado === "secaoHistorico";
+    // Mantém o resumo nas demais seções e o oculta junto do filtro em Dispositivos.
+    if (resumoPeriodo) {
+        resumoPeriodo.hidden = painelSelecionado === "secaoDispositivos";
+    }
 }
 
 // Alterna o painel selecionado e redesenha o canvas depois que ele fica visível.
@@ -2081,6 +2088,30 @@ function normalizarEstadoAtual(resposta) {
         origemHorario = "Consulta recebida pelo dashboard";
     }
 
+    const dispositivos = atual.devices === undefined
+        ? [{ id: "esp32", name: "Controlador ESP32", online: validarEstadoBooleano(atual.esp32Connected, "esp32Connected") }]
+        : (() => {
+            if (!Array.isArray(atual.devices)) {
+                throw new Error("O campo currentState.devices deve ser uma lista.");
+            }
+            return atual.devices.map((dispositivo) => {
+                if (
+                    !dispositivo ||
+                    typeof dispositivo !== "object" ||
+                    typeof dispositivo.id !== "string" ||
+                    typeof dispositivo.name !== "string" ||
+                    typeof dispositivo.online !== "boolean"
+                ) {
+                    throw new Error("Cada dispositivo deve informar id, name e online válidos.");
+                }
+                return {
+                    id: dispositivo.id,
+                    name: dispositivo.name,
+                    online: dispositivo.online
+                };
+            });
+        })();
+
     return {
         luminosidadeLux: validarLeituraAtual(atual.ambientLightLux, "ambientLightLux"),
         presencaDetectada: validarEstadoBooleano(atual.presenceDetected, "presenceDetected"),
@@ -2088,9 +2119,50 @@ function normalizarEstadoAtual(resposta) {
         potenciaWatts: validarLeituraAtual(atual.powerWatts, "powerWatts"),
         iluminacaoLigada: validarEstadoBooleano(atual.lightingOn, "lightingOn"),
         esp32Conectado: validarEstadoBooleano(atual.esp32Connected, "esp32Connected"),
+        dispositivos,
         atualizadoEm,
         origemHorario
     };
+}
+
+function atualizarPainelDispositivos() {
+    const lista = document.getElementById("listaDispositivos");
+    if (!lista) {
+        return;
+    }
+
+    lista.replaceChildren();
+
+    if (!estadoAtual.dispositivos.length) {
+        const itemVazio = document.createElement("li");
+        itemVazio.className = "dispositivo-item dispositivo-vazio";
+        itemVazio.textContent = "Nenhum dispositivo informado pelo serviço.";
+        lista.appendChild(itemVazio);
+        return;
+    }
+
+    estadoAtual.dispositivos.forEach((dispositivo) => {
+        const item = document.createElement("li");
+        item.className = "dispositivo-item";
+        const nome = document.createElement("span");
+        nome.className = "dispositivo-nome";
+        nome.textContent = dispositivo.name;
+
+        const status = document.createElement("span");
+        status.className = "status-indicador";
+        if (dispositivo.online === null) {
+            status.textContent = "Não informado";
+        } else if (estadoAtual.origemHorario === "Demonstração atualizada") {
+            status.textContent = dispositivo.online ? "Online · demonstração" : "Offline · demonstração";
+            status.classList.add(dispositivo.online ? "is-on" : "is-off");
+        } else {
+            status.textContent = dispositivo.online ? "Online" : "Offline";
+            status.classList.add(dispositivo.online ? "is-on" : "is-off");
+        }
+
+        item.append(nome, status);
+        lista.appendChild(item);
+    });
 }
 
 // Converte a resposta da API para o formato consumido pelos gráficos e indicadores.
@@ -2227,6 +2299,7 @@ function atualizarEstadoAtual() {
 
     atualizarIndicador("statusIluminacaoAtual", estadoAtual.iluminacaoLigada, "Ligada", "Desligada");
     atualizarIndicador("statusEsp32Atual", estadoAtual.esp32Conectado, "Conectado", "Desconectado");
+    atualizarPainelDispositivos();
 
     if (estadoAtual.atualizadoEm) {
         const dataAtualizacao = new Date(estadoAtual.atualizadoEm);
@@ -2248,6 +2321,7 @@ function carregarEstadoDemonstrativo() {
         potenciaWatts: 1140,
         iluminacaoLigada: true,
         esp32Conectado: true,
+        dispositivos: [{ id: "esp32", name: "Controlador ESP32", online: true }],
         atualizadoEm: new Date().toISOString(),
         origemHorario: "Demonstração atualizada"
     };

@@ -30,6 +30,10 @@ A rota deve retornar JSON neste formato. As séries mensais devem conter 12 núm
     "powerWatts": 1140,
     "lightingOn": true,
     "esp32Connected": true,
+    "devices": [
+      { "id": "esp32", "name": "Controlador ESP32", "online": true },
+      { "id": "sensor-presenca", "name": "Sensor de presença", "online": false }
+    ],
     "lastUpdatedAt": "2026-10-03T15:40:00.000Z"
   },
   "monthlyConsumptionKwh": [420, 510, 480, 620, 590, 710, 680, 790, 830, 910, 870, 980],
@@ -64,6 +68,7 @@ O objeto `currentState` é opcional para manter compatibilidade com serviços ex
 - `powerWatts`: potência elétrica instantânea em watts (número não negativo), exibida como consumo atual.
 - `lightingOn`: estado ligado/desligado da iluminação (booleano).
 - `esp32Connected`: conexão atual com o ESP32 (booleano).
+- `devices`: lista opcional de dispositivos, cada um com `id` e `name` em texto e `online` booleano. Quando omitida, o painel usa `esp32Connected` para exibir o controlador ESP32; se esse campo também estiver ausente, a conexão aparece como não informada.
 - `lastUpdatedAt`: instante em que o dispositivo atualizou essas leituras, em formato de data reconhecido pelo JavaScript; se não vier, o dashboard mostra o horário em que recebeu a resposta.
 
 Campos ausentes aparecem como “Não informado”, em vez de valores presumidos. Sem API configurada, a interface apresenta valores demonstrativos explicitamente identificados como demonstração.

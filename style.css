@@ -693,6 +693,37 @@ body.dashboard .status-indicador.is-disconnected {
     color: #8b3026;
 }
 
+body.dashboard .dispositivos-intro {
+    margin: -10px 0 18px;
+    color: #596a60;
+    font-size: 0.9rem;
+}
+
+body.dashboard .lista-dispositivos {
+    display: grid;
+    gap: 10px;
+    max-width: 720px;
+    list-style: none;
+}
+
+body.dashboard .dispositivo-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    min-height: 58px;
+    padding: 12px 14px;
+    border: 1px solid #e3e9e4;
+    border-radius: 6px;
+    background: #fbfcfb;
+}
+
+body.dashboard .dispositivo-nome {
+    color: var(--text);
+    font-weight: 600;
+}
+
 body.dashboard .resumo-periodo > h2 {
     margin-bottom: 14px;
 }
