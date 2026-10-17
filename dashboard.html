@@ -4,11 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard de Consumo</title>
-
-    <!--Liga o html com o CSS-->
-
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <title>EcoVolt | Dashboard de Energia</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -16,64 +16,86 @@
 
     <!-- Organiza a navegação lateral e o conteúdo principal do dashboard. -->
     <div class="dashboard-layout">
-        <aside class="dashboard-sidebar" aria-label="Navegação do dashboard">
-            <a class="sidebar-brand" href="dashboard.html">Consumo</a>
+        <aside class="dashboard-sidebar" id="navegacaoDashboard" aria-label="Navegação do dashboard">
+            <a class="sidebar-brand" href="dashboard.html">
+                <span class="material-symbols-outlined sidebar-brand-icon" aria-hidden="true">energy_savings_leaf</span>
+                <span class="sidebar-brand-copy"><strong>EcoVolt</strong><small>ENERGY IOT</small></span>
+            </a>
+            <div class="sidebar-device-status">
+                <span class="sidebar-status-dot" aria-hidden="true"></span>
+                <span><strong id="sidebarEsp32Status">Verificando ESP32</strong><small id="sidebarEsp32Detail">Estado da conexão</small></span>
+            </div>
             <p class="sidebar-caption">PAINEL</p>
             <nav class="sidebar-nav" aria-label="Seções do dashboard">
                 <button class="sidebar-link is-active" type="button" data-chart-target="secaoEstadoAtual" aria-controls="secaoEstadoAtual" aria-pressed="true">
-                    <span class="sidebar-link-icon" aria-hidden="true">R</span>
+                    <span class="material-symbols-outlined sidebar-link-icon" aria-hidden="true">dashboard</span>
                     Resumo atual
                 </button>
                 <button class="sidebar-link" type="button" data-chart-target="secaoGraficosConsumo" aria-controls="secaoGraficosConsumo" aria-pressed="false">
-                    <span class="sidebar-link-icon" aria-hidden="true">M</span>
+                    <span class="material-symbols-outlined sidebar-link-icon" aria-hidden="true">bolt</span>
                     Consumo
                 </button>
                 <button class="sidebar-link" type="button" data-chart-target="secaoGraficosIluminacao" aria-controls="secaoGraficosIluminacao" aria-pressed="false">
-                    <span class="sidebar-link-icon" aria-hidden="true">L</span>
+                    <span class="material-symbols-outlined sidebar-link-icon" aria-hidden="true">light_mode</span>
                     Iluminação e luminosidade
                 </button>
                 <button class="sidebar-link" type="button" data-chart-target="secaoDispositivos" aria-controls="secaoDispositivos" aria-pressed="false">
-                    <span class="sidebar-link-icon" aria-hidden="true">D</span>
+                    <span class="material-symbols-outlined sidebar-link-icon" aria-hidden="true">sensors</span>
                     Dispositivos
                 </button>
                 <button class="sidebar-link" type="button" data-chart-target="secaoHistorico" aria-controls="secaoHistorico" aria-pressed="false">
-                    <span class="sidebar-link-icon" aria-hidden="true">H</span>
+                    <span class="material-symbols-outlined sidebar-link-icon" aria-hidden="true">history</span>
                     Histórico
                 </button>
             </nav>
             <div class="sidebar-export">
-                <p class="sidebar-caption">DADOS</p>
+                <p class="sidebar-caption">RELATÓRIOS CSV/XLS</p>
+                <p class="sidebar-export-description">Exporte a telemetria do banco de dados em planilha estruturada.</p>
                 <button class="btn-exportar" id="btnExportarHistorico" type="button">
-                    <span aria-hidden="true">↓</span>
+                    <span class="material-symbols-outlined" aria-hidden="true">download</span>
                     Exportar planilha
                 </button>
                 <p id="statusExportacao" class="export-status" role="status" aria-live="polite"></p>
+                <p class="sidebar-version">EcoVolt <span><i></i> Sessão ativa</span></p>
             </div>
         </aside>
+        <button class="sidebar-backdrop" id="btnFecharMenu" type="button" aria-label="Fechar navegação" hidden></button>
 
         <main class="dashboard-main">
             <!-- Início do conteúdo principal do dashboard. -->
             <div class="dashboard-container">
                 <header class="dashboard-header">
-                    <div>
+                    <div class="dashboard-heading">
+                        <div class="dashboard-eyebrow"><span aria-hidden="true"></span> TELEMETRIA OPERACIONAL <b>•</b> NODE ESP32-WROOM</div>
                         <h1>Dashboard</h1>
-                        <h2>Painel de Controle</h2>
+                        <h2>Painel de Controle e Monitoramento de Energia em Tempo Real</h2>
                     </div>
                     <div class="dashboard-actions">
-                        <p>Olá, <span id="usuarioLogado"></span></p>
-                        <button class="btn-atualizar" id="btnAtualizarDados" type="button">Atualizar</button>
-                        <button class="btn-sair" id="btnSair" type="button">Sair</button>
+                        <button class="btn-menu" id="btnAlternarMenu" type="button" aria-controls="navegacaoDashboard" aria-expanded="false" aria-label="Abrir navegação">
+                            <span class="material-symbols-outlined" aria-hidden="true">menu</span>
+                        </button>
+                        <p class="dashboard-greeting">Olá, <strong id="usuarioLogado">Operador de Campo</strong><small>Monitoramento em tempo real da rede</small></p>
+                        <span class="api-connection" id="apiConnectionStatus" aria-live="polite"><i aria-hidden="true"></i><span>Verificando API</span></span>
+                        <button class="btn-atualizar" id="btnAtualizarDados" type="button" aria-label="Atualizar dados">
+                            <span class="material-symbols-outlined" aria-hidden="true">refresh</span><span class="btn-label">Atualizar</span>
+                        </button>
+                        <button class="btn-sair" id="btnSair" type="button" aria-label="Sair da conta">
+                            <span class="material-symbols-outlined" aria-hidden="true">logout</span><span class="btn-label">Sair</span>
+                        </button>
                     </div>
                 </header>
 
                 <!-- Informa se os dados são reais, demonstrativos ou se houve falha na API. -->
-                <p id="statusApi" class="api-status" role="status" aria-live="polite"></p>
+                <div class="dashboard-title-row">
+                    <p id="statusApi" class="api-status" role="status" aria-live="polite"></p>
+                    <span class="dashboard-sync"><span class="material-symbols-outlined" aria-hidden="true">update</span> Atualização automática a cada 60 s</span>
+                </div>
 
                 <!-- Define um intervalo ou um atalho antes de atualizar os indicadores e gráficos. -->
                 <section id="filtroPeriodo" class="filtro-periodo" aria-labelledby="tituloFiltroPeriodo">
                     <div class="filtro-periodo-cabecalho">
                         <div>
-                            <h2 id="tituloFiltroPeriodo">Analisar período</h2>
+                            <h2 id="tituloFiltroPeriodo"><span class="material-symbols-outlined" aria-hidden="true">calendar_month</span> Período</h2>
                             <p>O filtro usa as medições históricas disponíveis e não altera o estado atual.</p>
                         </div>
                         <label for="atalhoPeriodo">Período predefinido
@@ -104,17 +126,23 @@
                     <h2 id="tituloResumoPeriodo">Resumo do período</h2>
                     <section class="cards-grid">
                         <div class="card">
-                            <span class="card-title">Custo dos meses completos</span>
+                            <span class="card-icon" aria-hidden="true"><span class="material-symbols-outlined">payments</span></span>
+                            <span class="card-title">Custo no período</span>
+                            <small class="card-description">Tarifa TE + TUSD consolidada</small>
                             <strong id="cardCustoTotal">--</strong>
                             <small id="variacaoCustoTotal">No intervalo selecionado</small>
                         </div>
                         <div class="card">
-                            <span class="card-title">Média diária observada</span>
+                            <span class="card-icon" aria-hidden="true"><span class="material-symbols-outlined">query_stats</span></span>
+                            <span class="card-title">Média diária</span>
+                            <small class="card-description">Demanda média normalizada</small>
                             <strong id="cardConsumoDiario">--</strong>
                             <small id="variacaoConsumoDiario">--</small>
                         </div>
                         <div class="card">
-                            <span class="card-title">Consumo no intervalo</span>
+                            <span class="card-icon" aria-hidden="true"><span class="material-symbols-outlined">electric_bolt</span></span>
+                            <span class="card-title">Consumo acumulado</span>
+                            <small class="card-description">Consumo no intervalo selecionado</small>
                             <strong id="cardConsumoMensal">--</strong>
                             <small id="variacaoConsumoMensal">--</small>
                         </div>
@@ -126,25 +154,25 @@
             <section class="chart-panel estado-atual" id="secaoEstadoAtual" aria-labelledby="tituloEstadoAtual">
                 <div class="estado-atual-cabecalho">
                     <div>
-                        <h2 id="tituloEstadoAtual">Estado atual do sistema</h2>
+                        <h2 id="tituloEstadoAtual"><span class="live-dot" aria-hidden="true"></span> Telemetria ao vivo</h2>
                         <p>Leituras instantâneas dos sensores e do controlador.</p>
                     </div>
-                    <p class="ultima-atualizacao">Última atualização: <time id="ultimaAtualizacaoAtual">Aguardando dados</time></p>
+                    <p class="ultima-atualizacao"><span class="material-symbols-outlined" aria-hidden="true">schedule</span> Última atualização: <time id="ultimaAtualizacaoAtual">Aguardando dados</time></p>
                 </div>
 
                 <div class="estado-atual-grid">
                     <article class="card estado-card">
-                        <span class="card-title">Luminosidade</span>
+                        <span class="estado-card-heading"><span class="card-title">Luminosidade (LDR)</span><span class="material-symbols-outlined" aria-hidden="true">light_mode</span></span>
                         <strong id="valorLuminosidadeAtual">--</strong>
                         <small>Intensidade de luz ambiente</small>
                     </article>
                     <article class="card estado-card">
-                        <span class="card-title">Presença</span>
+                        <span class="estado-card-heading"><span class="card-title">Presença (PIR)</span><span class="material-symbols-outlined" aria-hidden="true">sensors</span></span>
                         <strong id="valorPresencaAtual">--</strong>
                         <small id="detalhePresencaAtual">Estado do sensor</small>
                     </article>
                     <article class="card estado-card">
-                        <span class="card-title">Intensidade da iluminação</span>
+                        <span class="estado-card-heading"><span class="card-title">Iluminação LED</span><span class="material-symbols-outlined" aria-hidden="true">lightbulb</span></span>
                         <strong id="valorIntensidadeAtual">--</strong>
                         <div class="barra-iluminacao" aria-label="Nível de iluminação">
                             <div id="nivelIluminacao"></div>
@@ -152,12 +180,12 @@
                         <small id="statusIluminacao">Aguardando leitura...</small>
                     </article>
                     <article class="card estado-card">
-                        <span class="card-title">Consumo atual</span>
+                        <span class="estado-card-heading"><span class="card-title">Potência instantânea</span><span class="material-symbols-outlined" aria-hidden="true">bolt</span></span>
                         <strong id="valorConsumoAtual">--</strong>
                         <small>Potência instantânea medida</small>
                     </article>
                     <article class="card estado-card">
-                        <span class="card-title">Energia acumulada</span>
+                        <span class="estado-card-heading"><span class="card-title">Energia acumulada</span><span class="material-symbols-outlined" aria-hidden="true">electric_meter</span></span>
                         <strong id="valorEnergiaAcumulada">0,0000 kWh</strong>
                         <small id="statusEnergiaAcumulada">Aguardando leituras de potência</small>
                     </article>
@@ -300,7 +328,13 @@
             </section>
 
             <section class="chart-panel dispositivos-panel" id="secaoDispositivos" aria-labelledby="tituloDispositivos" hidden>
-                <h2 id="tituloDispositivos">Dispositivos</h2>
+                <div class="dispositivos-heading">
+                    <div>
+                        <h2 id="tituloDispositivos">Hardware em operação</h2>
+                        <p class="dispositivos-intro">Periféricos e microcontroladores vinculados à malha IoT</p>
+                    </div>
+                    <span class="material-symbols-outlined" aria-hidden="true">developer_board</span>
+                </div>
                 <p class="dispositivos-intro">Estado de conexão informado pelo serviço do dashboard.</p>
                 <ul id="listaDispositivos" class="lista-dispositivos" aria-live="polite">
                     <li class="dispositivo-item">

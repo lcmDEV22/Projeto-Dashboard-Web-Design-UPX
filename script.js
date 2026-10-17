@@ -646,8 +646,8 @@ function desenharGraficoEnergiaAcumulada() {
         descricao.textContent = energiaAcumulada.ultimaLeitura
             ? "Não há amostras de energia acumulada no intervalo selecionado."
             : "O gráfico será preenchido após novas leituras de potência.";
-        contexto.fillStyle = "#68776d";
-        contexto.font = "14px Poppins, sans-serif";
+        contexto.fillStyle = "#6b8779";
+        contexto.font = "14px Inter, sans-serif";
         contexto.textAlign = "center";
         contexto.fillText("Sem amostras no período.", largura / 2, altura / 2);
         return;
@@ -674,21 +674,21 @@ function desenharGraficoEnergiaAcumulada() {
 
     descricao.textContent = `${leituras.length.toLocaleString("pt-BR")} amostras horárias · total acumulado em kWh`;
 
-    contexto.font = "11px Poppins, sans-serif";
+    contexto.font = "11px Inter, sans-serif";
     contexto.textAlign = "right";
     contexto.textBaseline = "middle";
     for (let linha = 0; linha <= 4; linha++) {
         const y = margem.topo + alturaGrafico - (linha / 4) * alturaGrafico;
-        contexto.strokeStyle = "#e5ebe6";
+        contexto.strokeStyle = "rgba(167, 243, 208, 0.12)";
         contexto.beginPath();
         contexto.moveTo(margem.esquerda, y);
         contexto.lineTo(largura - margem.direita, y);
         contexto.stroke();
-        contexto.fillStyle = "#68776d";
+        contexto.fillStyle = "#a7f3d0";
         contexto.fillText((passo * linha).toLocaleString("pt-BR", { maximumFractionDigits: 3 }), margem.esquerda - 8, y);
     }
 
-    contexto.strokeStyle = "#31805a";
+    contexto.strokeStyle = "#34d399";
     contexto.lineWidth = 2.5;
     contexto.beginPath();
     leituras.forEach((leitura, indice) => {
@@ -703,7 +703,7 @@ function desenharGraficoEnergiaAcumulada() {
     contexto.stroke();
 
     // Desenha pontos para que até uma única amostra seja visível como dado no gráfico.
-    contexto.fillStyle = "#31805a";
+    contexto.fillStyle = "#34d399";
     leituras.forEach((leitura, indice) => {
         const x = margem.esquerda + (leituras.length === 1 ? larguraGrafico / 2 : (indice / (leituras.length - 1)) * larguraGrafico);
         const y = margem.topo + alturaGrafico - (leitura.kwh / maximo) * alturaGrafico;
@@ -713,7 +713,7 @@ function desenharGraficoEnergiaAcumulada() {
     });
 
     const intervaloRotulos = Math.max(1, Math.ceil(leituras.length / 6));
-    contexto.fillStyle = "#68776d";
+    contexto.fillStyle = "#a7f3d0";
     contexto.textAlign = "center";
     contexto.textBaseline = "top";
     leituras.forEach((leitura, indice) => {
@@ -860,10 +860,10 @@ function criarGrafico(canvas) {
             ano: null
         });
         ctx.clearRect(0, 0, largura, altura);
-        ctx.fillStyle = "#ffffff";
+        ctx.fillStyle = "#0f291e";
         ctx.fillRect(0, 0, largura, altura);
-        ctx.fillStyle = "#68776d";
-        ctx.font = "14px Poppins, sans-serif";
+        ctx.fillStyle = "#a7f3d0";
+        ctx.font = "14px Inter, sans-serif";
         ctx.textAlign = "center";
         ctx.fillText(eixoPorHorario
             ? "Sem leituras horárias neste dia."
@@ -937,15 +937,15 @@ function criarGrafico(canvas) {
     }
 
     ctx.clearRect(0, 0, largura, altura);
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = "#0f291e";
     ctx.fillRect(0, 0, largura, altura);
     ctx.fillStyle = "#777";
-    ctx.font = "12px Poppins, sans-serif";
+    ctx.font = "12px Inter, sans-serif";
     ctx.textAlign = "left";
     ctx.fillText(`Valores em ${serieSelecionada.unidade}`, margemEsquerda, 16);
 
     // Desenha as linhas horizontais de referência da área do gráfico.
-    ctx.strokeStyle = "#e5e5e5";
+    ctx.strokeStyle = "rgba(167, 243, 208, 0.14)";
     ctx.lineWidth = 1;
     for (let i = 0; i <= quantidadeLinhas; i++) {
         const y = margemSuperior + (alturaGrafico / quantidadeLinhas) * i;
@@ -962,19 +962,19 @@ function criarGrafico(canvas) {
             ctx.beginPath();
             ctx.moveTo(x, margemSuperior);
             ctx.lineTo(x, margemSuperior + alturaGrafico);
-            ctx.strokeStyle = "#eef0ee";
+            ctx.strokeStyle = "rgba(167, 243, 208, 0.08)";
             ctx.lineWidth = 1;
             ctx.stroke();
-            ctx.fillStyle = "#777";
-            ctx.font = "11px Poppins, sans-serif";
+            ctx.fillStyle = "#6b8779";
+            ctx.font = "11px Inter, sans-serif";
             ctx.textAlign = hora === 0 ? "left" : hora === 24 ? "right" : "center";
             ctx.fillText(`${String(hora).padStart(2, "0")}h`, x, altura - 15);
         });
     }
 
     // Mostra os valores correspondentes às linhas da grade no eixo vertical.
-    ctx.fillStyle = "#777";
-    ctx.font = "12px Poppins, sans-serif";
+    ctx.fillStyle = "#a7f3d0";
+    ctx.font = "12px Inter, sans-serif";
     ctx.textAlign = "right";
     for (let i = 0; i <= quantidadeLinhas; i++) {
         const valor = maiorValor - (maiorValor / quantidadeLinhas) * i;
@@ -984,7 +984,7 @@ function criarGrafico(canvas) {
 
     // Distribui os rótulos do eixo horizontal e omite alguns dias para evitar sobreposição.
     if (intervaloPeriodoAplicado && !isGraficoDiario && !isGraficoSensorLuz && labels.length > 8) {
-        ctx.font = "8px Poppins, sans-serif";
+        ctx.font = "8px Inter, sans-serif";
     }
     if (!eixoPorHorario) {
         ctx.textAlign = "center";
@@ -1000,7 +1000,7 @@ function criarGrafico(canvas) {
     }
 
     if (!valores.some(Number.isFinite)) {
-        ctx.fillStyle = "#68776d";
+        ctx.fillStyle = "#a7f3d0";
         ctx.textAlign = "center";
         ctx.fillText("Sem medições nesta faixa de datas.", largura / 2, margemSuperior + alturaGrafico / 2);
     }
@@ -1023,7 +1023,7 @@ function criarGrafico(canvas) {
             ctx.lineTo(ponto.x, ponto.y);
         }
     });
-    ctx.strokeStyle = "#4CAF50";
+    ctx.strokeStyle = "#34d399";
     ctx.lineWidth = 3;
     ctx.lineJoin = "round";
     ctx.lineCap = "round";
@@ -1036,9 +1036,9 @@ function criarGrafico(canvas) {
         }
         ctx.beginPath();
         ctx.arc(ponto.x, ponto.y, 4, 0, Math.PI * 2);
-        ctx.fillStyle = "#ffffff";
+        ctx.fillStyle = "#0f291e";
         ctx.fill();
-        ctx.strokeStyle = "#4CAF50";
+        ctx.strokeStyle = "#34d399";
         ctx.lineWidth = 2;
         ctx.stroke();
     });
@@ -1217,21 +1217,32 @@ function atualizarVisibilidadeFiltroPeriodo(painelSelecionado) {
     const filtroPeriodo = document.getElementById("filtroPeriodo");
     const resumoPeriodo = document.querySelector(".resumo-periodo");
 
-    // Os filtros e indicadores de período não pertencem à seção de dispositivos.
+    // O histórico e os dispositivos têm filtros e indicadores próprios.
     if (filtroPeriodo) {
         filtroPeriodo.hidden = painelSelecionado === "secaoHistorico" || painelSelecionado === "secaoDispositivos";
     }
 
-    // Mantém o resumo nas demais seções e o oculta junto do filtro em Dispositivos.
+    // Mantém os indicadores do período fora da seção de dispositivos.
     if (resumoPeriodo) {
         resumoPeriodo.hidden = painelSelecionado === "secaoDispositivos";
     }
+}
+
+function exibirPainelDashboard(painelSelecionado, paineis) {
+    const resumoInicial = painelSelecionado === "secaoEstadoAtual";
+    paineis.forEach((painel) => {
+        painel.hidden = resumoInicial
+            ? !["secaoEstadoAtual", "secaoGraficosConsumo", "secaoDispositivos"].includes(painel.id)
+            : painel.id !== painelSelecionado;
+    });
+    atualizarVisibilidadeFiltroPeriodo(painelSelecionado);
 }
 
 // Alterna o painel selecionado e redesenha o canvas depois que ele fica visível.
 function configurarSelecaoGraficos() {
     const botoes = document.querySelectorAll("[data-chart-target]");
     const paineis = document.querySelectorAll(".chart-panel");
+    const menu = document.getElementById("navegacaoDashboard");
 
     botoes.forEach((botao) => {
         botao.addEventListener("click", () => {
@@ -1248,19 +1259,19 @@ function configurarSelecaoGraficos() {
                 tooltip.hidden = true;
             });
 
-            paineis.forEach((painel) => {
-                painel.hidden = painel.id !== painelSelecionado;
-            });
-
-            atualizarVisibilidadeFiltroPeriodo(painelSelecionado);
+            exibirPainelDashboard(painelSelecionado, paineis);
+            menu?.classList.remove("menu-aberto");
+            document.getElementById("btnAlternarMenu")?.setAttribute("aria-expanded", "false");
+            document.getElementById("btnFecharMenu").hidden = true;
 
             // O canvas precisa estar visível para medir sua largura antes de desenhar.
             // O canvas acumulado tem renderizador próprio e não deve receber a série dos gráficos genéricos.
-            const canvasesDoPainel = Array.from(canvases).filter((canvas) =>
-                canvas.closest(`#${painelSelecionado}`)
-            );
             if (!API_CONFIG.baseUrl.trim() || dadosReaisCarregados || intervaloPeriodoAplicado) {
-                canvasesDoPainel.forEach((canvas) => criarGrafico(canvas));
+                canvases.forEach((canvas) => {
+                    if (canvas.clientWidth > 0) {
+                        criarGrafico(canvas);
+                    }
+                });
                 desenharGraficoEnergiaAcumulada();
             }
         });
@@ -1270,11 +1281,50 @@ function configurarSelecaoGraficos() {
     const botaoInicial = document.querySelector("[data-chart-target].is-active") || botoes[0];
     if (botaoInicial) {
         const painelInicial = botaoInicial.dataset.chartTarget;
-        paineis.forEach((painel) => {
-            painel.hidden = painel.id !== painelInicial;
-        });
-        atualizarVisibilidadeFiltroPeriodo(painelInicial);
+        exibirPainelDashboard(painelInicial, paineis);
     }
+}
+
+function configurarNavegacaoResponsiva() {
+    const menu = document.getElementById("navegacaoDashboard");
+    const botaoAlternar = document.getElementById("btnAlternarMenu");
+    const botaoFechar = document.getElementById("btnFecharMenu");
+    if (!menu || !botaoAlternar || !botaoFechar) {
+        return;
+    }
+
+    const fecharMenu = (devolverFoco = false) => {
+        menu.classList.remove("menu-aberto");
+        botaoAlternar.setAttribute("aria-expanded", "false");
+        botaoAlternar.setAttribute("aria-label", "Abrir navegação");
+        botaoFechar.hidden = true;
+        if (devolverFoco) {
+            botaoAlternar.focus();
+        }
+    };
+
+    botaoAlternar.addEventListener("click", () => {
+        const abrir = botaoAlternar.getAttribute("aria-expanded") !== "true";
+        menu.classList.toggle("menu-aberto", abrir);
+        botaoAlternar.setAttribute("aria-expanded", String(abrir));
+        botaoAlternar.setAttribute("aria-label", abrir ? "Fechar navegação" : "Abrir navegação");
+        botaoFechar.hidden = !abrir;
+        if (abrir) {
+            menu.querySelector("[data-chart-target]")?.focus();
+        }
+    });
+
+    botaoFechar.addEventListener("click", () => fecharMenu(true));
+    document.addEventListener("keydown", (evento) => {
+        if (evento.key === "Escape" && menu.classList.contains("menu-aberto")) {
+            fecharMenu(true);
+        }
+    });
+    window.addEventListener("resize", () => {
+        if (window.innerWidth > 960) {
+            fecharMenu();
+        }
+    });
 }
 
 // Sincroniza os seletores dos dois painéis e redesenha usando a grandeza escolhida.
@@ -2287,6 +2337,16 @@ function atualizarEstadoAtual() {
         indicador.className = "status-indicador";
         if (valor === null) {
             indicador.textContent = "Não informado";
+            if (id === "statusEsp32Atual") {
+                const statusLateral = document.getElementById("sidebarEsp32Status");
+                const detalheLateral = document.getElementById("sidebarEsp32Detail");
+                const statusLateralContainer = statusLateral?.closest(".sidebar-device-status");
+                if (statusLateral && detalheLateral && statusLateralContainer) {
+                    statusLateral.textContent = "ESP32 sem informação";
+                    detalheLateral.textContent = "Estado da conexão";
+                    statusLateralContainer.classList.remove("is-offline");
+                }
+            }
             return;
         }
         indicador.textContent = valor ? ligado : desligado;
@@ -2294,6 +2354,16 @@ function atualizarEstadoAtual() {
         if (id === "statusEsp32Atual") {
             indicador.classList.toggle("is-connected", valor);
             indicador.classList.toggle("is-disconnected", !valor);
+            const statusLateral = document.getElementById("sidebarEsp32Status");
+            const detalheLateral = document.getElementById("sidebarEsp32Detail");
+            const statusLateralContainer = statusLateral?.closest(".sidebar-device-status");
+            if (statusLateral && detalheLateral && statusLateralContainer) {
+                statusLateral.textContent = valor === null
+                    ? "ESP32 sem informação"
+                    : valor ? "Online / ESP32" : "Offline / ESP32";
+                detalheLateral.textContent = "Node ESP32-WROOM";
+                statusLateralContainer.classList.toggle("is-offline", valor === false);
+            }
         }
     };
 
@@ -2702,6 +2772,19 @@ function atualizarStatusApi(mensagem, tipo = "") {
     const status = document.getElementById("statusApi");
     status.textContent = mensagem;
     status.className = `api-status${tipo ? ` is-${tipo}` : ""}`;
+    const indicador = document.getElementById("apiConnectionStatus");
+    if (indicador) {
+        const textoIndicador = indicador.querySelector("span");
+        const estados = {
+            success: "API conectada",
+            loading: "Conectando API",
+            error: "API indisponível",
+            demo: "Modo demonstração"
+        };
+        indicador.classList.toggle("is-connected", tipo === "success");
+        indicador.classList.toggle("is-error", tipo === "error");
+        textoIndicador.textContent = estados[tipo] || "Status da API";
+    }
 }
 
 // Busca e valida os dados para o mês e ano selecionados.
@@ -2861,6 +2944,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("periodoEnergiaAcumulada").addEventListener("change", desenharGraficoEnergiaAcumulada);
     configurarInteracaoGraficos();
     configurarSelecaoGraficos();
+    configurarNavegacaoResponsiva();
     configurarSelecaoGrandeza();
     configurarControlesGraficosSensores();
     configurarExportacaoHistorico();
