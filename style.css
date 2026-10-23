@@ -1,167 +1,114 @@
-/* Aplica box sizing previsível em todas as páginas. */
+/* ==========================================================================
+   EcoVolt - Sistema de Telemetria e Monitoramento de Energia IoT
+   Design System: Forest Telemetry Dark & Cyber-Glassmorphism
+   Baseado em code.html e especificações DESIGN.md
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Tokens de Cores, Tipografia e Superfícies
+   -------------------------------------------------------------------------- */
+:root {
+    --surface-base: #08100c;
+    --background: #0a1610;
+    --surface: #0a1610;
+    --surface-dim: #0a1610;
+    --surface-bright: #2f3c35;
+    --surface-container-lowest: #05110b;
+    --surface-container-low: #121e18;
+    --surface-container: #16221c;
+    --surface-container-high: #202d26;
+    --surface-container-highest: #2b3831;
+    --surface-card: rgba(15, 41, 30, 0.72);
+    --surface-card-hover: rgba(27, 67, 50, 0.45);
+    --surface-glass: rgba(18, 30, 24, 0.82);
+
+    --primary: #a5d0b9;
+    --primary-container: #1b4332;
+    --on-primary: #0e3727;
+    --on-primary-container: #86af99;
+    --primary-fixed: #c1ecd4;
+
+    --secondary: #4edea3;
+    --secondary-container: #00a572;
+    --on-secondary: #003824;
+    --on-secondary-container: #00311f;
+    --secondary-fixed: #6ffbbe;
+
+    --tertiary: #ffb95f;
+    --tertiary-container: #563400;
+    --on-tertiary: #472a00;
+
+    --error: #ffb4ab;
+    --error-container: #93000a;
+    --on-error: #690005;
+
+    --border-glass: rgba(52, 211, 153, 0.16);
+    --border-subtle: rgba(255, 255, 255, 0.08);
+
+    --sensor-emerald-glow: #34d399;
+    --metric-voltage-cyan: #06b6d4;
+    --metric-power-amber: #f59e0b;
+    --status-offline-red: #ef4444;
+
+    --text-primary: #f0fdf4;
+    --text-secondary: #a7f3d0;
+    --text-muted: #6b8779;
+    --on-surface: #d8e6dc;
+    --on-surface-variant: #c1c8c2;
+    --outline: #8b938d;
+    --outline-variant: #414844;
+}
+
+/* --------------------------------------------------------------------------
+   Reset Global & Comportamento Base
+   -------------------------------------------------------------------------- */
 *,
 *::before,
 *::after {
     box-sizing: border-box;
 }
 
-/* Define os fundos das páginas de autenticação. */
-body.Login {
-    background-image: url('imagens/FundoLogin.avif'); /* Imagem de fundo */
+html {
+    color-scheme: dark;
 }
 
-/* Reutiliza o fundo do login na página local de recuperação. */
-body.Recuperacao {
-    background-image: url('imagens/FundoLogin.avif');
-}
-
-/* Cartão principal: organiza título, formulário e link no centro da tela. */
-.login-form {
-    min-height: 350px;
-    height: auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0, 0, 0, 0.7); /* Fundo preto com transparência */
-    padding: 24px;
-    border-radius: 20px;
-    width: min(100%, 360px);
-    margin: 0 auto;
-}
-
-.h2-login {
-    text-align: center;
-    margin-bottom: 20px;
-    color: white;
-}
-
-/* Mantém campos e botão em coluna e alinha o botão ao centro. */
-.login-form form,
-.cadastro-form form {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.input-login-form {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    margin: 8px 0;
-    background: rgba(255, 255, 255, 0.12); /* Branco com transparência */
-    padding: 10px;
-}
-
-.input-login-form input {
-    flex: 1;
-    min-width: 0;
-    border: none;
-    background: rgba(255, 255, 255, 0.12); /* Branco com transparência */
-    background: none;
-    color: white;
-    font-size: 14px;
-    outline: none;
-    align-items: center;
-}
-
-.input-login-form input::placeholder {
-    color: white;
-}
-
-/* Mantém um indicador de foco visível mesmo com o outline removido dos campos. */
-.input-login-form:focus-within,
-.input-cadastro-form:focus-within {
-    outline: 2px solid #f0c36a;
-    outline-offset: 2px;
-}
-
-.sr-only {
-    width: 1px;
-    height: 1px;
+body {
+    margin: 0;
     padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--surface-base);
+    color: var(--on-surface);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-.auth-link {
-    color: white;
-    text-align: center;
+::selection {
+    background-color: var(--primary-container);
+    color: var(--text-primary);
 }
 
-.auth-link a {
-    color: white;
+/* Barra de rolagem refinada */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
 }
 
-/* Alinha o link de recuperação junto aos campos do formulário de login. */
-.login-recovery-link {
-    align-self: flex-end;
-    width: 100%;
-    margin: 2px 0 10px;
-    font-size: 0.9rem;
-    text-align: right;
+::-webkit-scrollbar-track {
+    background: var(--surface-container-lowest);
 }
 
-/* Destaca que esta versão redefine a senha apenas no armazenamento local. */
-.auth-warning {
-    width: 100%;
-    margin: 0 0 12px;
-    color: #fff2c6;
-    font-size: 0.88rem;
-    line-height: 1.5;
-    text-align: center;
+::-webkit-scrollbar-thumb {
+    background: var(--surface-container-high);
+    border-radius: 999px;
 }
 
-/* Mostra o resultado das ações de cadastro e login. */
-.auth-message {
-    min-height: 1.5em;
-    margin-top: 12px;
-    color: white;
-    font-size: 0.9rem;
-    text-align: center;
+::-webkit-scrollbar-thumb:hover {
+    background: var(--sensor-emerald-glow);
 }
 
-.auth-message.is-error {
-    color: #ffb4ab;
-}
-
-.auth-message.is-success {
-    color: #b8f7c5;
-}
-
-/* Botão de Cadastrar */
-.btn-cadastrar {
-    background-color: white;
-    color:black;
-    border: none;
-    padding: 10px 22px;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.3s;
-}
-
-
-/* Botão de Entrar */
-.btn-entrar {
-    align-self: center;
-    background-color: rgba(255, 255, 255, 0.12); /* Branco com transparência */
-    color: white;
-    border: none;
-    padding: 12px 22px;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.3s;
-}
-
-
-/* Centraliza as telas de autenticação e adapta a largura ao dispositivo. */
+/* --------------------------------------------------------------------------
+   Páginas de Autenticação (Login, Cadastro, Recuperação de Senha)
+   -------------------------------------------------------------------------- */
 body.Login,
 body.Cadastro,
 body.Recuperacao {
@@ -174,66 +121,68 @@ body.Recuperacao {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    color: black;
-    font-family: Arial, sans-serif;
+    background-color: var(--surface-base);
+    font-family: 'Inter', sans-serif;
 }
 
-
-/* Fundo e cartão específicos da página de cadastro. */
-body.Cadastro{
-    background-image: url('imagens/FundoCadastro.jpg'); /* Imagem de fundo */
+body.Login {
+    background-image: url('imagens/ImagemFundo.avif');
 }
 
+body.Cadastro {
+    background-image: url('imagens/ImagemFundo.avif');
+}
+
+body.Recuperacao {
+    background-image: url('imagens/ImagemFundo.avif');
+}
+
+.login-form,
+.cadastro-form,
+.recuperacao-form,
+div.login-form,
+div.cadastro-form {
+    width: min(100%, 400px);
+    min-height: 350px;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(12, 24, 18, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 28px 24px;
+    border-radius: 16px;
+    border: 1px solid var(--border-glass);
+    box-shadow: 0 24px 50px -12px rgba(0, 0, 0, 0.7);
+    position: relative;
+    overflow: hidden;
+}
+
+.login-form::before,
+.cadastro-form::before,
+.recuperacao-form::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    inset-x: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(78, 222, 163, 0.5), transparent);
+}
+
+.h2-login,
 .h2-cadastro {
     text-align: center;
     margin-bottom: 20px;
-    color: white;
+    color: var(--text-primary);
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
 }
 
-div.login-form {
-    background: rgba(255, 255, 255, 0.08); /* Branco com transparência */
-    padding: 22px;
-    border: 1px solid rgba(255, 255, 255, 0.3); /* Borda branca com transparência */
-    border-radius: 22px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.416); /* Sombra preta com transparência */
-    backdrop-filter: blur(7px); /* Efeito de desfoque */
-    width: min(100%, 360px);
-    min-height: 350px;
-    height: auto;
-    margin: 0 auto;
-}
-
-.cadastro-form {
-    min-height: 350px;
-    height: auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0, 0, 0, 0.7); /* Fundo preto com transparência */
-    padding: 24px;
-    border-radius: 22px;
-    width: min(100%, 380px);
-    margin: 0 auto;
-}
-
-/* Apresenta a recuperação com o mesmo cartão translúcido das páginas de acesso. */
-.recuperacao-form {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: min(100%, 420px);
-    min-height: 350px;
-    margin: 0 auto;
-    padding: 24px;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 22px;
-    background: rgba(0, 0, 0, 0.72);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.416);
-    backdrop-filter: blur(7px);
-}
-
+.login-form form,
+.cadastro-form form,
 .recuperacao-form form {
     display: flex;
     flex-direction: column;
@@ -241,242 +190,687 @@ div.login-form {
     width: 100%;
 }
 
-.recuperacao-form .btn-entrar {
-    width: min(100%, 220px);
-    margin-top: 12px;
-}
-
-div.cadastro-form{
-    background: rgba(255, 255, 255, 0.08); /* Branco com transparência */
-    padding: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.3); /* Borda branca com transparência */
-    border-radius: 22px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.416); /* Sombra preta com transparência */
-    backdrop-filter: blur(7px); /* Efeito de desfoque */
-    width: min(100%, 380px);
-    min-height: 350px;
-    height: auto;
-    margin: 0 auto;
-}
-
+.input-login-form,
 .input-cadastro-form {
     display: flex;
     align-items: center;
     width: 100%;
     margin: 8px 0;
-    background: rgba(255, 255, 255, 0.12); /* Branco com transparência */
-    padding: 10px;
+    background: rgba(5, 17, 11, 0.85);
+    border: 1px solid rgba(52, 211, 153, 0.16);
+    border-radius: 8px;
+    padding: 10px 12px;
+    transition: all 0.2s ease;
 }
 
+.input-login-form:focus-within,
+.input-cadastro-form:focus-within {
+    border-color: var(--secondary);
+    box-shadow: 0 0 0 2px rgba(78, 222, 163, 0.35);
+    background: var(--surface-container-lowest);
+    outline: none;
+}
+
+.input-login-form input,
 .input-cadastro-form input {
     flex: 1;
     min-width: 0;
     border: none;
-    background: rgba(255, 255, 255, 0.12); /* Branco com transparência */
-    background: none;
-    color: white;
+    background: transparent;
+    color: var(--text-primary);
+    font-family: inherit;
     font-size: 14px;
     outline: none;
 }
 
+.input-login-form input::placeholder,
 .input-cadastro-form input::placeholder {
-    color: white;
+    color: var(--text-muted);
 }
 
-/* Mantém formulários e campos dentro da largura do painel. */
-.login-form form,
-.cadastro-form form {
-    width: 100%;
+.auth-link {
+    color: var(--on-surface-variant);
+    text-align: center;
+    font-size: 0.88rem;
+    margin-top: 14px;
 }
 
-/* Define as cores usadas somente no dashboard. */
-body.dashboard {
-    --bg-light: #f5f5f5;
-    --text: #333;
-    --primary: #4CAF50;
-    --white: #ffffff;
-}
-
-/* Remove margens padrão apenas dos elementos do dashboard. */
-body.dashboard,
-body.dashboard * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-/* Aplica a aparência geral da página do dashboard. */
-body.dashboard {
-    background-color: var(--bg-light);
-    color: var(--text);
-    line-height: 1.6;
-    font-family: 'Poppins', sans-serif;
-}
-
-/* Divide a tela entre a navegação lateral e o conteúdo principal. */
-body.dashboard .dashboard-layout {
-    display: grid;
-    grid-template-columns: 230px minmax(0, 1fr);
-    gap: 28px;
-    width: min(1440px, 100%);
-    min-height: 100vh;
-    margin: 0 auto;
-    padding: 24px;
-}
-
-/* Mantém a navegação acessível enquanto o usuário consulta os gráficos. */
-body.dashboard .dashboard-sidebar {
-    position: sticky;
-    top: 24px;
-    align-self: start;
-    display: flex;
-    flex-direction: column;
-    min-height: calc(100vh - 48px);
-    padding: 22px 16px;
-    border-radius: 8px;
-    background: #20382b;
-    color: #fff;
-}
-
-body.dashboard .sidebar-brand {
-    color: #fff;
-    font-size: 1.35rem;
-    font-weight: 700;
+.auth-link a {
+    color: var(--secondary);
     text-decoration: none;
-}
-
-body.dashboard .sidebar-caption {
-    margin: 30px 8px 10px;
-    color: #b9c9be;
-    font-size: 0.7rem;
     font-weight: 600;
 }
 
-body.dashboard .sidebar-nav {
+.auth-link a:hover {
+    color: var(--primary-fixed);
+    text-decoration: underline;
+}
+
+.login-recovery-link {
+    align-self: flex-end;
+    width: 100%;
+    margin: 4px 0 12px;
+    font-size: 0.84rem;
+    text-align: right;
+}
+
+.login-recovery-link a {
+    color: var(--secondary);
+    text-decoration: none;
+}
+
+.login-recovery-link a:hover {
+    text-decoration: underline;
+}
+
+.auth-warning {
+    width: 100%;
+    margin: 0 0 12px;
+    color: var(--tertiary);
+    font-size: 0.85rem;
+    line-height: 1.5;
+    text-align: center;
+}
+
+.auth-message {
+    min-height: 1.5em;
+    margin-top: 12px;
+    font-size: 0.86rem;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.auth-message.is-error {
+    color: var(--error);
+}
+
+.auth-message.is-success {
+    color: var(--secondary);
+}
+
+.btn-cadastrar,
+.btn-entrar {
+    align-self: center;
+    width: 100%;
+    background: linear-gradient(90deg, var(--secondary-container), var(--secondary));
+    color: var(--on-secondary-container);
+    border: none;
+    padding: 12px 22px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0, 165, 114, 0.35);
+    transition: all 0.2s ease;
+}
+
+.btn-cadastrar:hover,
+.btn-entrar:hover {
+    box-shadow: 0 6px 22px rgba(78, 222, 163, 0.45);
+    filter: brightness(1.06);
+    transform: translateY(-1px);
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ==========================================================================
+   DASHBOARD ECOVOLT - Forest Telemetry Dark
+   ========================================================================== */
+
+body.dashboard {
+    background-color: var(--surface-base);
+    color: var(--on-surface);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+}
+
+body.dashboard [hidden] {
+    display: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   Fundo Tecnológico Fixo com Grid e Brilhos Radiais (Estilo code.html)
+   -------------------------------------------------------------------------- */
+.fixed-tech-bg {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+
+.fixed-tech-bg .glow-radial-top {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 850px;
+    height: 520px;
+    background: radial-gradient(ellipse at top, rgba(27, 67, 50, 0.3), rgba(5, 17, 11, 0.45), transparent 75%);
+    filter: blur(65px);
+    opacity: 0.85;
+}
+
+.fixed-tech-bg .glow-radial-bottom {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 550px;
+    height: 420px;
+    background: radial-gradient(circle at bottom right, rgba(27, 67, 50, 0.24), transparent 70%);
+    filter: blur(55px);
+    opacity: 0.75;
+}
+
+.fixed-tech-bg .grid-mesh-overlay {
+    position: absolute;
+    inset: 0;
+    background-image: 
+        linear-gradient(to right, rgba(52, 211, 153, 0.035) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(52, 211, 153, 0.035) 1px, transparent 1px);
+    background-size: 32px 32px;
+}
+
+/* Linha decorativa de topo com gradiente nos cartões */
+.card-glow-line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(78, 222, 163, 0.45), transparent);
+    pointer-events: none;
+}
+
+/* Animação do Beacon de status IoT */
+@keyframes beaconPulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+        box-shadow: 0 0 10px rgba(52, 211, 153, 0.85);
+    }
+    50% {
+        opacity: 0.55;
+        transform: scale(0.88);
+        box-shadow: 0 0 3px rgba(52, 211, 153, 0.35);
+    }
+}
+
+.pulse-beacon,
+.sidebar-status-dot,
+.live-dot,
+.api-connection i,
+.pulse-dot,
+.pulse-emerald-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--sensor-emerald-glow);
+    box-shadow: 0 0 10px rgba(52, 211, 153, 0.75);
+    animation: beaconPulse 2.2s infinite ease-in-out;
+}
+
+/* --------------------------------------------------------------------------
+   Layout Estrutural Shell (Sidebar + Main)
+   -------------------------------------------------------------------------- */
+body.dashboard .dashboard-layout {
     display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    width: 100%;
+    min-height: 100vh;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+/* --------------------------------------------------------------------------
+   Barra Lateral de Navegação (Sidebar Rail)
+   -------------------------------------------------------------------------- */
+body.dashboard .dashboard-sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 22px 16px 16px;
+    background: rgba(12, 24, 18, 0.94);
+    border-right: 1px solid var(--border-glass);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    z-index: 20;
+    box-shadow: 8px 0 28px rgba(0, 0, 0, 0.25);
+}
+
+/* Logotipo / Marca EcoVolt */
+body.dashboard .sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 2px 4px 16px;
+    text-decoration: none;
+    color: var(--text-primary);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+body.dashboard .sidebar-brand-icon-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--surface-container-high);
+    border: 1px solid var(--border-glass);
+    color: var(--secondary);
+    box-shadow: 0 0 18px rgba(52, 211, 153, 0.22);
+}
+
+body.dashboard .sidebar-brand-icon {
+    font-size: 22px;
+}
+
+body.dashboard .sidebar-brand-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+body.dashboard .sidebar-brand-copy .brand-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
     gap: 6px;
 }
 
-body.dashboard .sidebar-link,
-body.dashboard .btn-exportar {
+body.dashboard .badge-iot {
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--surface-container-high);
+    color: var(--secondary);
+    border: 1px solid rgba(52, 211, 153, 0.2);
+}
+
+body.dashboard .sidebar-brand-copy small {
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    font-weight: 500;
+}
+
+/* Indicador de Status do ESP32 na Sidebar */
+body.dashboard .sidebar-device-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 14px 0 6px;
+    padding: 10px 12px;
+    background: var(--surface-container);
+    border: 1px solid var(--border-subtle);
+    border-radius: 9px;
+}
+
+body.dashboard .sidebar-device-copy {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+body.dashboard .sidebar-device-copy strong {
+    font-size: 0.74rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+body.dashboard .sidebar-device-copy small {
+    font-size: 0.64rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+body.dashboard .sidebar-device-status.is-offline .sidebar-status-dot {
+    background-color: var(--status-offline-red);
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+    animation: none;
+}
+
+body.dashboard .sidebar-device-status.is-offline strong {
+    color: var(--error);
+}
+
+/* Títulos das seções na Sidebar */
+body.dashboard .sidebar-caption {
+    margin: 22px 6px 8px;
+    font-size: 0.64rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+}
+
+/* Links da Sidebar */
+body.dashboard .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+body.dashboard .sidebar-link {
     display: flex;
     align-items: center;
     gap: 10px;
     width: 100%;
-    min-height: 44px;
-    padding: 10px;
-    border: 0;
-    border-radius: 6px;
+    min-height: 40px;
+    padding: 8px 10px;
+    border: 1px solid transparent;
+    border-radius: 8px;
     background: transparent;
-    color: #edf4ef;
+    color: var(--on-surface-variant);
     font: inherit;
-    font-size: 0.9rem;
+    font-size: 0.82rem;
+    font-weight: 500;
     text-align: left;
     cursor: pointer;
+    transition: all 0.18s ease;
 }
 
-body.dashboard .sidebar-link:hover,
+body.dashboard .sidebar-link-icon {
+    font-size: 19px;
+    color: var(--text-muted);
+    transition: color 0.18s ease;
+}
+
+body.dashboard .sidebar-link:hover {
+    background: rgba(255, 255, 255, 0.045);
+    color: var(--text-primary);
+}
+
+body.dashboard .sidebar-link:hover .sidebar-link-icon {
+    color: var(--secondary);
+}
+
 body.dashboard .sidebar-link.is-active {
-    background: #365443;
-    color: #fff;
+    background: var(--primary-container);
+    border-color: rgba(52, 211, 153, 0.28);
+    color: var(--secondary);
+    font-weight: 600;
+    box-shadow: 0 0 18px rgba(52, 211, 153, 0.12);
+}
+
+body.dashboard .sidebar-link.is-active .sidebar-link-icon {
+    color: var(--secondary);
 }
 
 body.dashboard .sidebar-link:focus-visible,
 body.dashboard .btn-exportar:focus-visible {
-    outline: 2px solid #f0c36a;
+    outline: 2px solid var(--secondary);
     outline-offset: 2px;
 }
 
-body.dashboard .sidebar-link-icon {
-    display: grid;
-    flex: 0 0 26px;
-    width: 26px;
-    height: 26px;
-    place-items: center;
-    border-radius: 5px;
-    background: rgba(255, 255, 255, 0.12);
-    font-size: 0.75rem;
-    font-weight: 700;
-}
-
+/* Seção de Exportação */
 body.dashboard .sidebar-export {
     margin-top: auto;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-body.dashboard .sidebar-export .sidebar-caption {
-    margin-top: 24px;
+body.dashboard .sidebar-export-description {
+    font-size: 0.66rem;
+    color: var(--text-muted);
+    line-height: 1.35;
+    margin: 4px 6px 12px;
 }
 
 body.dashboard .btn-exportar {
+    display: flex;
+    align-items: center;
     justify-content: center;
-    background: #f0c36a;
-    color: #26342c;
-    font-weight: 600;
+    gap: 8px;
+    width: 100%;
+    min-height: 42px;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(90deg, var(--secondary-container), var(--secondary));
+    color: var(--on-secondary-container);
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0, 165, 114, 0.35);
+    transition: all 0.2s ease;
 }
 
 body.dashboard .btn-exportar:hover {
-    background: #f6d48f;
+    box-shadow: 0 6px 22px rgba(78, 222, 163, 0.45);
+    filter: brightness(1.06);
+    transform: translateY(-1px);
+}
+
+body.dashboard .btn-exportar .material-symbols-outlined {
+    font-size: 19px;
 }
 
 body.dashboard .export-status {
-    min-height: 1.4em;
-    margin-top: 8px;
-    color: #d8e4db;
-    font-size: 0.75rem;
+    min-height: 1.3em;
+    margin: 6px 4px 0;
+    font-size: 0.68rem;
+    color: var(--text-secondary);
 }
 
-body.dashboard .dashboard-main {
-    min-width: 0;
-}
-
-/* Centraliza o título e os indicadores do dashboard. */
-body.dashboard .dashboard-container {
-    width: 100%;
-    max-width: none;
-    margin: 0;
-    padding: 18px 0 26px;
-}
-
-.dashboard-container h1 {
-    color: var(--primary);
-    font-size: 2.2rem;
-    font-weight: 700;
-    margin-bottom: 5px;
-}
-
-.dashboard-container h2 {
-    color: #666;
-    font-size: 1.1rem;
-    font-weight: 400;
-    margin-bottom: 30px;
-}
-
-/* Alinha o usuário e a ação de sair ao título do painel. */
-.dashboard-header,
-.dashboard-actions {
+body.dashboard .sidebar-version {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 20px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+    font-size: 0.64rem;
+    color: var(--text-muted);
 }
 
-.dashboard-actions p {
-    color: var(--text);
+body.dashboard .sidebar-version span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
-/* Distingue atualização manual e estados do carregamento da API. */
-body.dashboard .btn-atualizar {
-    padding: 9px 14px;
-    border: 1px solid #9aa99f;
-    border-radius: 6px;
-    background: #fff;
-    color: #26342c;
+body.dashboard .sidebar-version .version-tag {
+    background: var(--surface-container-high);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+/* --------------------------------------------------------------------------
+   Conteúdo Principal do Dashboard
+   -------------------------------------------------------------------------- */
+body.dashboard .dashboard-main {
+    width: 100%;
+    max-width: 1680px;
+    min-width: 0;
+    margin-inline: auto;
+    padding: 24px clamp(20px, 3.5vw, 48px) 48px;
+}
+
+body.dashboard .dashboard-container {
+    width: 100%;
+    margin: 0;
+    padding: 0 0 10px;
+}
+
+/* Cabeçalho do Dashboard */
+body.dashboard .dashboard-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px 28px;
+    margin-bottom: 8px;
+}
+
+body.dashboard .dashboard-heading {
+    min-width: 0;
+}
+
+body.dashboard .dashboard-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+body.dashboard .dashboard-eyebrow b,
+body.dashboard .dashboard-eyebrow .eyebrow-sep {
+    color: var(--sensor-emerald-glow);
+}
+
+body.dashboard .dashboard-container h1 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: clamp(1.85rem, 3.2vw, 2.45rem);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1.15;
+}
+
+body.dashboard .dashboard-container h2 {
+    margin: 4px 0 0;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+}
+
+/* Ações do Topo */
+body.dashboard .dashboard-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+body.dashboard .dashboard-greeting {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-right: 6px;
+    text-align: right;
+}
+
+body.dashboard .dashboard-greeting .greeting-user {
+    font-size: 0.78rem;
+    color: var(--on-surface);
+}
+
+body.dashboard .dashboard-greeting strong {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+body.dashboard .dashboard-greeting small {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+}
+
+body.dashboard .api-connection,
+body.dashboard .dashboard-sync {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(52, 211, 153, 0.08);
+    border: 1px solid var(--border-glass);
+    color: var(--text-secondary);
+    font-size: 0.68rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+body.dashboard .api-connection:not(.is-connected) {
+    border-color: rgba(255, 185, 95, 0.22);
+    background: rgba(255, 185, 95, 0.08);
+    color: #ffddb8;
+}
+
+body.dashboard .api-connection:not(.is-connected) i {
+    background-color: var(--tertiary);
+    box-shadow: 0 0 10px rgba(255, 185, 95, 0.5);
+}
+
+body.dashboard .api-connection.is-error {
+    border-color: rgba(239, 68, 68, 0.28);
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--error);
+}
+
+body.dashboard .api-connection.is-error i {
+    background-color: var(--status-offline-red);
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+}
+
+body.dashboard .btn-atualizar,
+body.dashboard .btn-sair {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 38px;
+    padding: 8px 14px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    background: var(--surface-container);
+    color: var(--on-surface);
     font: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
     cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+body.dashboard .btn-atualizar .material-symbols-outlined,
+body.dashboard .btn-sair .material-symbols-outlined {
+    font-size: 18px;
 }
 
 body.dashboard .btn-atualizar:hover:not(:disabled) {
-    background: #edf3ee;
+    border-color: rgba(52, 211, 153, 0.35);
+    background: var(--surface-container-high);
+    color: var(--text-primary);
+    box-shadow: 0 0 14px rgba(52, 211, 153, 0.15);
 }
 
 body.dashboard .btn-atualizar:disabled,
@@ -485,1458 +879,130 @@ body.dashboard .btn-exportar:disabled {
     opacity: 0.6;
 }
 
-body.dashboard .api-status {
-    min-height: 1.5em;
-    margin: 0 0 14px;
-    color: #53665a;
-    font-size: 0.85rem;
-}
-
-body.dashboard .api-status.is-loading {
-    color: #765b22;
-}
-
-body.dashboard .api-status.is-success {
-    color: #267342;
-}
-
-body.dashboard .api-status.is-error {
-    color: #a22;
-}
-
-body.dashboard .api-status.is-demo {
-    color: #596a60;
-}
-
-/* Agrupa o intervalo e os atalhos em controles que se reorganizam no celular. */
-body.dashboard .filtro-periodo {
-    margin: 0 0 22px;
-    padding: 18px;
-    border: 1px solid #e3e9e4;
-    border-radius: 10px;
-    background: var(--white);
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.04);
-}
-
-body.dashboard .filtro-periodo-cabecalho,
-body.dashboard .filtro-periodo-controles {
-    display: flex;
-    align-items: end;
-    flex-wrap: wrap;
-    gap: 12px;
-}
-
-body.dashboard .filtro-periodo-cabecalho {
-    align-items: flex-start;
-    justify-content: space-between;
-    margin-bottom: 12px;
-}
-
-body.dashboard .filtro-periodo h2 {
-    margin: 0;
-    color: var(--text);
-    font-size: 1.1rem;
-}
-
-body.dashboard .filtro-periodo p {
-    color: #596a60;
-    font-size: 0.85rem;
-}
-
-body.dashboard .filtro-periodo label {
-    display: grid;
-    flex: 1 1 160px;
-    gap: 4px;
-    color: #596a60;
-    font-size: 0.82rem;
-    font-weight: 600;
-}
-
-body.dashboard .filtro-periodo select,
-body.dashboard .filtro-periodo input {
-    width: 100%;
-    min-height: 42px;
-    padding: 8px 10px;
-    border: 1px solid #cbd4cd;
-    border-radius: 6px;
-    background: var(--white);
-    color: var(--text);
-    font: inherit;
-}
-
-body.dashboard .filtro-periodo-cabecalho > label {
-    max-width: 220px;
-}
-
-body.dashboard .filtro-periodo-controles .btn-atualizar {
-    min-height: 42px;
-    background: #20382b;
-    color: #fff;
-}
-
-body.dashboard .filtro-periodo-controles .btn-atualizar:hover {
-    background: #365443;
-}
-
-body.dashboard .filtro-periodo-controles .btn-resetar-periodo {
-    background: #fff;
-    color: #26342c;
-}
-
-body.dashboard .filtro-periodo-controles .btn-resetar-periodo:hover {
-    background: #edf3ee;
-}
-
-body.dashboard .filtro-periodo-status {
-    min-height: 1.5em;
-    margin-top: 8px;
-}
-
-/* Agrupa as leituras instantâneas para distingui-las do resumo histórico. */
-body.dashboard .estado-atual {
-    margin-bottom: 28px;
-    padding: 22px;
-    border: 1px solid #e3e9e4;
-    border-radius: 12px;
-    background: #eef4ef;
-}
-
-body.dashboard .estado-atual-cabecalho {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 8px 20px;
-    margin-bottom: 18px;
-}
-
-body.dashboard .estado-atual-cabecalho h2,
-body.dashboard .resumo-periodo > h2 {
-    margin: 0;
-    color: var(--text);
-    font-size: 1.2rem;
-    font-weight: 600;
-}
-
-body.dashboard .estado-atual-cabecalho p,
-body.dashboard .ultima-atualizacao {
-    color: #596a60;
-    font-size: 0.85rem;
-}
-
-body.dashboard .ultima-atualizacao {
-    padding-top: 4px;
-}
-
-/* Distribui os indicadores em telas largas e permite quebrar em telas menores. */
-body.dashboard .estado-atual-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
-    gap: 14px;
-}
-
-body.dashboard .estado-card {
-    min-width: 0;
-    padding: 18px 12px;
-    border: 1px solid #edf0ed;
-    border-radius: 10px;
-}
-
-body.dashboard .estado-card strong {
-    overflow-wrap: anywhere;
-    font-size: clamp(1.25rem, 2vw, 1.8rem);
-}
-
-body.dashboard .estado-card small {
-    color: #68776d;
-    font-weight: 400;
-}
-
-/* Mantém os estados de iluminação e conexão legíveis também sem cor. */
-body.dashboard .status-dispositivos {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px 22px;
-    margin-top: 16px;
-}
-
-body.dashboard .status-dispositivos p {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
-    color: #53665a;
-    font-size: 0.9rem;
-}
-
-body.dashboard .status-indicador {
-    display: inline-flex;
-    align-items: center;
-    min-height: 28px;
-    padding: 2px 10px;
-    border-radius: 999px;
-    background: #e2e7e3;
-    color: #3f5145;
-    font-size: 0.8rem;
-    font-weight: 600;
-}
-
-body.dashboard .status-indicador.is-on,
-body.dashboard .status-indicador.is-connected {
-    background: #d9f1df;
-    color: #216238;
-}
-
-body.dashboard .status-indicador.is-off,
-body.dashboard .status-indicador.is-disconnected {
-    background: #f8e3df;
-    color: #8b3026;
-}
-
-body.dashboard .dispositivos-intro {
-    margin: -10px 0 18px;
-    color: #596a60;
-    font-size: 0.9rem;
-}
-
-body.dashboard .lista-dispositivos {
-    display: grid;
-    gap: 10px;
-    max-width: 720px;
-    list-style: none;
-}
-
-body.dashboard .dispositivo-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 10px 16px;
-    min-height: 58px;
-    padding: 12px 14px;
-    border: 1px solid #e3e9e4;
-    border-radius: 6px;
-    background: #fbfcfb;
-}
-
-body.dashboard .dispositivo-nome {
-    color: var(--text);
-    font-weight: 600;
-}
-
-body.dashboard .resumo-periodo > h2 {
-    margin-bottom: 14px;
-}
-
-.btn-sair {
-    padding: 9px 16px;
-    border: 1px solid #c33;
-    border-radius: 6px;
-    background: transparent;
-    color: #a22;
-    font: inherit;
-    cursor: pointer;
-}
-
-.btn-sair:hover {
-    background: #a22;
-    color: var(--white);
-}
-
-/* Organiza os indicadores em três colunas. */
-.cards-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-}
-
-.card {
-    background: var(--white);
-    padding: 25px;
-    border-radius: 15px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    text-align: center;
-}
-
-.card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
-}
-
-.card-title {
-    display: block;
-    color: #777;
-    font-size: 0.9rem;
-    font-weight: 600;
-    margin-bottom: 8px;
-}
-
-.card strong {
-    display: block;
-    color: var(--text);
-    font-size: 1.8rem;
-    font-weight: 700;
-    margin-bottom: 5px;
-}
-
-.card small {
-    color: var(--primary);
-    font-size: 0.85rem;
-    font-weight: 600;
-}
-
-/* Dá espaço e fundo branco ao painel gráfico selecionado. */
-body.dashboard .dashboard-main > .chart-panel {
-    width: 100%;
-    margin: 0 0 28px;
-    background: var(--white);
-    padding: 25px;
-    border-radius: 8px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-}
-
-body.dashboard .chart-panel h2 {
-    color: var(--text);
-    font-size: 1.3rem;
-    margin-bottom: 20px;
-}
-
-/* Coloca os gráficos dos sensores lado a lado em telas largas. */
-body.dashboard .graficos-iluminacao-grid,
-body.dashboard .graficos-consumo-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 20px;
-}
-
-/* Mantém o histórico acumulado em largura total e adapta o canvas a telas menores. */
-body.dashboard .grafico-energia {
-    min-width: 0;
-    margin-top: 20px;
-    padding: 18px;
-    border: 1px solid #e3e9e4;
-    border-radius: 10px;
-    background: #fbfcfb;
-}
-
-body.dashboard .grafico-energia h3 {
-    margin-bottom: 10px;
-    color: var(--text);
-    font-size: 1rem;
-}
-
-body.dashboard .grafico-energia .chart-toolbar {
-    justify-content: flex-start;
-    margin: 0 0 12px;
-}
-
-body.dashboard .grafico-energia .seletor-temporal {
-    width: min(240px, 70vw);
-    min-height: 40px;
-    padding: 8px 10px;
-    border: 1px solid #cbd5cd;
-    border-radius: 6px;
-    background: var(--white);
-    color: var(--text);
-    font: inherit;
-}
-
-body.dashboard .grafico-energia .grafico-wrapper {
-    position: relative;
-    width: 100%;
-}
-
-body.dashboard .grafico-energia .grafico-wrapper canvas {
-    display: block;
-    width: 100%;
-    height: 300px;
-    cursor: crosshair;
-    touch-action: pan-y;
-    border-radius: 8px;
-    background: linear-gradient(180deg, #f9fbfa, #f5f9f6);
-}
-
-body.dashboard .grafico-energia .tooltip-grafico {
-    position: absolute;
-    z-index: 1;
-    max-width: calc(100% - 16px);
-    padding: 7px 10px;
-    border-radius: 6px;
-    background: #26342c;
-    color: #fff;
-    font-size: 0.8rem;
-    line-height: 1.4;
-    text-align: center;
-    pointer-events: none;
-    transform: translate(-50%, -100%);
-    white-space: normal;
-}
-
-body.dashboard .grafico-energia .tooltip-grafico.is-below {
-    transform: translate(-50%, 0);
-}
-
-body.dashboard .grafico-sensor {
-    min-width: 0;
-    padding: 18px;
-    border: 1px solid #e3e9e4;
-    border-radius: 10px;
-    background: #fbfcfb;
-}
-
-body.dashboard .grafico-sensor h3 {
-    margin-bottom: 14px;
-    color: var(--text);
-    font-size: 1rem;
-}
-
-/* Mantém as duas leituras de consumo alinhadas sem alterar seus valores ou filtros. */
-body.dashboard .painel-consumo .controles-consumo {
-    justify-content: flex-start;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin: 0 0 12px;
-}
-
-body.dashboard .painel-consumo .controles-consumo label {
-    display: grid;
-    flex: 1 1 140px;
-    gap: 4px;
-}
-
-body.dashboard .painel-consumo .controles-consumo label[hidden] {
-    display: none;
-}
-
-body.dashboard .painel-consumo .controles-consumo .seletor-temporal,
-body.dashboard .painel-consumo .controles-consumo .seletor-mes,
-body.dashboard .painel-consumo .controles-consumo .seletor-grandeza {
-    width: 100%;
-    min-height: 40px;
-}
-
-/* Mantém os controles de período fáceis de usar em desktop e celular. */
-body.dashboard .painel-iluminacao .controles-sensor {
-    justify-content: flex-start;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin: 0 0 12px;
-}
-
-body.dashboard .painel-iluminacao .controles-sensor label {
-    display: grid;
-    flex: 1 1 140px;
-    align-items: start;
-    gap: 4px;
-}
-
-body.dashboard .painel-iluminacao .controles-sensor label[hidden] {
-    display: none;
-}
-
-body.dashboard .painel-iluminacao .seletor-temporal {
-    width: 100%;
-    min-height: 40px;
-    padding: 8px 10px;
-    border: 1px solid #cbd5cd;
-    border-radius: 6px;
-    background: var(--white);
-    color: var(--text);
-    font: inherit;
-}
-
-body.dashboard .painel-iluminacao .seletor-temporal:focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
-}
-
-body.dashboard .chart-period-status {
-    min-height: 1.4em;
-    margin: -14px 0 14px;
-    color: #68776d;
-    font-size: 0.8rem;
-}
-
-/* Alinha o seletor mensal à direita, acima da área do gráfico. */
-body.dashboard .chart-toolbar {
-    display: flex;
-    justify-content: flex-end;
-    margin: -8px 0 16px;
-}
-
-body.dashboard .chart-toolbar label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: #666;
-    font-size: 0.85rem;
-    font-weight: 600;
-}
-
-/* Mantém mês e grandeza utilizáveis lado a lado ou empilhados no gráfico diário. */
-body.dashboard #secaoGraficosConsumo .controles-consumo {
-    justify-content: flex-start;
-    flex-wrap: wrap;
-    gap: 10px 16px;
-}
-
-body.dashboard #secaoGraficosConsumo .controles-consumo label {
-    display: grid;
-    flex: 1 1 180px;
-    gap: 4px;
-}
-
-body.dashboard #secaoGraficosConsumo #controleMesGraficoDiario[hidden],
-body.dashboard #secaoGraficosConsumo #controleDataGraficoDiario[hidden] {
-    display: none;
-}
-
-body.dashboard .seletor-grandeza {
-    width: min(220px, 65vw);
-    min-height: 40px;
-    padding: 8px 10px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    background: var(--white);
-    color: var(--text);
-    font: inherit;
-}
-
-body.dashboard #secaoGraficosConsumo .seletor-grandeza {
-    width: 100%;
-}
-
-body.dashboard #secaoGraficosConsumo .seletor-mes {
-    width: 100%;
-    min-height: 40px;
-    padding: 8px 10px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    background: var(--white);
-    color: var(--text);
-    font: inherit;
-}
-
-/* Cria uma referência local para posicionar tooltips nos gráficos. */
-.grafico-wrapper {
-    position: relative;
-    width: 100%;
-}
-
-.grafico-wrapper canvas {
-    cursor: crosshair;
-    touch-action: pan-y;
-}
-
-/* Mantém a leitura do valor legível sem aumentar o tamanho do gráfico. */
-.tooltip-grafico {
-    position: absolute;
-    z-index: 1;
-    max-width: calc(100% - 16px);
-    padding: 7px 10px;
-    border-radius: 6px;
-    background: #26342c;
-    color: #fff;
-    font-size: 0.8rem;
-    line-height: 1.4;
-    text-align: center;
-    pointer-events: none;
-    transform: translate(-50%, -100%);
-    white-space: normal;
-}
-
-.tooltip-grafico.is-below {
-    transform: translate(-50%, 0);
-}
-
-/* Separa os controles de comparação da listagem de registros históricos. */
-body.dashboard .historico-intro {
-    margin: -10px 0 18px;
-    color: #596a60;
-}
-
-body.dashboard .historico-status {
-    min-height: 1.5em;
-    margin-bottom: 12px;
-    color: #53665a;
-    font-size: 0.85rem;
-}
-
-body.dashboard .historico-filtros {
-    margin-bottom: 20px;
-    padding: 16px;
-    border: 1px solid #e3e9e4;
-    border-radius: 8px;
-    background: #f9fbf9;
-}
-
-body.dashboard .historico-filtros label {
-    flex-basis: 220px;
-    color: #53665a;
-}
-
-body.dashboard .historico-filtros select {
-    min-height: 42px;
-    padding: 8px 12px;
-    border: 1px solid #cbd5cd;
-    border-radius: 6px;
-    background: var(--white);
-    color: var(--text);
-    font: inherit;
-}
-
-body.dashboard .historico-filtros select:focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
-}
-
-body.dashboard .comparacao-historico {
-    margin-bottom: 24px;
-    padding: 18px;
-    border: 1px solid #e3e9e4;
-    border-radius: 8px;
-    background: #f9fbf9;
-}
-
-body.dashboard .comparacao-historico h3 {
-    margin-bottom: 12px;
-    color: var(--text);
-    font-size: 1rem;
-}
-
-body.dashboard .comparacao-controles {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-}
-
-body.dashboard .comparacao-controles label {
-    display: grid;
-    flex: 1 1 180px;
-    gap: 4px;
-    color: #666;
-    font-size: 0.85rem;
-    font-weight: 600;
-}
-
-body.dashboard .comparacao-controles select {
-    width: 100%;
-    min-height: 40px;
-    padding: 8px 10px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    background: var(--white);
-    color: var(--text);
-    font: inherit;
-}
-
-body.dashboard .resultado-comparacao {
-    min-height: 1.5em;
-    margin: 14px 0 8px;
-    color: #26342c;
-    font-weight: 600;
-}
-
-/* Desenha barras escaláveis sem depender de uma biblioteca externa. */
-body.dashboard .grafico-comparacao {
-    display: grid;
-    gap: 12px;
-}
-
-body.dashboard .barra-comparacao {
-    display: grid;
-    grid-template-columns: minmax(90px, 150px) minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 10px;
-    color: #53665a;
-    font-size: 0.85rem;
-}
-
-body.dashboard .barra-comparacao-trilho {
-    height: 14px;
-    overflow: hidden;
-    border-radius: 999px;
-    background: #e5ebe6;
-}
-
-body.dashboard .barra-comparacao-valor {
-    display: block;
-    height: 100%;
-    border-radius: inherit;
-    background: var(--primary);
-}
-
-body.dashboard .tabela-historico-wrapper {
-    width: 100%;
-    overflow-x: auto;
-    border: 1px solid #e3e9e4;
-    border-radius: 8px;
-}
-
-body.dashboard .tabela-historico {
-    width: 100%;
-    min-width: 640px;
-    border-collapse: collapse;
-    background: var(--white);
-    font-size: 0.85rem;
-    text-align: left;
-}
-
-body.dashboard .tabela-historico caption {
-    padding: 12px;
-    color: #53665a;
-    font-weight: 600;
-    text-align: left;
-}
-
-body.dashboard .tabela-historico th,
-body.dashboard .tabela-historico td {
-    padding: 10px 12px;
-    border-top: 1px solid #e8ece9;
-    white-space: nowrap;
-}
-
-body.dashboard .tabela-historico th {
-    background: #f5f8f5;
-    color: #53665a;
-    font-weight: 600;
-}
-
-body.dashboard .tabela-historico .historico-vazio {
-    padding: 18px 12px;
-    color: #68776d;
-    text-align: center;
-    white-space: normal;
-}
-
-/* Mantém todos os gráficos, inclusive intensidade, fluidos e legíveis. */
-#meuGrafico,
-#meuGrafico2,
-#meuGraficoIntensidade,
-#meuGraficoLuminosidade {
-    width: 100%;
-    height: 350px;
-    display: block;
-}
-
-/* Distribui os cards em duas colunas em telas médias. */
-@media (max-width: 900px) {
-    body.dashboard .dashboard-layout {
-        grid-template-columns: 200px minmax(0, 1fr);
-        gap: 18px;
-        padding: 18px;
-    }
-
-    .dashboard-container h1 {
-        font-size: 1.9rem;
-    }
-
-    .cards-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    body.dashboard .filtro-periodo-cabecalho > label {
-        max-width: none;
-    }
-
-    body.dashboard .estado-atual-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    body.dashboard .graficos-iluminacao-grid,
-    body.dashboard .graficos-consumo-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* Centraliza o último card quando ele fica sozinho na linha do tablet. */
-@media (min-width: 601px) and (max-width: 900px) {
-    .cards-grid .card:last-child:nth-child(odd) {
-        grid-column: 1 / -1;
-        justify-self: center;
-        width: calc((100% - 20px) / 2);
-    }
-
-    body.dashboard .estado-atual-grid .estado-card:last-child:nth-child(odd) {
-        grid-column: 1 / -1;
-        justify-self: center;
-        width: calc((100% - 14px) / 2);
-    }
-}
-
-/* Empilha os cards e reduz os gráficos em telas pequenas. */
-@media (max-width: 600px) {
-    body.Login,
-    body.Cadastro,
-    body.Recuperacao {
-        padding: 16px;
-    }
-
-    .login-form,
-    div.login-form,
-    .cadastro-form,
-    div.cadastro-form,
-    .recuperacao-form {
-        width: 100%;
-        min-height: 0;
-        padding: 24px 18px;
-    }
-
-    body.dashboard .dashboard-layout {
-        grid-template-columns: 1fr;
-        gap: 14px;
-        padding: 14px;
-    }
-
-    body.dashboard .dashboard-sidebar {
-        position: static;
-        min-height: 0;
-        padding: 16px;
-    }
-
-    body.dashboard .dashboard-sidebar > .sidebar-caption,
-    body.dashboard .sidebar-export .sidebar-caption {
-        margin: 12px 4px 8px;
-    }
-
-    body.dashboard .sidebar-nav {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    body.dashboard .sidebar-export {
-        margin-top: 8px;
-    }
-
-    body.dashboard .dashboard-container {
-        padding: 14px 0 20px;
-    }
-
-    .dashboard-container h1 {
-        font-size: 1.8rem;
-    }
-
-    .dashboard-header,
-    .dashboard-actions {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .cards-grid {
-        grid-template-columns: 1fr;
-    }
-
-    body.dashboard .filtro-periodo-controles {
-        align-items: stretch;
-        flex-direction: column;
-    }
-
-    body.dashboard .filtro-periodo-controles .btn-atualizar {
-        width: 100%;
-    }
-
-    body.dashboard .estado-atual {
-        padding: 16px;
-    }
-
-    body.dashboard .estado-atual-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
-    }
-
-    body.dashboard .estado-card {
-        padding: 16px 10px;
-    }
-
-    body.dashboard .status-dispositivos {
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    body.dashboard .dashboard-main > .chart-panel {
-        padding: 20px;
-    }
-
-    body.dashboard .comparacao-historico {
-        padding: 14px;
-    }
-
-    body.dashboard .grafico-sensor {
-        padding: 14px;
-    }
-
-    body.dashboard .barra-comparacao {
-        grid-template-columns: minmax(75px, 110px) minmax(0, 1fr);
-        gap: 6px 8px;
-    }
-
-    body.dashboard .barra-comparacao strong {
-        grid-column: 2;
-    }
-
-    #meuGrafico,
-    #meuGrafico2,
-    #meuGraficoIntensidade,
-    #meuGraficoLuminosidade {
-        height: 260px;
-    }
-
-    body.dashboard #graficoEnergiaAcumulada {
-        height: 240px;
-    }
-}
-
-/* Evita que os números dos cards fiquem grandes demais no celular. */
-@media (max-width: 480px) {
-    .dashboard-container h1 {
-        font-size: 1.7rem;
-    }
-
-    body.dashboard .estado-atual-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .card {
-        padding: 20px;
-    }
-
-    .card strong {
-        font-size: 1.5rem;
-    }
-
-    body.dashboard .dashboard-main > .chart-panel {
-        margin-bottom: 20px;
-        padding: 16px;
-    }
-}
-/* Indicador de intensidade de iluminação */
-.barra-iluminacao {
-    width: 100%;
-    height: 12px;
-    background-color: #e5e7eb;
-    border-radius: 10px;
-    overflow: hidden;
-    margin-top: 8px;
-}
-
-#nivelIluminacao {
-    width: 0%;
-    height: 100%;
-    background-color: #4CAF50;
-    border-radius: 10px;
-    transition: width 0.5s ease;
-}
-
-#valorIntensidadeAtual {
-    font-size: 32px;
-}
-
-#statusIluminacao {
-    margin-top: 4px;
-}
-
-/* Dashboard EcoVolt: interface operacional em verde escuro. */
-body.dashboard {
-    --bg-light: #08100c;
-    --text: #d8e6dc;
-    --primary: #4edea3;
-    --white: #0f291e;
-    --surface: #0a1610;
-    --surface-raised: #121e18;
-    --surface-high: #16221c;
-    --border: rgba(52, 211, 153, 0.15);
-    --text-muted: #6b8779;
-    min-height: 100vh;
-    color-scheme: dark;
-    background:
-        radial-gradient(ellipse at 88% 4%, rgba(27, 67, 50, 0.23), transparent 32rem),
-        var(--bg-light);
-    color: var(--text);
-    font-family: Inter, sans-serif;
-}
-
-body.dashboard [hidden] {
-    display: none !important;
-}
-
-body.dashboard .dashboard-layout {
-    grid-template-columns: 240px minmax(0, 1fr);
-    gap: 0;
-    width: 100%;
-    max-width: none;
-    min-height: 100vh;
-    padding: 0;
-}
-
-body.dashboard .dashboard-sidebar {
-    z-index: 20;
-    top: 0;
-    height: 100vh;
-    min-height: 100vh;
-    padding: 20px 16px 14px;
-    border-right: 1px solid rgba(52, 211, 153, 0.08);
-    border-radius: 0;
-    background: rgba(15, 31, 24, 0.94);
-    box-shadow: 8px 0 28px rgba(0, 0, 0, 0.12);
-    backdrop-filter: blur(18px);
-}
-
-body.dashboard .sidebar-brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 0 4px 16px;
-    color: #f0fdf4;
-}
-
-body.dashboard .sidebar-brand-icon {
-    display: grid;
-    width: 36px;
-    height: 36px;
-    place-items: center;
-    border: 1px solid rgba(52, 211, 153, 0.18);
-    border-radius: 9px;
-    background: #1b4332;
-    color: #4edea3;
-    font-size: 21px;
-}
-
-body.dashboard .sidebar-brand-copy {
-    display: grid;
-    gap: 3px;
-}
-
-body.dashboard .sidebar-brand-copy strong {
-    font-size: 0.94rem;
-    line-height: 1;
-}
-
-body.dashboard .sidebar-brand-copy small {
-    color: #4edea3;
-    font-size: 0.58rem;
-    font-weight: 600;
-    letter-spacing: 0.11em;
-}
-
-body.dashboard .sidebar-device-status {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-width: 0;
-    padding: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.035);
-    border-radius: 9px;
-    background: #16221c;
-}
-
-body.dashboard .sidebar-device-status > span:last-child {
-    display: grid;
-    min-width: 0;
-    gap: 2px;
-}
-
-body.dashboard .sidebar-device-status strong {
-    overflow: hidden;
-    color: #a7f3d0;
-    font-size: 0.73rem;
-    font-weight: 500;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-body.dashboard .sidebar-device-status small {
-    overflow: hidden;
-    color: #6b8779;
-    font-size: 0.64rem;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-body.dashboard .sidebar-device-status.is-offline .sidebar-status-dot {
-    background: #ef4444;
-    box-shadow: 0 0 12px rgba(239, 68, 68, 0.38);
-}
-
-body.dashboard .sidebar-device-status.is-offline strong {
-    color: #ffb4ab;
-}
-
-body.dashboard .sidebar-status-dot,
-body.dashboard .dashboard-eyebrow > span,
-body.dashboard .live-dot,
-body.dashboard .api-connection i,
-body.dashboard .sidebar-version i {
-    flex: 0 0 auto;
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #34d399;
-    box-shadow: 0 0 12px rgba(52, 211, 153, 0.48);
-}
-
-body.dashboard .sidebar-caption {
-    margin: 22px 8px 8px;
-    color: #6b8779;
-    font-size: 0.61rem;
-    font-weight: 600;
-    letter-spacing: 0.11em;
-}
-
-body.dashboard .sidebar-nav {
-    gap: 3px;
-}
-
-body.dashboard .sidebar-link {
-    min-height: 39px;
-    padding: 8px 9px;
-    border-radius: 7px;
-    color: #c1c8c2;
-    font-size: 0.78rem;
-    transition: background 160ms ease, color 160ms ease;
-}
-
-body.dashboard .sidebar-link:hover {
-    background: rgba(255, 255, 255, 0.045);
-    color: #f0fdf4;
-}
-
-body.dashboard .sidebar-link.is-active {
-    background: #1b4332;
-    color: #f0fdf4;
-    box-shadow: 0 0 16px rgba(52, 211, 153, 0.08);
-}
-
-body.dashboard .sidebar-link-icon {
-    flex-basis: 21px;
-    width: 21px;
-    height: 21px;
-    border-radius: 0;
-    background: transparent;
-    color: #a7f3d0;
-    font-size: 17px;
-    font-weight: 400;
-}
-
-body.dashboard .sidebar-link:focus-visible,
-body.dashboard .btn-exportar:focus-visible,
-body.dashboard .btn-menu:focus-visible,
-body.dashboard .dashboard-actions button:focus-visible {
-    outline: 2px solid #4edea3;
-    outline-offset: 3px;
-}
-
-body.dashboard .sidebar-export .sidebar-caption {
-    margin-top: 0;
-}
-
-body.dashboard .sidebar-export-description {
-    margin: 0 0 8px 4px;
-    color: #6b8779;
-    font-size: 0.66rem;
-    line-height: 1.45;
-}
-
-body.dashboard .btn-exportar {
-    min-height: 37px;
-    border: 1px solid rgba(52, 211, 153, 0.17);
-    border-radius: 7px;
-    background: #1b4332;
-    color: #d8e6dc;
-    font-size: 0.73rem;
-}
-
-body.dashboard .btn-exportar:hover {
-    background: #24573f;
-    color: #f0fdf4;
-}
-
-body.dashboard .btn-exportar .material-symbols-outlined {
-    font-size: 16px;
-}
-
-body.dashboard .export-status {
-    margin-top: 5px;
-    color: #a7f3d0;
-    font-size: 0.68rem;
-}
-
-body.dashboard .sidebar-version {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    margin-top: 10px;
-    padding-top: 9px;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
-    color: #6b8779;
-    font-size: 0.62rem;
-}
-
-body.dashboard .sidebar-version span {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-}
-
-body.dashboard .sidebar-version i {
-    width: 5px;
-    height: 5px;
-}
-
-body.dashboard .dashboard-main {
-    width: 100%;
-    max-width: 1680px;
-    min-width: 0;
-    margin-inline: auto;
-    padding: 20px clamp(20px, 3vw, 42px) 36px;
-}
-
-body.dashboard .dashboard-container {
-    padding: 0 0 10px;
-}
-
-body.dashboard .dashboard-header {
-    align-items: flex-start;
-    gap: 18px 28px;
-}
-
-body.dashboard .dashboard-heading {
-    min-width: 0;
-}
-
-body.dashboard .dashboard-eyebrow {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    margin-bottom: 5px;
-    color: #6b8779;
-    font-size: 0.63rem;
-    font-weight: 500;
-    letter-spacing: 0.12em;
-}
-
-body.dashboard .dashboard-eyebrow > span {
-    width: 6px;
-    height: 6px;
-}
-
-body.dashboard .dashboard-eyebrow b {
-    color: #34d399;
-    font-weight: 500;
-}
-
-body.dashboard .dashboard-container h1 {
-    margin: 0;
-    color: #f0fdf4;
-    font-size: clamp(1.8rem, 3vw, 2.35rem);
-    letter-spacing: -0.045em;
-    line-height: 1.15;
-}
-
-body.dashboard .dashboard-container h2 {
-    margin: 4px 0 0;
-    color: #6b8779;
-    font-size: 0.78rem;
-    font-weight: 400;
-    letter-spacing: 0.015em;
-}
-
-body.dashboard .dashboard-actions {
-    justify-content: flex-end;
-    flex-wrap: wrap;
-    gap: 9px;
-}
-
-body.dashboard .dashboard-greeting {
-    display: grid;
-    gap: 2px;
-    margin-right: 8px;
-    color: #d8e6dc;
-    font-size: 0.71rem;
-}
-
-body.dashboard .dashboard-greeting strong {
-    font-weight: 500;
-}
-
-body.dashboard .dashboard-greeting small {
-    color: #6b8779;
-    font-size: 0.62rem;
-}
-
-body.dashboard .api-connection,
-body.dashboard .dashboard-sync {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 5px 9px;
-    border: 1px solid rgba(52, 211, 153, 0.12);
-    border-radius: 999px;
-    background: rgba(52, 211, 153, 0.08);
-    color: #a7f3d0;
-    font-size: 0.63rem;
-    white-space: nowrap;
-}
-
-body.dashboard .api-connection i {
-    width: 5px;
-    height: 5px;
-}
-
-body.dashboard .api-connection:not(.is-connected) {
-    border-color: rgba(255, 185, 95, 0.16);
-    background: rgba(255, 185, 95, 0.08);
-    color: #ffddb8;
-}
-
-body.dashboard .api-connection:not(.is-connected) i {
-    background: #ffb95f;
-    box-shadow: 0 0 9px rgba(255, 185, 95, 0.4);
-}
-
-body.dashboard .api-connection.is-error {
-    border-color: rgba(239, 68, 68, 0.2);
-    background: rgba(239, 68, 68, 0.09);
-    color: #ffb4ab;
-}
-
-body.dashboard .api-connection.is-error i {
-    background: #ef4444;
-    box-shadow: 0 0 9px rgba(239, 68, 68, 0.38);
+body.dashboard .btn-sair {
+    background: rgba(147, 0, 10, 0.18);
+    border-color: rgba(255, 180, 171, 0.2);
+    color: var(--error);
+}
+
+body.dashboard .btn-sair:hover {
+    background: rgba(147, 0, 10, 0.32);
+    border-color: rgba(255, 180, 171, 0.4);
+    color: #ffdad6;
 }
 
 body.dashboard .btn-menu {
     display: none;
 }
 
-body.dashboard .btn-atualizar,
-body.dashboard .btn-sair {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    min-height: 34px;
-    padding: 6px 10px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 7px;
-    background: #16221c;
-    color: #d8e6dc;
-    font-size: 0.69rem;
-    transition: background 160ms ease, border-color 160ms ease;
-}
-
-body.dashboard .btn-atualizar .material-symbols-outlined,
-body.dashboard .btn-sair .material-symbols-outlined {
-    font-size: 16px;
-}
-
-body.dashboard .btn-atualizar:hover:not(:disabled),
-body.dashboard .btn-sair:hover {
-    border-color: rgba(52, 211, 153, 0.27);
-    background: #202d26;
-}
-
-body.dashboard .btn-sair {
-    border-color: rgba(255, 255, 255, 0.08);
-    color: #a7f3d0;
-}
-
+/* Linha de Status da API e Sincronização */
 body.dashboard .dashboard-title-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 8px 18px;
-    margin: 8px 0 14px;
+    gap: 10px 18px;
+    margin: 8px 0 16px;
 }
 
 body.dashboard .api-status {
-    min-height: 1.25em;
+    min-height: 1.4em;
     margin: 0;
-    color: #6b8779;
-    font-size: 0.69rem;
+    color: var(--text-muted);
+    font-size: 0.76rem;
 }
 
 body.dashboard .api-status.is-loading {
-    color: #ffb95f;
+    color: var(--tertiary);
 }
 
 body.dashboard .api-status.is-success {
-    color: #4edea3;
+    color: var(--secondary);
 }
 
 body.dashboard .api-status.is-error {
-    color: #ffb4ab;
+    color: var(--error);
 }
 
 body.dashboard .api-status.is-demo {
-    color: #a7f3d0;
+    color: var(--text-secondary);
 }
 
 body.dashboard .dashboard-sync .material-symbols-outlined {
-    font-size: 14px;
+    font-size: 16px;
 }
 
+/* --------------------------------------------------------------------------
+   Painéis e Cartões Glassmorphism (Tier 1 Surface)
+   -------------------------------------------------------------------------- */
 body.dashboard .filtro-periodo,
 body.dashboard .estado-atual,
 body.dashboard .resumo-periodo > .cards-grid,
 body.dashboard .dashboard-main > .chart-panel {
-    border: 1px solid var(--border);
-    border-radius: 11px;
-    background: rgba(15, 41, 30, 0.7);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
-    backdrop-filter: blur(12px);
+    position: relative;
+    border: 1px solid var(--border-glass);
+    border-radius: 14px;
+    background: var(--surface-card);
+    box-shadow: 0 18px 40px -10px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    overflow: hidden;
 }
 
+/* Filtro de Período */
 body.dashboard .filtro-periodo {
-    margin-bottom: 14px;
-    padding: 13px 16px;
+    margin-bottom: 18px;
+    padding: 18px 20px;
 }
 
 body.dashboard .filtro-periodo-cabecalho,
 body.dashboard .filtro-periodo-controles {
+    display: flex;
     align-items: end;
-    gap: 10px;
+    flex-wrap: wrap;
+    gap: 12px;
 }
 
 body.dashboard .filtro-periodo-cabecalho {
     align-items: center;
-    margin-bottom: 9px;
+    justify-content: space-between;
+    margin-bottom: 12px;
 }
 
 body.dashboard .filtro-periodo h2 {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     margin: 0;
-    color: #d8e6dc;
-    font-size: 0.72rem;
-    font-weight: 500;
+    color: var(--text-primary);
+    font-size: 0.86rem;
+    font-weight: 700;
     text-transform: uppercase;
+    letter-spacing: 0.04em;
 }
 
 body.dashboard .filtro-periodo h2 .material-symbols-outlined {
-    color: #4edea3;
-    font-size: 15px;
+    color: var(--secondary);
+    font-size: 18px;
 }
 
 body.dashboard .filtro-periodo p {
-    margin-top: 3px;
-    color: #6b8779;
-    font-size: 0.64rem;
+    margin: 3px 0 0;
+    color: var(--text-muted);
+    font-size: 0.72rem;
 }
 
 body.dashboard .filtro-periodo label {
-    flex-basis: 130px;
-    gap: 3px;
-    color: #6b8779;
-    font-size: 0.65rem;
-    font-weight: 500;
+    display: grid;
+    flex: 1 1 140px;
+    gap: 4px;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    font-weight: 600;
 }
 
 body.dashboard .filtro-periodo-cabecalho > label {
-    max-width: 190px;
+    max-width: 220px;
 }
 
 body.dashboard .filtro-periodo select,
@@ -1946,44 +1012,62 @@ body.dashboard .comparacao-controles select,
 body.dashboard .chart-panel .seletor-temporal,
 body.dashboard .chart-panel .seletor-grandeza,
 body.dashboard .chart-panel .seletor-mes {
-    min-height: 34px;
-    padding: 6px 9px;
-    border: 1px solid rgba(255, 255, 255, 0.09);
-    border-radius: 6px;
-    background: #0a1610;
-    color: #d8e6dc;
+    width: 100%;
+    min-height: 38px;
+    padding: 8px 12px;
+    border: 1px solid rgba(52, 211, 153, 0.2);
+    border-radius: 8px;
+    background: rgba(5, 17, 11, 0.9);
+    color: var(--text-primary);
     color-scheme: dark;
     font: inherit;
-    font-size: 0.69rem;
+    font-size: 0.78rem;
+    transition: all 0.18s ease;
 }
 
-body.dashboard .filtro-periodo select:focus-visible,
-body.dashboard .filtro-periodo input:focus-visible,
-body.dashboard .chart-panel select:focus-visible,
-body.dashboard .comparacao-controles select:focus-visible {
-    outline: 2px solid #34d399;
-    outline-offset: 2px;
+body.dashboard .filtro-periodo select:focus,
+body.dashboard .filtro-periodo input:focus,
+body.dashboard .chart-panel select:focus,
+body.dashboard .comparacao-controles select:focus,
+body.dashboard .historico-filtros select:focus {
+    outline: none;
+    border-color: var(--secondary);
+    box-shadow: 0 0 0 2px rgba(78, 222, 163, 0.35);
+    background: var(--surface-container-lowest);
 }
 
-body.dashboard .filtro-periodo-controles .btn-atualizar,
+body.dashboard .filtro-periodo-controles .btn-aplicar-periodo {
+    min-height: 38px;
+    border: none;
+    background: linear-gradient(90deg, var(--secondary-container), var(--secondary));
+    color: var(--on-secondary-container);
+    font-weight: 700;
+    box-shadow: 0 4px 14px rgba(0, 165, 114, 0.3);
+}
+
+body.dashboard .filtro-periodo-controles .btn-aplicar-periodo:hover {
+    box-shadow: 0 6px 18px rgba(78, 222, 163, 0.4);
+    filter: brightness(1.06);
+}
+
 body.dashboard .filtro-periodo-controles .btn-resetar-periodo {
-    min-height: 34px;
-    border-color: rgba(52, 211, 153, 0.17);
-    background: #1b4332;
-    color: #d8e6dc;
-}
-
-body.dashboard .filtro-periodo-controles .btn-resetar-periodo {
-    background: #121e18;
+    min-height: 38px;
+    background: var(--surface-container-high);
+    border-color: var(--border-subtle);
 }
 
 body.dashboard .filtro-periodo-status {
-    color: #a7f3d0;
-    font-size: 0.68rem;
+    min-height: 1.4em;
+    margin: 8px 0 0;
+    color: var(--text-secondary);
+    font-size: 0.72rem;
 }
 
+/* --------------------------------------------------------------------------
+   Resumo do Período (3 Cards de Métricas Consolidadas)
+   -------------------------------------------------------------------------- */
 body.dashboard .resumo-periodo {
-    margin-bottom: 14px;
+    margin-bottom: 18px;
 }
 
 body.dashboard .resumo-periodo > h2 {
@@ -1995,263 +1079,316 @@ body.dashboard .resumo-periodo > h2 {
 }
 
 body.dashboard .cards-grid {
+    display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
+    gap: 14px;
 }
 
 body.dashboard .resumo-periodo > .cards-grid {
-    padding: 12px;
+    padding: 14px;
 }
 
 body.dashboard .card {
     position: relative;
     min-width: 0;
-    padding: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.035);
-    border-radius: 9px;
-    background: #121e18;
-    box-shadow: none;
-    text-align: left;
-    transition: border-color 160ms ease, background 160ms ease;
+    padding: 16px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 11px;
+    background: rgba(18, 30, 24, 0.88);
+    overflow: hidden;
+    transition: all 0.22s ease;
 }
 
 body.dashboard .card:hover {
-    transform: none;
-    border-color: rgba(52, 211, 153, 0.2);
-    background: #16221c;
-    box-shadow: none;
+    border-color: rgba(52, 211, 153, 0.3);
+    background: var(--surface-container);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px -4px rgba(16, 185, 129, 0.16);
 }
 
 body.dashboard .card-title {
-    margin-bottom: 4px;
-    color: #92a69a;
-    font-size: 0.65rem;
-    font-weight: 500;
+    display: block;
+    margin-bottom: 2px;
+    color: var(--on-surface-variant);
+    font-size: 0.74rem;
+    font-weight: 600;
 }
 
 body.dashboard .card-description {
     display: block;
-    margin-bottom: 8px;
-    color: #6b8779;
-    font-size: 0.57rem;
+    margin-bottom: 10px;
+    color: var(--text-muted);
+    font-size: 0.65rem;
     font-weight: 400;
 }
 
 body.dashboard .card strong {
+    display: block;
     margin: 0;
-    color: #f0fdf4;
-    font-size: clamp(1.3rem, 2.3vw, 1.8rem);
+    color: var(--text-primary);
+    font-size: clamp(1.4rem, 2.5vw, 1.95rem);
+    font-weight: 800;
     font-variant-numeric: tabular-nums;
-    letter-spacing: -0.045em;
-    line-height: 1.2;
+    font-feature-settings: 'tnum' 1, 'zero' 1;
+    letter-spacing: -0.04em;
+    line-height: 1.15;
 }
 
 body.dashboard .card small:not(.card-description) {
     display: inline-flex;
     align-items: center;
     width: fit-content;
-    margin-top: 6px;
-    padding: 2px 6px;
+    margin-top: 8px;
+    padding: 3px 8px;
     border-radius: 999px;
-    background: rgba(52, 211, 153, 0.09);
-    color: #4edea3;
-    font-size: 0.59rem;
-    font-weight: 500;
+    background: rgba(52, 211, 153, 0.1);
+    border: 1px solid rgba(52, 211, 153, 0.2);
+    color: var(--secondary);
+    font-size: 0.65rem;
+    font-weight: 600;
 }
 
 body.dashboard .card-icon {
     position: absolute;
-    top: 11px;
-    right: 12px;
-    display: grid;
-    width: 25px;
-    height: 25px;
-    place-items: center;
-    border-radius: 6px;
-    background: #202d26;
-    color: #4edea3;
+    top: 14px;
+    right: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--surface-container-high);
+    border: 1px solid var(--border-glass);
+    color: var(--secondary);
 }
 
 body.dashboard .card-icon .material-symbols-outlined {
-    font-size: 15px;
+    font-size: 18px;
 }
 
+/* --------------------------------------------------------------------------
+   Telemetria ao Vivo (Estado Atual dos Sensores)
+   -------------------------------------------------------------------------- */
 body.dashboard .estado-atual {
-    margin: 0 0 14px;
-    padding: 13px;
+    margin: 0 0 18px;
+    padding: 18px 20px;
 }
 
 body.dashboard .estado-atual-cabecalho {
+    display: flex;
     align-items: center;
-    margin-bottom: 10px;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px 20px;
+    margin-bottom: 14px;
 }
 
 body.dashboard .estado-atual-cabecalho h2 {
     display: flex;
     align-items: center;
-    gap: 7px;
+    gap: 8px;
     margin: 0;
-    color: #d8e6dc;
-    font-size: 0.78rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
+    color: var(--text-primary);
+    font-size: 0.88rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
 }
 
-body.dashboard .live-dot {
-    width: 7px;
-    height: 7px;
-}
-
 body.dashboard .estado-atual-cabecalho p {
-    margin-top: 3px;
-    color: #6b8779;
-    font-size: 0.62rem;
+    margin: 3px 0 0;
+    color: var(--text-muted);
+    font-size: 0.7rem;
 }
 
 body.dashboard .ultima-atualizacao {
     display: flex;
     align-items: center;
-    gap: 5px;
-    padding-top: 0;
-    color: #6b8779;
-    font-size: 0.63rem;
+    gap: 6px;
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    font-weight: 500;
 }
 
 body.dashboard .ultima-atualizacao .material-symbols-outlined {
-    color: #4edea3;
-    font-size: 14px;
+    color: var(--secondary);
+    font-size: 16px;
 }
 
 body.dashboard .estado-atual-grid {
+    display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 9px;
+    gap: 12px;
 }
 
 body.dashboard .estado-card {
     display: flex;
     flex-direction: column;
-    min-height: 106px;
-    padding: 11px 10px;
-    border: 1px solid rgba(52, 211, 153, 0.07);
-    border-radius: 8px;
+    min-height: 118px;
+    padding: 13px 14px;
+    border: 1px solid rgba(52, 211, 153, 0.1);
+    border-radius: 10px;
     background: rgba(18, 30, 24, 0.88);
+    transition: all 0.2s ease;
 }
 
 body.dashboard .estado-card:hover {
-    background: #16221c;
+    border-color: rgba(52, 211, 153, 0.28);
+    background: var(--surface-container);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.35);
 }
 
 body.dashboard .estado-card-heading {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 5px;
+    gap: 6px;
 }
 
 body.dashboard .estado-card-heading .card-title {
-    min-width: 0;
     margin: 0;
-    color: #92a69a;
-    font-size: 0.6rem;
-    line-height: 1.35;
+    color: var(--on-surface-variant);
+    font-size: 0.68rem;
+    font-weight: 600;
+    line-height: 1.3;
 }
 
-body.dashboard .estado-card-heading > .material-symbols-outlined {
-    flex: 0 0 auto;
-    color: #4edea3;
-    font-size: 16px;
+body.dashboard .estado-card-heading .material-symbols-outlined {
+    font-size: 18px;
 }
 
-body.dashboard .estado-card:nth-child(3) .estado-card-heading > .material-symbols-outlined,
-body.dashboard .estado-card:nth-child(4) .estado-card-heading > .material-symbols-outlined {
-    color: #ffb95f;
+body.dashboard .icon-emerald {
+    color: var(--secondary);
+}
+
+body.dashboard .icon-amber {
+    color: var(--tertiary);
+}
+
+body.dashboard .icon-cyan {
+    color: var(--metric-voltage-cyan);
 }
 
 body.dashboard .estado-card strong {
     display: block;
-    margin: 12px 0 5px;
-    color: #f0fdf4;
-    font-size: clamp(1.1rem, 2vw, 1.55rem);
+    margin: 12px 0 4px;
+    color: var(--text-primary);
+    font-size: clamp(1.15rem, 2.1vw, 1.6rem);
+    font-weight: 800;
     font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1, 'zero' 1;
     line-height: 1.1;
+    letter-spacing: -0.03em;
 }
 
 body.dashboard .estado-card small {
     margin-top: auto;
-    color: #6b8779;
-    font-size: 0.58rem;
+    color: var(--text-muted);
+    font-size: 0.65rem;
     font-weight: 400;
-    line-height: 1.4;
+    line-height: 1.35;
 }
 
+/* Barra de Iluminação LED (Telemetry Progress Gauge) */
 body.dashboard .barra-iluminacao {
-    height: 6px;
-    margin: 2px 0 4px;
-    background: #202d26;
+    width: 100%;
+    height: 7px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    margin: 4px 0 5px;
 }
 
 body.dashboard #nivelIluminacao {
-    background: #34d399;
+    width: 0%;
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #10b981, #34d399);
+    box-shadow: 0 0 10px rgba(52, 211, 153, 0.5);
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-body.dashboard #valorIntensidadeAtual {
-    margin: 7px 0 5px;
-    font-size: clamp(1.1rem, 2vw, 1.55rem);
-}
-
+/* Indicadores de Status (Iluminação e ESP32) */
 body.dashboard .status-dispositivos {
-    gap: 8px 14px;
-    margin-top: 9px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 20px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 body.dashboard .status-dispositivos p {
-    color: #92a69a;
-    font-size: 0.63rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    color: var(--on-surface-variant);
+    font-size: 0.76rem;
+    font-weight: 500;
 }
 
 body.dashboard .status-indicador {
-    min-height: 22px;
-    padding: 2px 8px;
-    background: #202d26;
-    color: #c1c8c2;
-    font-size: 0.62rem;
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: var(--surface-container-high);
+    border: 1px solid var(--border-subtle);
+    color: var(--on-surface-variant);
+    font-size: 0.7rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
 }
 
 body.dashboard .status-indicador.is-on,
 body.dashboard .status-indicador.is-connected {
     background: rgba(52, 211, 153, 0.12);
-    color: #4edea3;
+    border-color: rgba(52, 211, 153, 0.28);
+    color: var(--secondary);
 }
 
 body.dashboard .status-indicador.is-off,
 body.dashboard .status-indicador.is-disconnected {
     background: rgba(239, 68, 68, 0.12);
-    color: #ffb4ab;
+    border-color: rgba(239, 68, 68, 0.28);
+    color: var(--error);
 }
 
+/* --------------------------------------------------------------------------
+   Painéis de Gráficos e Visualizações Analíticas
+   -------------------------------------------------------------------------- */
 body.dashboard .dashboard-main > .chart-panel {
-    margin: 0 0 14px;
-    padding: 16px;
-    background: rgba(15, 41, 30, 0.72);
+    margin: 0 0 18px;
+    padding: 20px;
 }
 
 body.dashboard .chart-panel h2 {
-    margin-bottom: 13px;
-    color: #f0fdf4;
-    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 14px;
+    color: var(--text-primary);
+    font-size: 1.05rem;
+    font-weight: 700;
     letter-spacing: -0.02em;
 }
 
-body.dashboard .painel-consumo > h2,
-body.dashboard .painel-iluminacao > h2 {
-    margin-bottom: 12px;
+body.dashboard .chart-panel h2 .material-symbols-outlined {
+    color: var(--secondary);
+    font-size: 20px;
 }
 
 body.dashboard .graficos-consumo-grid,
 body.dashboard .graficos-iluminacao-grid {
+    display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
+    gap: 14px;
 }
 
 body.dashboard .grafico-sensor,
@@ -2259,74 +1396,110 @@ body.dashboard .grafico-energia,
 body.dashboard .comparacao-historico,
 body.dashboard .historico-filtros {
     min-width: 0;
-    padding: 12px;
-    border: 1px solid rgba(52, 211, 153, 0.09);
-    border-radius: 8px;
-    background: rgba(18, 30, 24, 0.82);
+    padding: 16px;
+    border: 1px solid rgba(52, 211, 153, 0.12);
+    border-radius: 10px;
+    background: rgba(18, 30, 24, 0.88);
 }
 
 body.dashboard .grafico-sensor h3,
 body.dashboard .grafico-energia h3,
 body.dashboard .comparacao-historico h3 {
-    margin-bottom: 8px;
-    color: #d8e6dc;
-    font-size: 0.77rem;
-    font-weight: 600;
+    margin: 0 0 6px;
+    color: var(--text-primary);
+    font-size: 0.86rem;
+    font-weight: 700;
 }
 
 body.dashboard .chart-period-status {
-    margin: -2px 0 8px;
-    color: #6b8779;
-    font-size: 0.61rem;
+    min-height: 1.3em;
+    margin: 0 0 10px;
+    color: var(--text-muted);
+    font-size: 0.68rem;
 }
 
 body.dashboard .chart-toolbar {
+    display: flex;
+    align-items: center;
     justify-content: flex-start;
     flex-wrap: wrap;
-    gap: 8px;
-    margin: 0 0 8px;
+    gap: 10px;
+    margin: 0 0 12px;
 }
 
 body.dashboard .chart-toolbar label,
 body.dashboard .comparacao-controles label {
-    min-width: 0;
-    color: #6b8779;
-    font-size: 0.63rem;
-    font-weight: 500;
+    display: grid;
+    gap: 4px;
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    font-weight: 600;
 }
 
 body.dashboard .painel-consumo .controles-consumo label {
-    flex-basis: 120px;
+    flex: 1 1 130px;
 }
 
 body.dashboard .grafico-energia {
-    margin-top: 12px;
-}
-
-body.dashboard .grafico-energia .chart-toolbar {
-    margin: 0 0 8px;
+    margin-top: 14px;
 }
 
 body.dashboard .grafico-energia .seletor-temporal,
 body.dashboard .chart-panel .seletor-grandeza,
 body.dashboard .chart-panel .seletor-mes {
-    width: min(100%, 210px);
+    width: min(100%, 220px);
 }
 
-body.dashboard .grafico-wrapper canvas,
-body.dashboard .grafico-energia .grafico-wrapper canvas {
-    border-radius: 6px;
-    background: #0f291e;
+/* Área de Canvas dos Gráficos */
+body.dashboard .grafico-wrapper {
+    position: relative;
+    width: 100%;
 }
 
+body.dashboard .grafico-wrapper canvas {
+    display: block;
+    width: 100%;
+    height: 280px;
+    border-radius: 8px;
+    background: var(--surface-container-lowest);
+    border: 1px solid rgba(52, 211, 153, 0.08);
+    cursor: crosshair;
+    touch-action: pan-y;
+}
+
+body.dashboard #graficoEnergiaAcumulada {
+    height: 260px;
+}
+
+/* Tooltip nos Gráficos (Surface Tier 3) */
 body.dashboard .tooltip-grafico {
-    border: 1px solid rgba(52, 211, 153, 0.22);
-    border-radius: 7px;
-    background: #202d26;
-    color: #f0fdf4;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    position: absolute;
+    z-index: 10;
+    max-width: calc(100% - 16px);
+    padding: 8px 12px;
+    border: 1px solid rgba(52, 211, 153, 0.3);
+    border-radius: 8px;
+    background: rgba(11, 22, 18, 0.95);
+    color: var(--text-primary);
+    font-size: 0.74rem;
+    font-weight: 500;
+    line-height: 1.4;
+    text-align: center;
+    pointer-events: none;
+    transform: translate(-50%, -100%);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    white-space: nowrap;
 }
 
+body.dashboard .tooltip-grafico.is-below {
+    transform: translate(-50%, 0);
+}
+
+/* --------------------------------------------------------------------------
+   Painel de Dispositivos (Hardware em Operação)
+   -------------------------------------------------------------------------- */
 body.dashboard .dispositivos-heading {
     display: flex;
     align-items: center;
@@ -2339,76 +1512,199 @@ body.dashboard .dispositivos-heading h2 {
     margin: 0 0 4px;
 }
 
-body.dashboard .dispositivos-heading .material-symbols-outlined {
-    color: #4edea3;
+body.dashboard .dispositivos-heading .heading-icon {
+    font-size: 26px;
+    color: var(--secondary);
 }
 
 body.dashboard .dispositivos-intro,
 body.dashboard .historico-intro {
     margin: 0 0 14px;
-    color: #6b8779;
-    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-size: 0.76rem;
+}
+
+body.dashboard .lista-dispositivos {
+    display: grid;
+    gap: 10px;
+    max-width: 800px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
 }
 
 body.dashboard .dispositivo-item {
-    border-color: rgba(52, 211, 153, 0.1);
-    border-radius: 7px;
-    background: #121e18;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    min-height: 52px;
+    padding: 12px 16px;
+    border: 1px solid rgba(52, 211, 153, 0.12);
+    border-radius: 8px;
+    background: rgba(18, 30, 24, 0.88);
+    transition: all 0.18s ease;
+}
+
+body.dashboard .dispositivo-item:hover {
+    border-color: rgba(52, 211, 153, 0.28);
+    background: var(--surface-container);
 }
 
 body.dashboard .dispositivo-nome {
-    color: #d8e6dc;
+    color: var(--text-primary);
+    font-size: 0.82rem;
+    font-weight: 600;
 }
 
+/* --------------------------------------------------------------------------
+   Painel de Histórico, Comparação e Tabela de Registros
+   -------------------------------------------------------------------------- */
 body.dashboard .historico-status {
-    color: #a7f3d0;
+    min-height: 1.4em;
+    margin: 0 0 12px;
+    color: var(--text-secondary);
+    font-size: 0.74rem;
 }
 
-body.dashboard .comparacao-controles select,
-body.dashboard .historico-filtros select {
-    width: 100%;
+body.dashboard .historico-filtros {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+body.dashboard .historico-filtros label {
+    flex: 1 1 180px;
+    display: grid;
+    gap: 4px;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+
+body.dashboard .comparacao-historico {
+    margin-bottom: 18px;
+}
+
+body.dashboard .comparacao-controles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+body.dashboard .comparacao-controles label {
+    flex: 1 1 180px;
 }
 
 body.dashboard .resultado-comparacao {
-    color: #d8e6dc;
+    min-height: 1.4em;
+    margin: 8px 0 14px;
+    color: var(--text-primary);
+    font-size: 0.76rem;
+    font-weight: 500;
+}
+
+/* Barras de Comparação Visual */
+body.dashboard .grafico-comparacao {
+    display: grid;
+    gap: 10px;
 }
 
 body.dashboard .barra-comparacao {
-    color: #a7f3d0;
+    display: grid;
+    grid-template-columns: minmax(80px, 120px) minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-secondary);
+    font-size: 0.76rem;
 }
 
 body.dashboard .barra-comparacao-trilho {
-    background: #202d26;
+    position: relative;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    overflow: hidden;
 }
 
 body.dashboard .barra-comparacao-valor {
-    background: linear-gradient(90deg, #00a572, #4edea3);
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, var(--secondary-container), var(--secondary));
+    border-radius: 999px;
+    box-shadow: 0 0 8px rgba(78, 222, 163, 0.45);
+    transition: width 0.4s ease;
 }
 
+body.dashboard .barra-comparacao strong {
+    font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+/* Tabela de Registros Históricos */
 body.dashboard .tabela-historico-wrapper {
-    border-color: rgba(52, 211, 153, 0.12);
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid rgba(52, 211, 153, 0.14);
+    border-radius: 10px;
+    background: var(--surface-container-lowest);
 }
 
 body.dashboard .tabela-historico {
-    background: #0f291e;
-    color: #d8e6dc;
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+    text-align: left;
 }
 
-body.dashboard .tabela-historico caption,
+body.dashboard .tabela-historico caption {
+    padding: 10px 14px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    text-align: left;
+    color: var(--text-secondary);
+    background: rgba(27, 67, 50, 0.35);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
 body.dashboard .tabela-historico th {
-    background: #16221c;
-    color: #a7f3d0;
+    padding: 10px 14px;
+    background: rgba(27, 67, 50, 0.35);
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-body.dashboard .tabela-historico th,
 body.dashboard .tabela-historico td {
-    border-color: rgba(255, 255, 255, 0.07);
+    padding: 10px 14px;
+    color: var(--on-surface);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1, 'zero' 1;
+}
+
+body.dashboard .tabela-historico tbody tr:hover {
+    background: rgba(52, 211, 153, 0.05);
 }
 
 body.dashboard .tabela-historico .historico-vazio {
-    color: #6b8779;
+    padding: 20px 14px;
+    text-align: center;
+    color: var(--text-muted);
 }
 
+/* --------------------------------------------------------------------------
+   Backdrop e Navegação Mobile (Gaveta Off-Canvas)
+   -------------------------------------------------------------------------- */
 body.dashboard .sidebar-backdrop {
     display: none;
 }
@@ -2423,10 +1719,10 @@ body.dashboard .sidebar-backdrop {
         inset: 0 auto 0 0;
         width: min(290px, calc(100vw - 52px));
         height: 100dvh;
-        min-height: 0;
         overflow-y: auto;
         transform: translateX(-105%);
-        transition: transform 220ms ease;
+        transition: transform 240ms cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 30;
     }
 
     body.dashboard .dashboard-sidebar.menu-aberto {
@@ -2435,29 +1731,28 @@ body.dashboard .sidebar-backdrop {
 
     body.dashboard .sidebar-backdrop:not([hidden]) {
         position: fixed;
-        z-index: 19;
         inset: 0;
+        z-index: 25;
         display: block;
         width: 100%;
         height: 100%;
         border: 0;
-        background: rgba(0, 0, 0, 0.62);
-        backdrop-filter: blur(2px);
-    }
-
-    body.dashboard .dashboard-main {
-        padding-inline: clamp(16px, 3vw, 30px);
+        background: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
     }
 
     body.dashboard .btn-menu {
-        display: inline-grid;
-        width: 34px;
-        height: 34px;
-        place-items: center;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 7px;
-        background: #16221c;
-        color: #a7f3d0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        border: 1px solid var(--border-subtle);
+        border-radius: 8px;
+        background: var(--surface-container);
+        color: var(--text-secondary);
+        cursor: pointer;
     }
 
     body.dashboard .estado-atual-grid {
@@ -2469,22 +1764,18 @@ body.dashboard .sidebar-backdrop {
     body.dashboard .dashboard-header {
         align-items: flex-start;
         flex-direction: column;
+        gap: 16px;
     }
 
     body.dashboard .dashboard-actions {
-        justify-content: flex-start;
-        flex-direction: row;
-        align-items: center;
         width: 100%;
+        justify-content: flex-start;
+        align-items: center;
     }
 
     body.dashboard .dashboard-greeting {
+        text-align: left;
         margin-right: auto;
-    }
-
-    body.dashboard .graficos-consumo-grid,
-    body.dashboard .graficos-iluminacao-grid {
-        grid-template-columns: 1fr;
     }
 
     body.dashboard .cards-grid {
@@ -2493,6 +1784,11 @@ body.dashboard .sidebar-backdrop {
 
     body.dashboard .estado-atual-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    body.dashboard .graficos-consumo-grid,
+    body.dashboard .graficos-iluminacao-grid {
+        grid-template-columns: 1fr;
     }
 
     body.dashboard .filtro-periodo-cabecalho {
@@ -2505,38 +1801,35 @@ body.dashboard .sidebar-backdrop {
     }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 520px) {
     body.dashboard .dashboard-main {
-        padding: 14px 12px 24px;
+        padding: 16px 12px 32px;
     }
 
-    body.dashboard .dashboard-heading h2 {
-        max-width: 35ch;
-        font-size: 0.7rem;
-        line-height: 1.45;
+    body.dashboard .dashboard-container h1 {
+        font-size: 1.65rem;
     }
 
-    body.dashboard .dashboard-eyebrow {
-        flex-wrap: wrap;
-        font-size: 0.55rem;
+    body.dashboard .dashboard-actions {
+        gap: 8px;
     }
 
-    body.dashboard .dashboard-greeting {
-        font-size: 0.66rem;
-    }
-
-    body.dashboard .api-connection {
+    body.dashboard .btn-label {
         display: none;
     }
 
-    body.dashboard .dashboard-sync {
-        font-size: 0.58rem;
+    body.dashboard .btn-atualizar,
+    body.dashboard .btn-sair {
+        min-height: 36px;
+        padding: 8px 10px;
     }
 
-    body.dashboard .filtro-periodo,
-    body.dashboard .estado-atual,
-    body.dashboard .dashboard-main > .chart-panel {
-        padding: 12px;
+    body.dashboard .cards-grid {
+        grid-template-columns: 1fr;
+    }
+
+    body.dashboard .estado-atual-grid {
+        grid-template-columns: 1fr;
     }
 
     body.dashboard .filtro-periodo-controles {
@@ -2544,112 +1837,18 @@ body.dashboard .sidebar-backdrop {
     }
 
     body.dashboard .filtro-periodo-controles label {
-        flex-basis: 100%;
+        flex: 1 1 100%;
     }
 
     body.dashboard .filtro-periodo-controles .btn-atualizar {
         width: 100%;
     }
 
-    body.dashboard .cards-grid {
-        grid-template-columns: 1fr;
-        gap: 8px;
-    }
-
-    body.dashboard .resumo-periodo > .cards-grid {
-        padding: 8px;
-    }
-
-    body.dashboard .card {
-        padding: 12px;
-    }
-
-    body.dashboard .estado-atual-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 7px;
-    }
-
-    body.dashboard .estado-card {
-        min-height: 100px;
-        padding: 9px 8px;
-    }
-
-    body.dashboard .estado-card-heading .card-title {
-        font-size: 0.55rem;
-    }
-
-    body.dashboard .ultima-atualizacao {
-        flex-wrap: wrap;
-        font-size: 0.58rem;
-    }
-
-    body.dashboard .grafico-sensor,
-    body.dashboard .grafico-energia,
-    body.dashboard .comparacao-historico,
-    body.dashboard .historico-filtros {
-        padding: 10px;
-    }
-
-    #meuGrafico,
-    #meuGrafico2,
-    #meuGraficoIntensidade,
-    #meuGraficoLuminosidade {
+    body.dashboard .grafico-wrapper canvas {
         height: 230px;
     }
 
     body.dashboard #graficoEnergiaAcumulada {
-        height: 220px;
+        height: 210px;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

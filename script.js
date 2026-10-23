@@ -631,6 +631,8 @@ function desenharGraficoEnergiaAcumulada() {
     contexto.setTransform(1, 0, 0, 1, 0, 0);
     contexto.scale(proporcao, proporcao);
     contexto.clearRect(0, 0, largura, altura);
+    contexto.fillStyle = "#05110b";
+    contexto.fillRect(0, 0, largura, altura);
 
     // Usa o combo box deste gráfico, sem acoplar seu intervalo ao filtro geral do dashboard.
     const periodoSelecionado = document.getElementById("periodoEnergiaAcumulada").value;
@@ -679,7 +681,7 @@ function desenharGraficoEnergiaAcumulada() {
     contexto.textBaseline = "middle";
     for (let linha = 0; linha <= 4; linha++) {
         const y = margem.topo + alturaGrafico - (linha / 4) * alturaGrafico;
-        contexto.strokeStyle = "rgba(167, 243, 208, 0.12)";
+        contexto.strokeStyle = "rgba(52, 211, 153, 0.08)";
         contexto.beginPath();
         contexto.moveTo(margem.esquerda, y);
         contexto.lineTo(largura - margem.direita, y);
@@ -688,8 +690,37 @@ function desenharGraficoEnergiaAcumulada() {
         contexto.fillText((passo * linha).toLocaleString("pt-BR", { maximumFractionDigits: 3 }), margem.esquerda - 8, y);
     }
 
-    contexto.strokeStyle = "#34d399";
+    // Preenchimento com gradiente de área bioluminescente sob a curva
+    if (leituras.length > 1) {
+        const gradiente = contexto.createLinearGradient(0, margem.topo, 0, margem.topo + alturaGrafico);
+        gradiente.addColorStop(0, "rgba(78, 222, 163, 0.22)");
+        gradiente.addColorStop(1, "rgba(5, 17, 11, 0)");
+
+        contexto.beginPath();
+        let primeiroX = null;
+        let ultimoX = null;
+        leituras.forEach((leitura, indice) => {
+            const x = margem.esquerda + (indice / (leituras.length - 1)) * larguraGrafico;
+            const y = margem.topo + alturaGrafico - (leitura.kwh / maximo) * alturaGrafico;
+            if (indice === 0) {
+                contexto.moveTo(x, margem.topo + alturaGrafico);
+                contexto.lineTo(x, y);
+                primeiroX = x;
+            } else {
+                contexto.lineTo(x, y);
+            }
+            ultimoX = x;
+        });
+        contexto.lineTo(ultimoX, margem.topo + alturaGrafico);
+        contexto.closePath();
+        contexto.fillStyle = gradiente;
+        contexto.fill();
+    }
+
+    contexto.strokeStyle = "#4edea3";
     contexto.lineWidth = 2.5;
+    contexto.lineJoin = "round";
+    contexto.lineCap = "round";
     contexto.beginPath();
     leituras.forEach((leitura, indice) => {
         const x = margem.esquerda + (leituras.length === 1 ? larguraGrafico / 2 : (indice / (leituras.length - 1)) * larguraGrafico);
@@ -702,14 +733,17 @@ function desenharGraficoEnergiaAcumulada() {
     });
     contexto.stroke();
 
-    // Desenha pontos para que até uma única amostra seja visível como dado no gráfico.
-    contexto.fillStyle = "#34d399";
+    // Marcadores refinados com anel externo e centro escuro
     leituras.forEach((leitura, indice) => {
         const x = margem.esquerda + (leituras.length === 1 ? larguraGrafico / 2 : (indice / (leituras.length - 1)) * larguraGrafico);
         const y = margem.topo + alturaGrafico - (leitura.kwh / maximo) * alturaGrafico;
         contexto.beginPath();
-        contexto.arc(x, y, 3, 0, Math.PI * 2);
+        contexto.arc(x, y, 3.5, 0, Math.PI * 2);
+        contexto.fillStyle = "#05110b";
         contexto.fill();
+        contexto.strokeStyle = "#4edea3";
+        contexto.lineWidth = 1.8;
+        contexto.stroke();
     });
 
     const intervaloRotulos = Math.max(1, Math.ceil(leituras.length / 6));
@@ -860,7 +894,7 @@ function criarGrafico(canvas) {
             ano: null
         });
         ctx.clearRect(0, 0, largura, altura);
-        ctx.fillStyle = "#0f291e";
+        ctx.fillStyle = "#05110b";
         ctx.fillRect(0, 0, largura, altura);
         ctx.fillStyle = "#a7f3d0";
         ctx.font = "14px Inter, sans-serif";
@@ -937,15 +971,15 @@ function criarGrafico(canvas) {
     }
 
     ctx.clearRect(0, 0, largura, altura);
-    ctx.fillStyle = "#0f291e";
+    ctx.fillStyle = "#05110b";
     ctx.fillRect(0, 0, largura, altura);
-    ctx.fillStyle = "#777";
-    ctx.font = "12px Inter, sans-serif";
+    ctx.fillStyle = "#6b8779";
+    ctx.font = "11px Inter, sans-serif";
     ctx.textAlign = "left";
     ctx.fillText(`Valores em ${serieSelecionada.unidade}`, margemEsquerda, 16);
 
     // Desenha as linhas horizontais de referência da área do gráfico.
-    ctx.strokeStyle = "rgba(167, 243, 208, 0.14)";
+    ctx.strokeStyle = "rgba(52, 211, 153, 0.08)";
     ctx.lineWidth = 1;
     for (let i = 0; i <= quantidadeLinhas; i++) {
         const y = margemSuperior + (alturaGrafico / quantidadeLinhas) * i;
@@ -962,7 +996,7 @@ function criarGrafico(canvas) {
             ctx.beginPath();
             ctx.moveTo(x, margemSuperior);
             ctx.lineTo(x, margemSuperior + alturaGrafico);
-            ctx.strokeStyle = "rgba(167, 243, 208, 0.08)";
+            ctx.strokeStyle = "rgba(52, 211, 153, 0.06)";
             ctx.lineWidth = 1;
             ctx.stroke();
             ctx.fillStyle = "#6b8779";
@@ -1005,7 +1039,54 @@ function criarGrafico(canvas) {
         ctx.fillText("Sem medições nesta faixa de datas.", largura / 2, margemSuperior + alturaGrafico / 2);
     }
 
-    // Liga os pontos da série para formar a linha de consumo.
+    // Cores temáticas dinâmicas por grandeza (Forest Telemetry Dark)
+    let corLinha = "#4edea3";
+    let corGradiente = "rgba(78, 222, 163, 0.22)";
+
+    if (isGraficoIntensidade) {
+        corLinha = "#34d399";
+        corGradiente = "rgba(52, 211, 153, 0.22)";
+    } else if (isGraficoLuminosidade) {
+        corLinha = "#ffb95f";
+        corGradiente = "rgba(255, 185, 95, 0.22)";
+    } else if (grandezaSelecionada === "tensao") {
+        corLinha = "#06b6d4";
+        corGradiente = "rgba(6, 182, 212, 0.22)";
+    } else if (grandezaSelecionada === "potencia") {
+        corLinha = "#f59e0b";
+        corGradiente = "rgba(245, 158, 11, 0.22)";
+    } else if (grandezaSelecionada === "corrente") {
+        corLinha = "#a5d0b9";
+        corGradiente = "rgba(165, 208, 185, 0.22)";
+    }
+
+    // Preenchimento com gradiente de área bioluminescente sob a curva
+    const pontosValidos = pontos.filter((p) => Number.isFinite(p.valor));
+    if (pontosValidos.length > 1) {
+        const gradiente = ctx.createLinearGradient(0, margemSuperior, 0, margemSuperior + alturaGrafico);
+        gradiente.addColorStop(0, corGradiente);
+        gradiente.addColorStop(1, "rgba(5, 17, 11, 0)");
+
+        ctx.beginPath();
+        let primeiroX = null;
+        let ultimoX = null;
+        pontosValidos.forEach((ponto, idx) => {
+            if (idx === 0) {
+                ctx.moveTo(ponto.x, margemSuperior + alturaGrafico);
+                ctx.lineTo(ponto.x, ponto.y);
+                primeiroX = ponto.x;
+            } else {
+                ctx.lineTo(ponto.x, ponto.y);
+            }
+            ultimoX = ponto.x;
+        });
+        ctx.lineTo(ultimoX, margemSuperior + alturaGrafico);
+        ctx.closePath();
+        ctx.fillStyle = gradiente;
+        ctx.fill();
+    }
+
+    // Liga os pontos da série para formar a linha de telemetria.
     ctx.beginPath();
     let caminhoAberto = false;
     pontos.forEach((ponto, index) => {
@@ -1023,23 +1104,23 @@ function criarGrafico(canvas) {
             ctx.lineTo(ponto.x, ponto.y);
         }
     });
-    ctx.strokeStyle = "#34d399";
-    ctx.lineWidth = 3;
+    ctx.strokeStyle = corLinha;
+    ctx.lineWidth = 2.5;
     ctx.lineJoin = "round";
     ctx.lineCap = "round";
     ctx.stroke();
 
-    // Desenha um marcador em cada dia ou mês com dado.
+    // Marcadores elegantes com anel externo e centro escuro
     pontos.forEach((ponto) => {
         if (!Number.isFinite(ponto.valor)) {
             return;
         }
         ctx.beginPath();
-        ctx.arc(ponto.x, ponto.y, 4, 0, Math.PI * 2);
-        ctx.fillStyle = "#0f291e";
+        ctx.arc(ponto.x, ponto.y, 3.5, 0, Math.PI * 2);
+        ctx.fillStyle = "#05110b";
         ctx.fill();
-        ctx.strokeStyle = "#34d399";
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = corLinha;
+        ctx.lineWidth = 1.8;
         ctx.stroke();
     });
 }
