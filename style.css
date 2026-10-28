@@ -1440,12 +1440,13 @@ body.dashboard .painel-consumo .controles-consumo label {
     flex: 1 1 130px;
 }
 
-/* O gráfico acumulado usa o mesmo cartão, toolbar e fundo dos outros gráficos. */
+/* O gráfico acumulado usa exatamente o mesmo cartão, toolbar e fundo dos outros gráficos. */
 body.dashboard .grafico-energia {
     margin-top: 14px;
     background: rgba(18, 30, 24, 0.88);
     border: 1px solid rgba(52, 211, 153, 0.12);
     border-radius: 10px;
+    box-shadow: none;
 }
 
 body.dashboard .grafico-energia .seletor-temporal,

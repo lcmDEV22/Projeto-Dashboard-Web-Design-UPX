@@ -654,12 +654,11 @@ function desenharGraficoEnergiaAcumulada() {
         return;
     }
 
-    const margem = { topo: 16, direita: 18, base: 38, esquerda: 74 };
+    // Usa as mesmas margens dos gráficos mensais e diários para padronizar os eixos.
+    const margem = { topo: 38, direita: 20, base: 45, esquerda: 55 };
     const larguraGrafico = largura - margem.esquerda - margem.direita;
     const alturaGrafico = altura - margem.topo - margem.base;
-    const maximo = Math.max(...leituras.map((leitura) => leitura.kwh), 0.001);
-    const passo = maximo / 4;
-
+    const maximo = Math.max(1, ...leituras.map((leitura) => leitura.kwh));
     const pontos = leituras.map((leitura, indice) => {
         const x = margem.esquerda + (leituras.length === 1 ? larguraGrafico / 2 : (indice / (leituras.length - 1)) * larguraGrafico);
         const y = margem.topo + alturaGrafico - (leitura.kwh / maximo) * alturaGrafico;
@@ -680,21 +679,38 @@ function desenharGraficoEnergiaAcumulada() {
     contexto.textAlign = "left";
     contexto.textBaseline = "alphabetic";
     contexto.fillStyle = "#6b8779";
-    contexto.fillText("Energia acumulada (kWh)", margem.esquerda, 14);
+    contexto.fillText("Energia acumulada (kWh)", margem.esquerda, 16);
 
-    contexto.font = "11px Inter, sans-serif";
+    // Desenha uma grade horizontal com cinco divisões, igual aos outros gráficos do painel.
+    contexto.lineWidth = 1;
+    contexto.font = "12px Inter, sans-serif";
     contexto.textAlign = "right";
     contexto.textBaseline = "middle";
     for (let linha = 0; linha <= 4; linha++) {
-        const y = margem.topo + alturaGrafico - (linha / 4) * alturaGrafico;
+        const y = margem.topo + (linha / 4) * alturaGrafico;
         contexto.strokeStyle = "rgba(52, 211, 153, 0.08)";
         contexto.beginPath();
         contexto.moveTo(margem.esquerda, y);
         contexto.lineTo(largura - margem.direita, y);
         contexto.stroke();
+        const valorEixo = maximo - (maximo / 4) * linha;
         contexto.fillStyle = "#a7f3d0";
-        contexto.fillText((passo * linha).toLocaleString("pt-BR", { maximumFractionDigits: 3 }), margem.esquerda - 8, y);
+        contexto.fillText(valorEixo.toLocaleString("pt-BR", { maximumFractionDigits: 3 }), margem.esquerda - 8, y + 4);
     }
+
+    // Adiciona divisões verticais leves, mantendo o mesmo comportamento visual dos gráficos padrão.
+    contexto.lineWidth = 1;
+    leituras.forEach((leitura, indice) => {
+        if (indice % Math.max(1, Math.ceil(leituras.length / 6)) !== 0 && indice !== leituras.length - 1) {
+            return;
+        }
+        const x = margem.esquerda + (leituras.length === 1 ? larguraGrafico / 2 : (indice / (leituras.length - 1)) * larguraGrafico);
+        contexto.strokeStyle = "rgba(52, 211, 153, 0.06)";
+        contexto.beginPath();
+        contexto.moveTo(x, margem.topo);
+        contexto.lineTo(x, margem.topo + alturaGrafico);
+        contexto.stroke();
+    });
 
     // Preenchimento com gradiente de área bioluminescente sob a curva
     if (leituras.length > 1) {
@@ -765,7 +781,7 @@ function desenharGraficoEnergiaAcumulada() {
         const rotulo = largura < 520
             ? data.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })
             : data.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit" });
-        contexto.fillText(rotulo, x, altura - margem.base + 10);
+        contexto.fillText(rotulo, x, altura - 15);
     });
 }
 
