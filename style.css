@@ -1,5 +1,5 @@
 /* ==========================================================================
-   EcoVolt - Sistema de Telemetria e Monitoramento de Energia IoT
+   EnergiView - Sistema de Telemetria e Monitoramento de Energia IoT
    Design System: Forest Telemetry Dark & Cyber-Glassmorphism
    Baseado em code.html e especificações DESIGN.md
    ========================================================================== */
@@ -455,7 +455,7 @@ body.dashboard .dashboard-sidebar {
     box-shadow: 8px 0 28px rgba(0, 0, 0, 0.25);
 }
 
-/* Logotipo / Marca EcoVolt */
+/* Logotipo / Marca EnergiView */
 body.dashboard .sidebar-brand {
     display: flex;
     align-items: center;
@@ -1440,8 +1440,12 @@ body.dashboard .painel-consumo .controles-consumo label {
     flex: 1 1 130px;
 }
 
+/* O gráfico acumulado usa o mesmo cartão, toolbar e fundo dos outros gráficos. */
 body.dashboard .grafico-energia {
     margin-top: 14px;
+    background: rgba(18, 30, 24, 0.88);
+    border: 1px solid rgba(52, 211, 153, 0.12);
+    border-radius: 10px;
 }
 
 body.dashboard .grafico-energia .seletor-temporal,
@@ -1467,8 +1471,9 @@ body.dashboard .grafico-wrapper canvas {
     touch-action: pan-y;
 }
 
+/* Mantém a altura responsiva idêntica aos demais canvases do dashboard. */
 body.dashboard #graficoEnergiaAcumulada {
-    height: 260px;
+    height: 280px;
 }
 
 /* Tooltip nos Gráficos (Surface Tier 3) */
@@ -1849,6 +1854,6 @@ body.dashboard .sidebar-backdrop {
     }
 
     body.dashboard #graficoEnergiaAcumulada {
-        height: 210px;
+        height: 230px;
     }
 }

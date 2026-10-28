@@ -81,69 +81,7 @@ function gerarDadosFicticiosHistorico() {
                     { tipo: "diario", data, grandeza: "Luminosidade ambiente (LDR)", chaveGrandeza: "luminosidade", valor: Number((320 + Math.sin((dia + mes) * 0.68) * 210 + Math.cos(dia * 0.31) * 95).toFixed(1)), unidade: "lux", capturadoEm, origem: "Demonstração" }
                 );
 
-                // Cria amostras horárias somente para o mês atual, sem aumentar o histórico antigo.
-                if (ano === hoje.getFullYear() && mes === hoje.getMonth()) {
-                    // Os dados demonstrativos mostram uma curva acumulada; não alteram o total diário já salvo.
-                    for (let hora = 0; hora < 24; hora++) {
-                        if (data === hojeFormatado && hora > hoje.getHours()) {
-                            break;
-                        }
-                        const instanteLeitura = new Date(ano, mes, dia, hora).toISOString();
-                        const variacaoHora = Math.sin((hora / 24) * Math.PI * 2);
-                        [
-                            ["consumo", "Consumo", consumoDiario * ((hora + 1) / 24), "kWh"],
-                            ["tensao", "Tensão", tensaoDiaria + variacaoHora * 2, "V"],
-                            ["corrente", "Corrente", correnteDiaria + variacaoHora * 0.2, "A"],
-                            ["potencia", "Potência", potenciaDiaria + variacaoHora * 60, "W"]
-                        ].forEach(([chaveGrandeza, grandeza, valor, unidade]) => {
-                            registros.push({
-                                tipo: "diario",
-                                data,
-                                grandeza,
-                                chaveGrandeza,
-                                valor: Number(valor.toFixed(2)),
-                                unidade,
-                                capturadoEm,
-                                instanteLeitura,
-                                origem: "Demonstração"
-                            });
-                        });
-                    }
-
-                    const intensidadeBase = 50 + Math.sin((dia + mes * 2) * 0.72) * 32;
-                    const luminosidadeBase = 320 + Math.sin((dia + mes) * 0.68) * 210 + Math.cos(dia * 0.31) * 95;
-                    for (let hora = 0; hora < 24; hora++) {
-                        if (data === hojeFormatado && hora > hoje.getHours()) {
-                            break;
-                        }
-                        const instanteLeitura = new Date(ano, mes, dia, hora).toISOString();
-                        const curvaDoDia = Math.sin((hora / 24) * Math.PI * 2);
-                        registros.push(
-                            {
-                                tipo: "diario",
-                                data,
-                                grandeza: "Intensidade da iluminação",
-                                chaveGrandeza: "intensidade",
-                                valor: Number((intensidadeBase + curvaDoDia * 12).toFixed(1)),
-                                unidade: "%",
-                                capturadoEm,
-                                instanteLeitura,
-                                origem: "Demonstração"
-                            },
-                            {
-                                tipo: "diario",
-                                data,
-                                grandeza: "Luminosidade ambiente (LDR)",
-                                chaveGrandeza: "luminosidade",
-                                valor: Number((luminosidadeBase + curvaDoDia * Math.min(150, luminosidadeBase * 0.5)).toFixed(1)),
-                                unidade: "lux",
-                                capturadoEm,
-                                instanteLeitura,
-                                origem: "Demonstração"
-                            }
-                        );
-                    }
-                }
+                // Os horários são gerados sob demanda para todos os dias, evitando inflar o armazenamento local.
             }
 
             const totalConsumoMensal = consumoMensal.reduce((total, valor) => total + valor, 0);
@@ -394,22 +332,28 @@ function atualizarMesesGraficoDiario() {
     atualizarDiasGraficoDiario();
 }
 
-// Preenche as datas que realmente possuem amostras de consumo com horário.
+// Gera cada dia civil do intervalo, inclusive dias sem amostras no histórico.
+// Isso mantém todos os meses visíveis no combo independentemente da quantidade de dados.
+function obterDatasPeriodoSelecionado() {
+    const datas = [];
+    if (!intervaloPeriodoAplicado) {
+        return datas;
+    }
+
+    const inicio = new Date(`${intervaloPeriodoAplicado.inicio}T00:00:00`);
+    const fim = new Date(`${intervaloPeriodoAplicado.fim}T00:00:00`);
+    for (const cursor = new Date(inicio); cursor <= fim; cursor.setDate(cursor.getDate() + 1)) {
+        datas.push(formatarDataHistorico(cursor.getFullYear(), cursor.getMonth(), cursor.getDate()));
+    }
+    return datas;
+}
+
+// Preenche o combo diário com todo o intervalo escolhido, não apenas com datas amostradas.
 function atualizarDiasGraficoDiario() {
     const seletor = document.getElementById("dataGraficoDiario");
     const modo = document.getElementById("modoGraficoDiario").value;
     const valorAnterior = seletor.value;
-    const datas = [...new Set(
-        registrosHistorico
-            .filter((registro) =>
-                registro.tipo === "diario" &&
-                registro.chaveGrandeza === grandezaSelecionada &&
-                registro.instanteLeitura &&
-                registro.data >= intervaloPeriodoAplicado.inicio &&
-                registro.data <= intervaloPeriodoAplicado.fim
-            )
-            .map((registro) => registro.data)
-    )].sort();
+    const datas = obterDatasPeriodoSelecionado();
 
     seletor.replaceChildren();
     datas.forEach((data) => {
@@ -464,13 +408,62 @@ function obterSerieDiariaMensal(chaveGrandeza) {
     return serie;
 }
 
+// Gera deterministicamente as 24 horas de um dia demonstrativo a partir do resumo diário.
+// A geração sob demanda preserva o histórico no navegador e atende qualquer dia do combo.
+function gerarAmostrasHorariasDemonstrativas(chaveGrandeza, data) {
+    const resumo = registrosHistorico.find((registro) =>
+        registro.tipo === "diario" &&
+        !registro.instanteLeitura &&
+        registro.chaveGrandeza === chaveGrandeza &&
+        registro.data === data &&
+        registro.origem === "Demonstração"
+    );
+    if (!resumo) {
+        return [];
+    }
+
+    const pesos = Array.from({ length: 24 }, (_, hora) => {
+        const periodo = ((hora - 6) / 24) * Math.PI * 2;
+        return 0.25 + Math.max(0, Math.sin(periodo)) * 0.75;
+    });
+    const somaPesos = pesos.reduce((total, peso) => total + peso, 0);
+
+    return pesos.map((peso, hora) => {
+        const instante = new Date(`${data}T${String(hora).padStart(2, "0")}:00:00`).toISOString();
+        const variacaoHorario = Math.sin((hora / 24) * Math.PI * 2);
+        let valor;
+
+        if (chaveGrandeza === "consumo") {
+            valor = resumo.valor * (peso / somaPesos);
+        } else if (chaveGrandeza === "tensao") {
+            valor = resumo.valor + variacaoHorario * 2;
+        } else if (chaveGrandeza === "corrente") {
+            valor = resumo.valor + variacaoHorario * 0.2;
+        } else if (chaveGrandeza === "potencia") {
+            valor = resumo.valor + variacaoHorario * 60;
+        } else if (chaveGrandeza === "intensidade") {
+            valor = resumo.valor + variacaoHorario * 12;
+        } else if (chaveGrandeza === "luminosidade") {
+            valor = resumo.valor + variacaoHorario * Math.min(150, resumo.valor * 0.5);
+        } else {
+            valor = resumo.valor;
+        }
+
+        return {
+            data,
+            periodo: instante,
+            valor: Number(Math.max(0, valor).toFixed(chaveGrandeza === "luminosidade" || chaveGrandeza === "intensidade" ? 1 : 2))
+        };
+    });
+}
+
 // Retorna os registros de consumo acumulado capturados ao longo de uma data específica.
 function obterSerieConsumoPorHora(data) {
     if (!data) {
         return [];
     }
 
-    return registrosHistorico
+    const amostrasArmazenadas = registrosHistorico
         .filter((registro) =>
             registro.tipo === "diario" &&
             registro.chaveGrandeza === grandezaSelecionada &&
@@ -485,6 +478,11 @@ function obterSerieConsumoPorHora(data) {
             valor: registro.valor
         }))
         .sort((primeiro, segundo) => primeiro.periodo.localeCompare(segundo.periodo));
+
+    // Leituras reais prevalecem; os resumos da demonstração recebem uma curva horária completa.
+    return amostrasArmazenadas.length
+        ? amostrasArmazenadas
+        : gerarAmostrasHorariasDemonstrativas(grandezaSelecionada, data);
 }
 
 // Carrega o total e as amostras para preservar o acompanhamento entre sessões no mesmo navegador.
@@ -642,6 +640,7 @@ function desenharGraficoEnergiaAcumulada() {
     const leituras = energiaAcumulada.amostras.filter((amostra) =>
         Date.parse(amostra.instante) >= inicioPeriodoMs
     );
+    // O rótulo interno deixa a unidade visível no próprio gráfico, junto das séries padrão.
     const descricao = document.getElementById("descricaoGraficoEnergia");
     if (!leituras.length) {
         dadosGraficos.delete("graficoEnergiaAcumulada");
@@ -675,6 +674,13 @@ function desenharGraficoEnergiaAcumulada() {
     });
 
     descricao.textContent = `${leituras.length.toLocaleString("pt-BR")} amostras horárias · total acumulado em kWh`;
+
+    // Identificador interno padronizado com os demais gráficos: grandeza e unidade no topo.
+    contexto.font = "11px Inter, sans-serif";
+    contexto.textAlign = "left";
+    contexto.textBaseline = "alphabetic";
+    contexto.fillStyle = "#6b8779";
+    contexto.fillText("Energia acumulada (kWh)", margem.esquerda, 14);
 
     contexto.font = "11px Inter, sans-serif";
     contexto.textAlign = "right";
@@ -976,7 +982,8 @@ function criarGrafico(canvas) {
     ctx.fillStyle = "#6b8779";
     ctx.font = "11px Inter, sans-serif";
     ctx.textAlign = "left";
-    ctx.fillText(`Valores em ${serieSelecionada.unidade}`, margemEsquerda, 16);
+    // Mantém a unidade dentro da área pintada para que ela não fique fora do gráfico.
+    ctx.fillText(`${serieSelecionada.nome} (${serieSelecionada.unidade})`, margemEsquerda, 16);
 
     // Desenha as linhas horizontais de referência da área do gráfico.
     ctx.strokeStyle = "rgba(52, 211, 153, 0.08)";
@@ -2552,7 +2559,7 @@ function obterSerieSensorPorHora(chaveGrandeza, data) {
         return [];
     }
 
-    return obterLeiturasSensorNoIntervalo(chaveGrandeza)
+    const amostrasArmazenadas = obterLeiturasSensorNoIntervalo(chaveGrandeza)
         .filter((registro) => registro.data === data && registro.instanteLeitura)
         .map((registro) => ({
             data: registro.data,
@@ -2560,20 +2567,22 @@ function obterSerieSensorPorHora(chaveGrandeza, data) {
             valor: registro.valor
         }))
         .sort((primeiro, segundo) => primeiro.periodo.localeCompare(segundo.periodo));
+
+    // Mantém dados reais da API e completa apenas os resumos demonstrativos com 24 horas.
+    return amostrasArmazenadas.length
+        ? amostrasArmazenadas
+        : gerarAmostrasHorariasDemonstrativas(chaveGrandeza, data);
 }
 
-// Atualiza as datas disponíveis e mostra o seletor de dia somente no modo por horário.
+// Atualiza os dias dos sensores com todos os dias civis do período global.
+// Separar essa fonte do intervalo faz o combo listar meses completos ao trocar o filtro.
 function atualizarControlesGraficosSensores() {
-    seletoresSensoresLuz.forEach(({ chave, modoId, dataId, controleDataId }) => {
+    seletoresSensoresLuz.forEach(({ modoId, dataId, controleDataId }) => {
         const modo = document.getElementById(modoId);
         const seletorData = document.getElementById(dataId);
         const controleData = document.getElementById(controleDataId);
         const dataAnterior = seletorData.value;
-        const datas = [...new Set(
-            obterLeiturasSensorNoIntervalo(chave)
-                .filter((registro) => registro.instanteLeitura)
-                .map((registro) => registro.data)
-        )].sort();
+        const datas = obterDatasPeriodoSelecionado();
 
         seletorData.replaceChildren();
         datas.forEach((data) => {

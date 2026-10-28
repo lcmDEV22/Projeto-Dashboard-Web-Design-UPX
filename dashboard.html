@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EcoVolt | Dashboard de Telemetria e Consumo</title>
+    <title>EnergiView | Dashboard de Telemetria e Consumo</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -14,7 +14,7 @@
 
 <body class="dashboard">
 
-    <!-- Fundo tecnológico com malha e névoa bioluminescente (estilo EcoVolt Forest Telemetry Dark) -->
+    <!-- Fundo tecnológico com malha e névoa bioluminescente (estilo EnergiView Forest Telemetry Dark). -->
     <div class="fixed-tech-bg" aria-hidden="true">
         <div class="glow-radial-top"></div>
         <div class="glow-radial-bottom"></div>
@@ -29,7 +29,7 @@
                     <span class="material-symbols-outlined sidebar-brand-icon" aria-hidden="true" style="font-variation-settings: 'FILL' 1;">bolt</span>
                 </div>
                 <div class="sidebar-brand-copy">
-                    <span class="brand-title">EcoVolt <span class="badge-iot">IoT Core</span></span>
+                    <span class="brand-title">EnergiView <span class="badge-iot">IoT Core</span></span>
                     <small>TELEMETRIA CONECTADA</small>
                 </div>
             </a>
@@ -360,7 +360,7 @@
                 <div class="dispositivos-heading">
                     <div>
                         <h2 id="tituloDispositivos">Hardware em operação</h2>
-                        <p class="dispositivos-intro">Periféricos e microcontroladores vinculados à malha IoT EcoVolt</p>
+                        <p class="dispositivos-intro">Periféricos e microcontroladores vinculados à malha IoT EnergiView</p>
                     </div>
                     <span class="material-symbols-outlined heading-icon" aria-hidden="true">developer_board</span>
                 </div>
@@ -396,6 +396,8 @@
                 <!-- Compara duas medições mensais e representa visualmente os valores. -->
                 <section class="comparacao-historico" aria-labelledby="tituloComparacao">
                     <h3 id="tituloComparacao">Comparar períodos</h3>
+                    <!-- A unidade fica dentro do painel para indicar claramente a escala da comparação. -->
+                    <p class="chart-period-status">Unidade de comparação: kWh.</p>
                     <div class="comparacao-controles">
                         <label for="periodoComparacaoA">Primeiro período
                             <select id="periodoComparacaoA"></select>
