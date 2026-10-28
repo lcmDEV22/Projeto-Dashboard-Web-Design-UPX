@@ -1708,6 +1708,107 @@ body.dashboard .tabela-historico .historico-vazio {
 }
 
 /* --------------------------------------------------------------------------
+   Rodapé do Dashboard
+   -------------------------------------------------------------------------- */
+/* Mantém o rodapé integrado ao visual técnico do painel sem ocupar espaço excessivo. */
+body.dashboard .dashboard-footer {
+    display: grid;
+    grid-template-columns: minmax(220px, 1.3fr) auto minmax(210px, 1fr);
+    align-items: center;
+    gap: 20px 28px;
+    margin-top: 28px;
+    padding: 22px 24px 18px;
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    border-radius: 18px;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.94), rgba(7, 20, 18, 0.88));
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.18), inset 0 1px rgba(255, 255, 255, 0.025);
+}
+
+/* Reúne marca, navegação e status em uma faixa visual alinhada. */
+body.dashboard .footer-brand-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--on-surface);
+    text-decoration: none;
+}
+
+body.dashboard .footer-brand-icon {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    place-items: center;
+    border-radius: 11px;
+    color: #042f25;
+    background: linear-gradient(135deg, #34d399, #6ee7b7);
+    box-shadow: 0 8px 22px rgba(52, 211, 153, 0.18);
+    font-size: 21px;
+}
+
+body.dashboard .footer-brand-link > span:last-child {
+    display: flex;
+    flex-direction: column;
+}
+
+body.dashboard .footer-brand-link strong {
+    font-size: 0.98rem;
+}
+
+body.dashboard .footer-brand-link small,
+body.dashboard .footer-status small {
+    color: var(--text-muted);
+}
+
+body.dashboard .footer-nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 18px;
+}
+
+body.dashboard .footer-nav a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 700;
+    transition: color 160ms ease;
+}
+
+body.dashboard .footer-nav a:hover,
+body.dashboard .footer-nav a:focus-visible {
+    color: #6ee7b7;
+}
+
+body.dashboard .footer-status {
+    display: flex;
+    align-items: flex-end;
+    flex-direction: column;
+    gap: 4px;
+}
+
+body.dashboard .footer-status span {
+    color: var(--on-surface);
+    font-size: 0.8rem;
+    font-weight: 800;
+}
+
+body.dashboard .footer-status .pulse-emerald-dot {
+    margin-right: 5px;
+}
+
+/* A linha final separa os créditos sem criar uma área visual pesada. */
+body.dashboard .footer-copy {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(148, 163, 184, 0.08);
+    color: rgba(148, 163, 184, 0.72);
+    font-size: 0.74rem;
+}
+
+/* --------------------------------------------------------------------------
    Backdrop e Navegação Mobile (Gaveta Off-Canvas)
    -------------------------------------------------------------------------- */
 body.dashboard .sidebar-backdrop {
@@ -1804,6 +1905,22 @@ body.dashboard .sidebar-backdrop {
     body.dashboard .filtro-periodo-cabecalho > label {
         max-width: none;
     }
+
+    /* Reorganiza o rodapé em duas áreas para evitar compressão em tablets. */
+    body.dashboard .dashboard-footer {
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+    }
+
+    body.dashboard .footer-nav {
+        justify-content: flex-end;
+    }
+
+    body.dashboard .footer-status {
+        grid-column: 1 / -1;
+        align-items: center;
+        padding-top: 4px;
+    }
 }
 
 @media (max-width: 520px) {
@@ -1855,5 +1972,37 @@ body.dashboard .sidebar-backdrop {
 
     body.dashboard #graficoEnergiaAcumulada {
         height: 230px;
+    }
+
+    /* Empilha as informações no celular e centraliza os créditos do projeto. */
+    body.dashboard .dashboard-footer {
+        grid-template-columns: 1fr;
+        text-align: center;
+        padding-inline: 16px;
+    }
+
+    body.dashboard .footer-brand,
+    body.dashboard .footer-nav,
+    body.dashboard .footer-status {
+        width: 100%;
+        justify-content: center;
+        align-items: center;
+    }
+
+    body.dashboard .footer-brand-link {
+        justify-content: center;
+    }
+
+    body.dashboard .footer-nav {
+        justify-content: center;
+    }
+
+    body.dashboard .footer-status {
+        grid-column: auto;
+    }
+
+    body.dashboard .footer-copy {
+        align-items: center;
+        flex-direction: column;
     }
 }

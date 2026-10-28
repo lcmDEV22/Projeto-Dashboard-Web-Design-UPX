@@ -78,7 +78,7 @@ function gerarDadosFicticiosHistorico() {
                     { tipo: "diario", data, grandeza: "Potência", chaveGrandeza: "potencia", valor: potenciaDiaria, unidade: "W", capturadoEm, origem: "Demonstração" },
                     // Os exemplos mantêm históricos demonstrativos separados para os dois sensores de luz.
                     { tipo: "diario", data, grandeza: "Intensidade da iluminação", chaveGrandeza: "intensidade", valor: Number((50 + Math.sin((dia + mes * 2) * 0.72) * 32).toFixed(1)), unidade: "%", capturadoEm, origem: "Demonstração" },
-                    { tipo: "diario", data, grandeza: "Luminosidade ambiente (LDR)", chaveGrandeza: "luminosidade", valor: Number((320 + Math.sin((dia + mes) * 0.68) * 210 + Math.cos(dia * 0.31) * 95).toFixed(1)), unidade: "lux", capturadoEm, origem: "Demonstração" }
+                    { tipo: "diario", data, grandeza: "Luminosidade ambiente", chaveGrandeza: "luminosidade", valor: Number((320 + Math.sin((dia + mes) * 0.68) * 210 + Math.cos(dia * 0.31) * 95).toFixed(1)), unidade: "lux", capturadoEm, origem: "Demonstração" }
                 );
 
                 // Os horários são gerados sob demanda para todos os dias, evitando inflar o armazenamento local.
@@ -798,7 +798,7 @@ function criarGrafico(canvas) {
         : null;
     const serieSelecionada = isGraficoSensorLuz
         ? {
-            nome: isGraficoIntensidade ? "Intensidade da iluminação" : "Luminosidade ambiente (LDR)",
+            nome: isGraficoIntensidade ? "Intensidade da iluminação" : "Luminosidade ambiente",
             unidade: isGraficoIntensidade ? "%" : "lux",
             mensal: [],
             diario: []
@@ -1613,7 +1613,7 @@ function registrarHistorico(mes, ano, origem, atualizarInterface = true, estadoL
         novosRegistros.push({
             tipo: "diario",
             data: formatarDataHistorico(dataLeitura.getFullYear(), dataLeitura.getMonth(), dataLeitura.getDate()),
-            grandeza: "Luminosidade ambiente (LDR)",
+            grandeza: "Luminosidade ambiente",
             chaveGrandeza: "luminosidade",
             valor: estadoLeitura.luminosidadeLux,
             unidade: "lux",

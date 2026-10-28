@@ -82,7 +82,7 @@
         <main class="dashboard-main">
             <!-- Início do conteúdo principal do dashboard. -->
             <div class="dashboard-container">
-                <header class="dashboard-header">
+                <header class="dashboard-header" id="topoDashboard">
                     <div class="dashboard-heading">
                         <div class="dashboard-eyebrow"><span class="pulse-beacon" aria-hidden="true"></span> TELEMETRIA OPERACIONAL <b>•</b> NODE ESP32-WROOM</div>
                         <h1>Dashboard</h1>
@@ -188,7 +188,7 @@
 
                 <div class="estado-atual-grid">
                     <article class="card estado-card">
-                        <span class="estado-card-heading"><span class="card-title">Luminosidade (LDR)</span><span class="material-symbols-outlined icon-amber" aria-hidden="true">light_mode</span></span>
+                        <span class="estado-card-heading"><span class="card-title">Luminosidade </span><span class="material-symbols-outlined icon-amber" aria-hidden="true">light_mode</span></span>
                         <strong id="valorLuminosidadeAtual">--</strong>
                         <small>Intensidade de luz ambiente</small>
                     </article>
@@ -334,7 +334,7 @@
                     </section>
 
                     <section class="grafico-sensor" aria-labelledby="tituloGraficoLuminosidade">
-                        <h3 id="tituloGraficoLuminosidade">Luminosidade ambiente (LDR, lux)</h3>
+                        <h3 id="tituloGraficoLuminosidade">Luminosidade ambiente (lux)</h3>
                         <div class="chart-toolbar controles-sensor">
                             <label for="modoGraficoLuminosidade">Visualizar
                                 <select id="modoGraficoLuminosidade" class="seletor-temporal">
@@ -427,9 +427,47 @@
                     </table>
                 </div>
             </section>
+
+            <!-- Rodapé operacional com identidade do sistema, status e links de acesso rápido. -->
+            <footer class="dashboard-footer" aria-label="Rodapé do dashboard">
+                <!-- Apresenta a marca e uma descrição curta do monitoramento realizado pelo sistema. -->
+                <div class="footer-brand">
+                    <a class="footer-brand-link" href="#topoDashboard" aria-label="Voltar ao início do dashboard">
+                        <span class="material-symbols-outlined footer-brand-icon" aria-hidden="true">bolt</span>
+                        <span>
+                            <strong>EnergiView</strong>
+                            <small>Telemetria energética inteligente</small>
+                        </span>
+                    </a>
+                </div>
+
+                <!-- Indica ao usuário quais partes da plataforma estão disponíveis para navegação. -->
+                <nav class="footer-nav" aria-label="Navegação do rodapé">
+                    <a href="#secaoEstadoAtual">Resumo</a>
+                    <a href="#secaoGraficosConsumo">Consumo</a>
+                    <a href="#secaoDispositivos">Dispositivos</a>
+                    <a href="#secaoHistorico">Histórico</a>
+                </nav>
+
+                <!-- Agrupa os indicadores de sistema sem competir com o conteúdo principal. -->
+                <div class="footer-status" aria-label="Status do sistema">
+                    <span><i class="pulse-emerald-dot" aria-hidden="true"></i> Sistema conectado</span>
+                    <small>ESP32 • Atualização automática</small>
+                </div>
+
+                <!-- Mostra a autoria e o ano atual do projeto de forma responsiva. -->
+                <div class="footer-copy">
+                    <span>&copy; <span id="anoRodape">2026</span> EnergiView</span>
+                    <span>Monitoramento IoT em tempo real</span>
+                </div>
+            </footer>
         </main>
     </div>
 
+    <!-- Atualiza automaticamente o ano exibido no rodapé sem intervenção manual. -->
+    <script>
+        document.getElementById('anoRodape').textContent = new Date().getFullYear();
+    </script>
     <script src="api-config.js"></script>
     <script src="script.js"></script>
     <script src="auth.js"></script>
