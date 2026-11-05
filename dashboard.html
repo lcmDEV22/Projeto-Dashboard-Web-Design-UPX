@@ -52,7 +52,7 @@
                 </button>
                 <button class="sidebar-link" type="button" data-chart-target="secaoGraficosIluminacao" aria-controls="secaoGraficosIluminacao" aria-pressed="false">
                     <span class="material-symbols-outlined sidebar-link-icon" aria-hidden="true">light_mode</span>
-                    Iluminação e lux
+                    Iluminação e luminosidade
                 </button>
                 <button class="sidebar-link" type="button" data-chart-target="secaoDispositivos" aria-controls="secaoDispositivos" aria-pressed="false">
                     <span class="material-symbols-outlined sidebar-link-icon" aria-hidden="true">sensors</span>
@@ -106,7 +106,7 @@
                     </div>
                 </header>
 
-                <!-- Informa se os dados são reais, demonstrativos ou se houve falha na API. -->
+                <!-- Informa o estado da conexão e da coleta da API. -->
                 <div class="dashboard-title-row">
                     <p id="statusApi" class="api-status" role="status" aria-live="polite"></p>
                     <span class="dashboard-sync"><span class="material-symbols-outlined" aria-hidden="true">update</span> Atualização automática a cada 60 s</span>
@@ -151,7 +151,7 @@
                             <div class="card-glow-line" aria-hidden="true"></div>
                             <span class="card-icon" aria-hidden="true"><span class="material-symbols-outlined">payments</span></span>
                             <span class="card-title">Custo no período</span>
-                            <small class="card-description">Tarifa TE + TUSD consolidada</small>
+                            <small class="card-description">Não informada pela API atual</small>
                             <strong id="cardCustoTotal">--</strong>
                             <small id="variacaoCustoTotal">No intervalo selecionado</small>
                         </div>
@@ -159,15 +159,15 @@
                             <div class="card-glow-line" aria-hidden="true"></div>
                             <span class="card-icon" aria-hidden="true"><span class="material-symbols-outlined">query_stats</span></span>
                             <span class="card-title">Média diária</span>
-                            <small class="card-description">Demanda média normalizada</small>
+                            <small class="card-description">Média das leituras de energia disponíveis</small>
                             <strong id="cardConsumoDiario">--</strong>
                             <small id="variacaoConsumoDiario">--</small>
                         </div>
                         <div class="card">
                             <div class="card-glow-line" aria-hidden="true"></div>
                             <span class="card-icon" aria-hidden="true"><span class="material-symbols-outlined">electric_bolt</span></span>
-                            <span class="card-title">Consumo acumulado</span>
-                            <small class="card-description">Consumo no intervalo selecionado</small>
+                            <span class="card-title">Energia informada</span>
+                            <small class="card-description">Soma das leituras disponíveis no período</small>
                             <strong id="cardConsumoMensal">--</strong>
                             <small id="variacaoConsumoMensal">--</small>
                         </div>
@@ -188,9 +188,9 @@
 
                 <div class="estado-atual-grid">
                     <article class="card estado-card">
-                        <span class="estado-card-heading"><span class="card-title">Luminosidade </span><span class="material-symbols-outlined icon-amber" aria-hidden="true">light_mode</span></span>
+                        <span class="estado-card-heading"><span class="card-title">Luminosidade do sensor</span><span class="material-symbols-outlined icon-amber" aria-hidden="true">light_mode</span></span>
                         <strong id="valorLuminosidadeAtual">--</strong>
-                        <small>Intensidade de luz ambiente</small>
+                        <small>Valor recebido do sensor (sem conversão)</small>
                     </article>
                     <article class="card estado-card">
                         <span class="estado-card-heading"><span class="card-title">Presença (PIR)</span><span class="material-symbols-outlined icon-emerald" aria-hidden="true">sensors</span></span>
@@ -211,6 +211,11 @@
                         <small>Potência instantânea medida</small>
                     </article>
                     <article class="card estado-card">
+                        <span class="estado-card-heading"><span class="card-title">Energia informada pela API</span><span class="material-symbols-outlined icon-cyan" aria-hidden="true">electric_meter</span></span>
+                        <strong id="valorEnergiaApiAtual">--</strong>
+                        <small>Valor mais recente enviado pelo ESP32</small>
+                    </article>
+                    <article class="card estado-card">
                         <span class="estado-card-heading"><span class="card-title">Energia acumulada</span><span class="material-symbols-outlined icon-cyan" aria-hidden="true">electric_meter</span></span>
                         <strong id="valorEnergiaAcumulada">0,0000 kWh</strong>
                         <small id="statusEnergiaAcumulada">Aguardando leituras de potência</small>
@@ -227,16 +232,16 @@
             <!-- Reúne os dois períodos de consumo; o seletor temporal existe apenas no gráfico diário. -->
             <section class="chart-panel painel-consumo" id="secaoGraficosConsumo" aria-labelledby="tituloGraficosConsumo" hidden>
                 <div class="card-glow-line" aria-hidden="true"></div>
-                <h2 id="tituloGraficosConsumo"><span class="material-symbols-outlined" aria-hidden="true">bolt</span> Consumo de energia</h2>
+                <h2 id="tituloGraficosConsumo"><span class="material-symbols-outlined" aria-hidden="true">bolt</span> Leituras de energia e rede</h2>
                 <div class="graficos-consumo-grid">
                     <section class="grafico-sensor" aria-labelledby="tituloGraficoMensal">
-                        <h3 id="tituloGraficoMensal">Consumo Mensal</h3>
+                        <h3 id="tituloGraficoMensal">Energia reportada por mês</h3>
                         <p id="periodoGraficoMensal" class="chart-period-status"></p>
                         <!-- Mantém a seleção de grandeza disponível como antes. -->
                         <div class="chart-toolbar">
                             <label for="grandezaGraficoMensal">
                                 <select id="grandezaGraficoMensal" class="seletor-grandeza">
-                                    <option value="consumo">Consumo (kWh)</option>
+                                    <option value="consumo">Energia reportada (kWh)</option>
                                     <option value="tensao">Tensão (V)</option>
                                     <option value="corrente">Corrente (A)</option>
                                     <option value="potencia">Potência (W)</option>
@@ -250,7 +255,7 @@
                     </section>
 
                     <section class="grafico-sensor" aria-labelledby="tituloGraficoDiario">
-                        <h3 id="tituloGraficoDiario">Consumo Diário</h3>
+                        <h3 id="tituloGraficoDiario">Energia reportada por dia</h3>
                         <p id="periodoGraficoDiario" class="chart-period-status"></p>
                         <!-- O gráfico diário pode alternar entre o total por dia e as amostras ao longo do dia. -->
                         <div class="chart-toolbar controles-consumo">
@@ -271,7 +276,7 @@
                             <label for="grandezaGraficoDiario">
                                 Grandeza
                                 <select id="grandezaGraficoDiario" class="seletor-grandeza">
-                                    <option value="consumo">Consumo (kWh)</option>
+                                    <option value="consumo">Energia reportada (kWh)</option>
                                     <option value="tensao">Tensão (V)</option>
                                     <option value="corrente">Corrente (A)</option>
                                     <option value="potencia">Potência (W)</option>
@@ -334,7 +339,7 @@
                     </section>
 
                     <section class="grafico-sensor" aria-labelledby="tituloGraficoLuminosidade">
-                        <h3 id="tituloGraficoLuminosidade">Luminosidade ambiente (lux)</h3>
+                        <h3 id="tituloGraficoLuminosidade">Luminosidade enviada pelo sensor</h3>
                         <div class="chart-toolbar controles-sensor">
                             <label for="modoGraficoLuminosidade">Visualizar
                                 <select id="modoGraficoLuminosidade" class="seletor-temporal">

@@ -10,20 +10,12 @@ const seletoresSensoresLuz = [
     { chave: "luminosidade", modoId: "modoGraficoLuminosidade", dataId: "dataGraficoLuminosidade", controleDataId: "controleDataLuminosidade", canvasId: "meuGraficoLuminosidade" }
 ];
 const nomesMeses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-const dadosDemoMensais = [4200, 5100, 4800, 6200, 5900, 7100, 6800, 7900, 8300, 9100, 8700, 9800];
-const dadosDemoDiarios = [
-    320, 350, 295, 410, 375, 430, 390, 460, 425, 510,
-    480, 445, 530, 495, 560, 520, 475, 590, 545, 610,
-    575, 630, 590, 660, 620, 690, 645, 710, 675, 735, 700
-];
 const CHAVE_HISTORICO = "dashboardHistoricalReadings";
-const CHAVE_VERSAO_DEMO = "dashboardDemoHistoryVersion";
 const CHAVE_ENERGIA_ACUMULADA = "dashboardAccumulatedEnergy";
-const VERSAO_DEMO_HISTORICO = "6";
+const CHAVE_VERSAO_HISTORICO_REAL = "dashboardRealHistoryVersion";
 const LIMITE_REGISTROS_HISTORICO = 200000;
 const LIMITE_AMOSTRAS_ENERGIA = 10000;
 const INTERVALO_MAXIMO_INTEGRACAO_MS = 5 * 60 * 1000;
-const ANO_INICIAL_DADOS_FICTICIOS = 2020;
 let registrosHistorico = [];
 let avisoHistorico = "";
 let intervaloPeriodoAplicado = null;
@@ -34,174 +26,19 @@ let energiaAcumulada = {
     disponivel: true
 };
 
-function gerarDadosFicticiosHistorico() {
-    const hoje = new Date();
-    const ultimoAno = hoje.getFullYear();
-    const hojeFormatado = formatarDataHistorico(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
-    const registros = [];
-    const capturadoEm = new Date().toISOString();
-
-    for (let ano = ANO_INICIAL_DADOS_FICTICIOS; ano <= ultimoAno; ano++) {
-        for (let mes = 0; mes < 12; mes++) {
-            if (formatarDataHistorico(ano, mes, 1) > hojeFormatado) {
-                continue;
-            }
-            const ultimoDiaMes = new Date(ano, mes + 1, 0);
-            const diasNoMes = ultimoDiaMes.getDate();
-            const consumoMensal = [];
-            const tensaoMensal = [];
-            const correnteMensal = [];
-            const potenciaMensal = [];
-
-            for (let dia = 1; dia <= diasNoMes; dia++) {
-                const data = formatarDataHistorico(ano, mes, dia);
-                if (data > hojeFormatado) {
-                    continue;
-                }
-
-                const picoSemanal = Math.sin((dia + mes + 1) * 0.82) * 0.55;
-                const variacaoAnual = (ano - ANO_INICIAL_DADOS_FICTICIOS) * 0.18;
-                const consumoDiario = Number((150 + (mes * 7.5) + picoSemanal * 65 + variacaoAnual * 18 + (dia % 7) * 8).toFixed(2));
-                const tensaoDiaria = Number((220 + Math.sin((dia + 1) * 0.9 + mes) * 9 + (mes % 3) * 1.8).toFixed(2));
-                const correnteDiaria = Number((4.9 + Math.cos((dia + mes) * 0.9) * 1.2 + (ano % 5) * 0.08).toFixed(2));
-                const potenciaDiaria = Number((980 + Math.sin((dia + 2) * 0.75) * 210 + (mes * 18)).toFixed(2));
-
-                consumoMensal.push(consumoDiario);
-                tensaoMensal.push(tensaoDiaria);
-                correnteMensal.push(correnteDiaria);
-                potenciaMensal.push(potenciaDiaria);
-
-                registros.push(
-                    { tipo: "diario", data, grandeza: "Consumo", chaveGrandeza: "consumo", valor: consumoDiario, unidade: "kWh", capturadoEm, origem: "Demonstração" },
-                    { tipo: "diario", data, grandeza: "Tensão", chaveGrandeza: "tensao", valor: tensaoDiaria, unidade: "V", capturadoEm, origem: "Demonstração" },
-                    { tipo: "diario", data, grandeza: "Corrente", chaveGrandeza: "corrente", valor: correnteDiaria, unidade: "A", capturadoEm, origem: "Demonstração" },
-                    { tipo: "diario", data, grandeza: "Potência", chaveGrandeza: "potencia", valor: potenciaDiaria, unidade: "W", capturadoEm, origem: "Demonstração" },
-                    // Os exemplos mantêm históricos demonstrativos separados para os dois sensores de luz.
-                    { tipo: "diario", data, grandeza: "Intensidade da iluminação", chaveGrandeza: "intensidade", valor: Number((50 + Math.sin((dia + mes * 2) * 0.72) * 32).toFixed(1)), unidade: "%", capturadoEm, origem: "Demonstração" },
-                    { tipo: "diario", data, grandeza: "Luminosidade ambiente", chaveGrandeza: "luminosidade", valor: Number((320 + Math.sin((dia + mes) * 0.68) * 210 + Math.cos(dia * 0.31) * 95).toFixed(1)), unidade: "lux", capturadoEm, origem: "Demonstração" }
-                );
-
-                // Os horários são gerados sob demanda para todos os dias, evitando inflar o armazenamento local.
-            }
-
-            const totalConsumoMensal = consumoMensal.reduce((total, valor) => total + valor, 0);
-            const mediaTensaoMensal = tensaoMensal.reduce((total, valor) => total + valor, 0) / Math.max(tensaoMensal.length, 1);
-            const mediaCorrenteMensal = correnteMensal.reduce((total, valor) => total + valor, 0) / Math.max(correnteMensal.length, 1);
-            const mediaPotenciaMensal = potenciaMensal.reduce((total, valor) => total + valor, 0) / Math.max(potenciaMensal.length, 1);
-            const custoMensal = Number((totalConsumoMensal * (0.82 + (mes % 5) * 0.07 + (ano - ANO_INICIAL_DADOS_FICTICIOS) * 0.03)).toFixed(2));
-
-            registros.push(
-                { tipo: "mensal", data: formatarDataHistorico(ano, mes, 1), grandeza: "Consumo", chaveGrandeza: "consumo", valor: Number(totalConsumoMensal.toFixed(2)), unidade: "kWh", capturadoEm, origem: "Demonstração" },
-                { tipo: "mensal", data: formatarDataHistorico(ano, mes, 1), grandeza: "Tensão", chaveGrandeza: "tensao", valor: Number(mediaTensaoMensal.toFixed(2)), unidade: "V", capturadoEm, origem: "Demonstração" },
-                { tipo: "mensal", data: formatarDataHistorico(ano, mes, 1), grandeza: "Corrente", chaveGrandeza: "corrente", valor: Number(mediaCorrenteMensal.toFixed(2)), unidade: "A", capturadoEm, origem: "Demonstração" },
-                { tipo: "mensal", data: formatarDataHistorico(ano, mes, 1), grandeza: "Potência", chaveGrandeza: "potencia", valor: Number(mediaPotenciaMensal.toFixed(2)), unidade: "W", capturadoEm, origem: "Demonstração" },
-                { tipo: "resumo", data: formatarDataHistorico(ano, mes, 1), grandeza: "Custo total", chaveGrandeza: "custo", valor: custoMensal, unidade: "BRL", capturadoEm, origem: "Demonstração" }
-            );
-        }
-    }
-
-    return registros
-        .sort((primeiro, segundo) => primeiro.data.localeCompare(segundo.data))
-        .slice(0, LIMITE_REGISTROS_HISTORICO);
-}
-
-function atualizarSeriesDemoComHistorico() {
-    const hoje = new Date();
-    const mesAtual = hoje.getMonth();
-    const anoAtual = hoje.getFullYear();
-    const diasNoMesAtual = new Date(anoAtual, mesAtual + 1, 0).getDate();
-    const registrosMensais = registrosHistorico.filter((registro) => registro.tipo === "mensal");
-    const registrosDiarios = registrosHistorico.filter((registro) => registro.tipo === "diario" && registro.data.startsWith(`${anoAtual}-${String(mesAtual + 1).padStart(2, "0")}-`));
-    const mensaisPorPeriodo = new Map();
-    const diariosPorData = new Map();
-    registrosMensais.forEach((registro) => {
-        const chave = `${registro.chaveGrandeza}|${registro.data.slice(0, 7)}`;
-        const atual = mensaisPorPeriodo.get(chave);
-        if (!atual || registro.capturadoEm > atual.capturadoEm) {
-            mensaisPorPeriodo.set(chave, registro);
-        }
-    });
-    registrosDiarios.forEach((registro) => {
-        const chave = `${registro.chaveGrandeza}|${registro.data}`;
-        const atual = diariosPorData.get(chave);
-        if (!atual || registro.capturadoEm > atual.capturadoEm) {
-            diariosPorData.set(chave, registro);
-        }
-    });
-
-    const montarSerie = (chaveGrandeza, nome, unidade) => {
-        const mensais = [];
-        const diarias = [];
-        const mesesUltimos12 = [];
-
-        for (let indice = 11; indice >= 0; indice--) {
-            const dataMes = new Date(anoAtual, mesAtual - indice, 1);
-            mesesUltimos12.push(`${dataMes.getFullYear()}-${String(dataMes.getMonth() + 1).padStart(2, "0")}`);
-        }
-
-        mesesUltimos12.forEach((periodo) => {
-            const registro = mensaisPorPeriodo.get(`${chaveGrandeza}|${periodo}`);
-            mensais.push(registro ? Number(registro.valor) : null);
-        });
-
-        for (let dia = 1; dia <= diasNoMesAtual; dia++) {
-            const data = formatarDataHistorico(anoAtual, mesAtual, dia);
-            const registro = diariosPorData.get(`${chaveGrandeza}|${data}`);
-            diarias.push(registro ? Number(registro.valor) : null);
-        }
-
-        return { nome, unidade, mensal: mensais, diario: diarias };
-    };
-
-    const dadosDiaAtual = registrosHistorico.filter((registro) => registro.tipo === "diario" && registro.data === formatarDataHistorico(hoje.getFullYear(), hoje.getMonth(), hoje.getDate()));
-    const ultimoCusto = registrosHistorico
-        .filter((registro) => registro.tipo === "resumo" && registro.chaveGrandeza === "custo")
-        .sort((primeiro, segundo) =>
-            segundo.data.localeCompare(primeiro.data) ||
-            segundo.capturadoEm.localeCompare(primeiro.capturadoEm)
-        )[0];
-
-    Object.assign(seriesGrandezas, {
-        consumo: montarSerie("consumo", "Consumo", "kWh"),
-        tensao: montarSerie("tensao", "Tensão", "V"),
-        corrente: montarSerie("corrente", "Corrente", "A"),
-        potencia: montarSerie("potencia", "Potência", "W")
-    });
-
-    dadosConsumoMensal = seriesGrandezas.consumo.mensal;
-    dadosConsumoDiario = seriesGrandezas.consumo.diario;
-    const consumoHoje = dadosDiaAtual.find((registro) => registro.chaveGrandeza === "consumo")?.valor ?? 0;
-    resumoConsumo = {
-        totalCostBrl: ultimoCusto ? Number(ultimoCusto.valor) : 0,
-        dailyConsumptionKwh: consumoHoje,
-        monthlyConsumptionKwh: seriesGrandezas.consumo.mensal.at(-1) ?? 0,
-        dailyChangePercent: 0,
-        monthlyChangePercent: 0
-    };
-}
-
-// Gera valores de demonstração plausíveis para cada grandeza enquanto a API não está conectada.
-function criarSerieDemo(tamanho, media, amplitude, fase = 0) {
-    return Array.from({ length: tamanho }, (_, indice) =>
-        Number((media + Math.sin((indice + fase) * 1.7) * amplitude).toFixed(1))
-    );
-}
-
 const seriesGrandezas = {
-    consumo: { nome: "Consumo", unidade: "kWh", mensal: dadosDemoMensais, diario: dadosDemoDiarios },
-    tensao: { nome: "Tensão", unidade: "V", mensal: criarSerieDemo(12, 220, 3), diario: criarSerieDemo(31, 220, 4) },
-    corrente: { nome: "Corrente", unidade: "A", mensal: criarSerieDemo(12, 5.2, 0.7), diario: criarSerieDemo(31, 5.2, 1.1, 1) },
-    potencia: { nome: "Potência", unidade: "W", mensal: criarSerieDemo(12, 1140, 180), diario: criarSerieDemo(31, 1140, 240, 2) }
+    consumo: { nome: "Consumo", unidade: "kWh", mensal: [], diario: [] },
+    tensao: { nome: "Tensão", unidade: "V", mensal: [], diario: [] },
+    corrente: { nome: "Corrente", unidade: "A", mensal: [], diario: [] },
+    potencia: { nome: "Potência", unidade: "W", mensal: [], diario: [] }
 };
-let grandezaSelecionada = "consumo";
-let dadosConsumoMensal = [...dadosDemoMensais];
-let dadosConsumoDiario = [...dadosDemoDiarios];
+let grandezaSelecionada = "potencia";
 let resumoConsumo = {
-    totalCostBrl: 1240.5,
-    dailyConsumptionKwh: dadosDemoDiarios[0],
-    monthlyConsumptionKwh: dadosDemoMensais[new Date().getMonth()],
-    dailyChangePercent: 0,
-    monthlyChangePercent: 0
+    totalCostBrl: null,
+    dailyConsumptionKwh: null,
+    monthlyConsumptionKwh: null,
+    dailyChangePercent: null,
+    monthlyChangePercent: null
 };
 let estadoAtual = {
     luminosidadeLux: null,
@@ -215,8 +52,6 @@ let estadoAtual = {
     origemHorario: ""
 };
 let requisicaoAtual = null;
-let dadosReaisCarregados = false;
-let periodoDadosCarregados = null;
 
 // Sincroniza o texto do período visível em cada gráfico com a quantidade de pontos.
 function atualizarStatusGrafico(canvasId, quantidadePontos, totalPeriodos = quantidadePontos) {
@@ -408,56 +243,6 @@ function obterSerieDiariaMensal(chaveGrandeza) {
     return serie;
 }
 
-// Gera deterministicamente as 24 horas de um dia demonstrativo a partir do resumo diário.
-// A geração sob demanda preserva o histórico no navegador e atende qualquer dia do combo.
-function gerarAmostrasHorariasDemonstrativas(chaveGrandeza, data) {
-    const resumo = registrosHistorico.find((registro) =>
-        registro.tipo === "diario" &&
-        !registro.instanteLeitura &&
-        registro.chaveGrandeza === chaveGrandeza &&
-        registro.data === data &&
-        registro.origem === "Demonstração"
-    );
-    if (!resumo) {
-        return [];
-    }
-
-    const pesos = Array.from({ length: 24 }, (_, hora) => {
-        const periodo = ((hora - 6) / 24) * Math.PI * 2;
-        return 0.25 + Math.max(0, Math.sin(periodo)) * 0.75;
-    });
-    const somaPesos = pesos.reduce((total, peso) => total + peso, 0);
-
-    return pesos.map((peso, hora) => {
-        const instante = new Date(`${data}T${String(hora).padStart(2, "0")}:00:00`).toISOString();
-        const variacaoHorario = Math.sin((hora / 24) * Math.PI * 2);
-        let valor;
-
-        if (chaveGrandeza === "consumo") {
-            valor = resumo.valor * (peso / somaPesos);
-        } else if (chaveGrandeza === "tensao") {
-            valor = resumo.valor + variacaoHorario * 2;
-        } else if (chaveGrandeza === "corrente") {
-            valor = resumo.valor + variacaoHorario * 0.2;
-        } else if (chaveGrandeza === "potencia") {
-            valor = resumo.valor + variacaoHorario * 60;
-        } else if (chaveGrandeza === "intensidade") {
-            valor = resumo.valor + variacaoHorario * 12;
-        } else if (chaveGrandeza === "luminosidade") {
-            valor = resumo.valor + variacaoHorario * Math.min(150, resumo.valor * 0.5);
-        } else {
-            valor = resumo.valor;
-        }
-
-        return {
-            data,
-            periodo: instante,
-            valor: Number(Math.max(0, valor).toFixed(chaveGrandeza === "luminosidade" || chaveGrandeza === "intensidade" ? 1 : 2))
-        };
-    });
-}
-
-// Retorna os registros de consumo acumulado capturados ao longo de uma data específica.
 function obterSerieConsumoPorHora(data) {
     if (!data) {
         return [];
@@ -479,16 +264,18 @@ function obterSerieConsumoPorHora(data) {
         }))
         .sort((primeiro, segundo) => primeiro.periodo.localeCompare(segundo.periodo));
 
-    // Leituras reais prevalecem; os resumos da demonstração recebem uma curva horária completa.
-    return amostrasArmazenadas.length
-        ? amostrasArmazenadas
-        : gerarAmostrasHorariasDemonstrativas(grandezaSelecionada, data);
+    return amostrasArmazenadas;
 }
 
 // Carrega o total e as amostras para preservar o acompanhamento entre sessões no mesmo navegador.
 function carregarEnergiaAcumulada() {
     const status = document.getElementById("statusEnergiaAcumulada");
     try {
+        if (localStorage.getItem(CHAVE_VERSAO_HISTORICO_REAL) !== "1") {
+            localStorage.removeItem(CHAVE_ENERGIA_ACUMULADA);
+            localStorage.setItem(CHAVE_VERSAO_HISTORICO_REAL, "1");
+        }
+
         const salvo = localStorage.getItem(CHAVE_ENERGIA_ACUMULADA);
         if (salvo) {
             const dados = JSON.parse(salvo);
@@ -815,7 +602,7 @@ function criarGrafico(canvas) {
     const serieSelecionada = isGraficoSensorLuz
         ? {
             nome: isGraficoIntensidade ? "Intensidade da iluminação" : "Luminosidade ambiente",
-            unidade: isGraficoIntensidade ? "%" : "lux",
+            unidade: isGraficoIntensidade ? "%" : "unid.",
             mensal: [],
             diario: []
         }
@@ -896,7 +683,7 @@ function criarGrafico(canvas) {
     if (isGraficoIntensidade) {
         maiorValor = 100;
     } else if (isGraficoLuminosidade) {
-        // Arredonda o teto do eixo em intervalos legíveis, de acordo com os lux registrados.
+        // Arredonda o teto do eixo em intervalos legíveis, de acordo com as leituras registradas.
         const passoBruto = Math.max(5, maiorValor) / 5;
         const ordem = 10 ** Math.floor(Math.log10(passoBruto));
         const passoNormalizado = passoBruto / ordem;
@@ -1370,14 +1157,12 @@ function configurarSelecaoGraficos() {
 
             // O canvas precisa estar visível para medir sua largura antes de desenhar.
             // O canvas acumulado tem renderizador próprio e não deve receber a série dos gráficos genéricos.
-            if (!API_CONFIG.baseUrl.trim() || dadosReaisCarregados || intervaloPeriodoAplicado) {
-                canvases.forEach((canvas) => {
-                    if (canvas.clientWidth > 0) {
-                        criarGrafico(canvas);
-                    }
-                });
-                desenharGraficoEnergiaAcumulada();
-            }
+            canvases.forEach((canvas) => {
+                if (canvas.clientWidth > 0) {
+                    criarGrafico(canvas);
+                }
+            });
+            desenharGraficoEnergiaAcumulada();
         });
     });
 
@@ -1484,47 +1269,20 @@ function carregarHistoricoSalvo() {
         if (!Array.isArray(registrosSalvos)) {
             throw new Error("O histórico salvo não possui um formato válido.");
         }
-        registrosHistorico = registrosSalvos.filter(registroHistoricoValido);
+        registrosHistorico = registrosSalvos.filter((registro) =>
+            registroHistoricoValido(registro) && registro.origem !== "Demonstração"
+        );
         const quantidadeIgnorada = registrosSalvos.length - registrosHistorico.length;
         if (quantidadeIgnorada) {
-            avisoHistorico = `${quantidadeIgnorada.toLocaleString("pt-BR")} ${quantidadeIgnorada === 1 ? "registro inválido foi ignorado" : "registros inválidos foram ignorados"}.`;
-        }
-
-        const demoDesatualizada = registrosHistorico.some((registro) =>
-            registro.origem === "Demonstração" && registro.valor === 0
-        );
-        const precisaAtualizarDemo = !API_CONFIG.baseUrl.trim() && (
-            localStorage.getItem(CHAVE_VERSAO_DEMO) !== VERSAO_DEMO_HISTORICO ||
-            demoDesatualizada ||
-            !registrosHistorico.some((registro) => registro.origem === "Demonstração")
-        );
-
-        if (precisaAtualizarDemo || registrosHistorico.length === 0) {
-            if (precisaAtualizarDemo) {
-                registrosHistorico = registrosHistorico.filter((registro) => registro.origem !== "Demonstração");
-            }
-            registrosHistorico.push(...gerarDadosFicticiosHistorico());
+            avisoHistorico = `${quantidadeIgnorada.toLocaleString("pt-BR")} registros fictícios ou inválidos foram removidos.`;
             localStorage.setItem(CHAVE_HISTORICO, JSON.stringify(registrosHistorico));
-            if (!API_CONFIG.baseUrl.trim()) {
-                localStorage.setItem(CHAVE_VERSAO_DEMO, VERSAO_DEMO_HISTORICO);
-            }
-            atualizarStatusHistorico(`${registrosHistorico.length.toLocaleString("pt-BR")} registros fictícios foram gerados ou corrigidos para os dias e meses disponíveis.`);
-        } else {
-            atualizarStatusHistorico(`${registrosHistorico.length.toLocaleString("pt-BR")} registros recuperados deste navegador.`);
         }
 
-        if (!API_CONFIG.baseUrl.trim()) {
-            atualizarSeriesDemoComHistorico();
-        }
+        atualizarStatusHistorico(`${registrosHistorico.length.toLocaleString("pt-BR")} registros reais recuperados deste navegador.`);
     } catch (erro) {
-        registrosHistorico = gerarDadosFicticiosHistorico();
-        localStorage.setItem(CHAVE_HISTORICO, JSON.stringify(registrosHistorico));
-        if (!API_CONFIG.baseUrl.trim()) {
-            localStorage.setItem(CHAVE_VERSAO_DEMO, VERSAO_DEMO_HISTORICO);
-            atualizarSeriesDemoComHistorico();
-        }
+        registrosHistorico = [];
         avisoHistorico = `Não foi possível ler o histórico salvo: ${erro.message}`;
-        atualizarStatusHistorico(`${registrosHistorico.length.toLocaleString("pt-BR")} registros fictícios foram gerados após a falha de leitura.`);
+        atualizarStatusHistorico("O histórico local não está disponível; os dados coletados da API ainda podem ser exibidos.");
     }
 
     atualizarControlesGraficosSensores();
@@ -1539,8 +1297,6 @@ function formatarDataHistorico(ano, mes, dia) {
 // Guarda snapshots mensais e diários com a data consultada e a hora da captura.
 function registrarHistorico(mes, ano, origem, atualizarInterface = true, estadoLeitura = estadoAtual) {
     const capturadoEm = new Date().toISOString();
-    const hoje = new Date();
-    const limiteDemo = formatarDataHistorico(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
     const novosRegistros = [];
 
     Object.entries(seriesGrandezas).forEach(([chave, serie]) => {
@@ -1549,9 +1305,6 @@ function registrarHistorico(mes, ano, origem, atualizarInterface = true, estadoL
                 return;
             }
             const data = formatarDataHistorico(ano, indice, 1);
-            if (origem === "Demonstração" && data > limiteDemo) {
-                return;
-            }
             novosRegistros.push({
                 tipo: "mensal",
                 data,
@@ -1564,26 +1317,24 @@ function registrarHistorico(mes, ano, origem, atualizarInterface = true, estadoL
             });
         });
 
-        // Guarda o custo apenas para o mês consultado; não replica o resumo nos outros meses.
-        novosRegistros.push({
-            tipo: "resumo",
-            data: formatarDataHistorico(ano, mes, 1),
-            grandeza: "Custo total",
-            chaveGrandeza: "custo",
-            valor: resumoConsumo.totalCostBrl,
-            unidade: "BRL",
-            capturadoEm,
-            origem
-        });
+        if (Number.isFinite(resumoConsumo.totalCostBrl)) {
+            novosRegistros.push({
+                tipo: "resumo",
+                data: formatarDataHistorico(ano, mes, 1),
+                grandeza: "Custo total",
+                chaveGrandeza: "custo",
+                valor: resumoConsumo.totalCostBrl,
+                unidade: "BRL",
+                capturadoEm,
+                origem
+            });
+        }
 
         serie.diario.forEach((valor, indice) => {
             if (!Number.isFinite(valor)) {
                 return;
             }
             const data = formatarDataHistorico(ano, mes, indice + 1);
-            if (origem === "Demonstração" && data > limiteDemo) {
-                return;
-            }
             const instanteLeitura = estadoLeitura.atualizadoEm || capturadoEm;
             const dataInstanteLeitura = new Date(instanteLeitura);
             const dataLeitura = formatarDataHistorico(
@@ -1605,7 +1356,7 @@ function registrarHistorico(mes, ano, origem, atualizarInterface = true, estadoL
         });
     });
 
-    // Salva a intensidade recebida com a data real da leitura para alimentar a série temporal.
+    // Salva a intensidade recebida com o instante em que a API foi coletada.
     if (Number.isFinite(estadoLeitura.intensidadePercentual)) {
         const instanteLeitura = estadoLeitura.atualizadoEm || capturadoEm;
         const dataLeitura = new Date(instanteLeitura);
@@ -1622,7 +1373,7 @@ function registrarHistorico(mes, ano, origem, atualizarInterface = true, estadoL
         });
     }
 
-    // Salva cada leitura do LDR usando a data informada pelo dispositivo, quando disponível.
+    // Salva o valor bruto de luminosidade recebido junto com o instante da coleta.
     if (Number.isFinite(estadoLeitura.luminosidadeLux)) {
         const instanteLeitura = estadoLeitura.atualizadoEm || capturadoEm;
         const dataLeitura = new Date(instanteLeitura);
@@ -1632,7 +1383,7 @@ function registrarHistorico(mes, ano, origem, atualizarInterface = true, estadoL
             grandeza: "Luminosidade ambiente",
             chaveGrandeza: "luminosidade",
             valor: estadoLeitura.luminosidadeLux,
-            unidade: "lux",
+            unidade: "unid.",
             capturadoEm,
             instanteLeitura,
             origem
@@ -1644,9 +1395,7 @@ function registrarHistorico(mes, ano, origem, atualizarInterface = true, estadoL
         const leituraPorHorario = registro.instanteLeitura || "";
         return `${registro.tipo}|${registro.data}|${registro.chaveGrandeza}|${registro.origem}|${leituraPorHorario}`;
     };
-    const registrosPorChave = new Map(registrosHistorico
-        .filter((registro) => !(registro.origem === "Demonstração" && registro.data > limiteDemo))
-        .map((registro) => [criarChaveRegistro(registro), registro]));
+    const registrosPorChave = new Map(registrosHistorico.map((registro) => [criarChaveRegistro(registro), registro]));
     novosRegistros.forEach((registro) => {
         const chave = criarChaveRegistro(registro);
         registrosPorChave.set(chave, registro);
@@ -2184,98 +1933,95 @@ function configurarExportacaoHistorico() {
     }
 }
 
-// Valida tamanho e valores das séries recebidas para o período consultado.
-function validarSerieApi(serie, tamanhoEsperado, nomeSerie) {
-    if (!Array.isArray(serie) || serie.length !== tamanhoEsperado) {
-        throw new Error(`A série ${nomeSerie} deve conter ${tamanhoEsperado} valores.`);
+// Normaliza a leitura mais recente da lista e adiciona o instante de coleta local.
+function normalizarLeiturasEsp32(resposta, coletadoEm) {
+    if (!Array.isArray(resposta) || resposta.length === 0) {
+        throw new Error("A API deve retornar uma lista com pelo menos uma leitura.");
     }
 
-    return serie.map((valor) => {
-        const numero = Number(valor);
-        if (!Number.isFinite(numero) || numero < 0) {
-            throw new Error(`A série ${nomeSerie} contém um valor inválido.`);
+    const leitura = resposta[resposta.length - 1];
+    if (!leitura || typeof leitura !== "object" || Array.isArray(leitura)) {
+        throw new Error("A leitura mais recente da API não é um objeto válido.");
+    }
+
+    const lerNumero = (campos, nomeCampo, maximo = Infinity) => {
+        const valores = campos
+            .filter((campo) => leitura[campo] !== undefined && leitura[campo] !== null)
+            .map((campo) => leitura[campo]);
+        for (const valor of valores) {
+            if (typeof valor !== "number" || !Number.isFinite(valor) || valor < 0 || valor > maximo) {
+                throw new Error(`O campo ${nomeCampo} da leitura mais recente é inválido.`);
+            }
         }
-        return numero;
-    });
-}
-
-// Valida uma leitura atual opcional sem transformar valores ausentes em zeros.
-function validarLeituraAtual(valor, nomeCampo, maximo = Infinity) {
-    if (valor === undefined || valor === null) {
-        return null;
-    }
-
-    const numero = Number(valor);
-    if (!Number.isFinite(numero) || numero < 0 || numero > maximo) {
-        throw new Error(`A leitura atual ${nomeCampo} contém um valor inválido.`);
-    }
-    return numero;
-}
-
-// Normaliza os sensores e estados atuais, que são opcionais para compatibilidade da API.
-function normalizarEstadoAtual(resposta) {
-    const atual = resposta.currentState ?? {};
-    if (typeof atual !== "object" || Array.isArray(atual)) {
-        throw new Error("O campo currentState deve ser um objeto.");
-    }
-
-    const validarEstadoBooleano = (valor, nomeCampo) => {
-        if (valor === undefined || valor === null) {
-            return null;
-        }
-        if (typeof valor !== "boolean") {
-            throw new Error(`O estado atual ${nomeCampo} deve ser booleano.`);
-        }
-        return valor;
+        return valores.find((valor) => valor > 0) ?? valores[0] ?? null;
     };
 
-    let atualizadoEm = null;
-    let origemHorario = "";
-    if (atual.lastUpdatedAt !== undefined && atual.lastUpdatedAt !== null) {
-        if (typeof atual.lastUpdatedAt !== "string" || !Number.isFinite(Date.parse(atual.lastUpdatedAt))) {
-            throw new Error("O horário lastUpdatedAt do estado atual é inválido.");
+    const lerBooleano = (campos, nomeCampo) => {
+        const campo = campos.find((nome) => leitura[nome] !== undefined && leitura[nome] !== null);
+        if (!campo) {
+            return null;
         }
-        atualizadoEm = new Date(atual.lastUpdatedAt).toISOString();
-        origemHorario = "Atualizado pelo dispositivo";
-    } else {
-        atualizadoEm = new Date().toISOString();
-        origemHorario = "Consulta recebida pelo dashboard";
+        if (typeof leitura[campo] !== "boolean") {
+            throw new Error(`O campo ${nomeCampo} da leitura mais recente deve ser booleano.`);
+        }
+        return leitura[campo];
+    };
+
+    const instante = new Date(coletadoEm);
+    const mes = instante.getMonth();
+    const ano = instante.getFullYear();
+    const dia = instante.getDate();
+    const diasNoMes = new Date(ano, mes + 1, 0).getDate();
+    const criarSerie = (nome, unidade, valor) => {
+        const mensal = Array(12).fill(null);
+        const diario = Array(diasNoMes).fill(null);
+        if (valor !== null) {
+            mensal[mes] = valor;
+            diario[dia - 1] = valor;
+        }
+        return { nome, unidade, mensal, diario };
+    };
+
+    const intensidade = lerNumero(["intensidade", "led1", "led2", "led3"], "intensidade", 100);
+    const energiaWh = lerNumero(["energiawh", "energiaWh"], "energiaWh");
+    const energiaKwh = lerNumero(["energiakwh", "energiaKWh"], "energiaKWh");
+    const luminosidade = lerNumero(["luminosidade"], "luminosidade");
+    const presenca = lerBooleano(["presenca"], "presenca");
+    const tensao = lerNumero(["tensao"], "tensao");
+    const corrente = lerNumero(["corrente"], "corrente");
+    const potencia = lerNumero(["potencia"], "potencia");
+    const iluminacaoLigada = lerBooleano(["luzAtiva", "luzativa"], "luzAtiva");
+
+    if (
+        [intensidade, energiaWh, energiaKwh, luminosidade, tensao, corrente, potencia].every((valor) => valor === null) &&
+        presenca === null &&
+        iluminacaoLigada === null
+    ) {
+        throw new Error("A leitura mais recente não contém campos de sensor reconhecidos.");
     }
 
-    const dispositivos = atual.devices === undefined
-        ? [{ id: "esp32", name: "Controlador ESP32", online: validarEstadoBooleano(atual.esp32Connected, "esp32Connected") }]
-        : (() => {
-            if (!Array.isArray(atual.devices)) {
-                throw new Error("O campo currentState.devices deve ser uma lista.");
-            }
-            return atual.devices.map((dispositivo) => {
-                if (
-                    !dispositivo ||
-                    typeof dispositivo !== "object" ||
-                    typeof dispositivo.id !== "string" ||
-                    typeof dispositivo.name !== "string" ||
-                    typeof dispositivo.online !== "boolean"
-                ) {
-                    throw new Error("Cada dispositivo deve informar id, name e online válidos.");
-                }
-                return {
-                    id: dispositivo.id,
-                    name: dispositivo.name,
-                    online: dispositivo.online
-                };
-            });
-        })();
-
     return {
-        luminosidadeLux: validarLeituraAtual(atual.ambientLightLux, "ambientLightLux"),
-        presencaDetectada: validarEstadoBooleano(atual.presenceDetected, "presenceDetected"),
-        intensidadePercentual: validarLeituraAtual(atual.lightingIntensityPercent, "lightingIntensityPercent", 100),
-        potenciaWatts: validarLeituraAtual(atual.powerWatts, "powerWatts"),
-        iluminacaoLigada: validarEstadoBooleano(atual.lightingOn, "lightingOn"),
-        esp32Conectado: validarEstadoBooleano(atual.esp32Connected, "esp32Connected"),
-        dispositivos,
-        atualizadoEm,
-        origemHorario
+        mes,
+        ano,
+        estadoAtual: {
+            luminosidadeLux: luminosidade,
+            presencaDetectada: presenca,
+            intensidadePercentual: intensidade,
+            potenciaWatts: potencia,
+            iluminacaoLigada,
+            esp32Conectado: null,
+            dispositivos: [{ id: "esp32", name: "Controlador ESP32", online: null }],
+            atualizadoEm: instante.toISOString(),
+            origemHorario: "Coletado pelo dashboard",
+            energiaWh,
+            energiaKwh
+        },
+        metricas: {
+            consumo: criarSerie("Energia", "kWh", energiaKwh),
+            tensao: criarSerie("Tensão", "V", tensao),
+            corrente: criarSerie("Corrente", "A", corrente),
+            potencia: criarSerie("Potência", "W", potencia)
+        }
     };
 }
 
@@ -2306,9 +2052,6 @@ function atualizarPainelDispositivos() {
         status.className = "status-indicador";
         if (dispositivo.online === null) {
             status.textContent = "Não informado";
-        } else if (estadoAtual.origemHorario === "Demonstração atualizada") {
-            status.textContent = dispositivo.online ? "Online · demonstração" : "Offline · demonstração";
-            status.classList.add(dispositivo.online ? "is-on" : "is-off");
         } else {
             status.textContent = dispositivo.online ? "Online" : "Offline";
             status.classList.add(dispositivo.online ? "is-on" : "is-off");
@@ -2319,66 +2062,6 @@ function atualizarPainelDispositivos() {
     });
 }
 
-// Converte a resposta da API para o formato consumido pelos gráficos e indicadores.
-function normalizarRespostaApi(resposta, mes, ano) {
-    if (!resposta || typeof resposta !== "object" || !resposta.summary) {
-        throw new Error("Resposta da API fora do formato documentado.");
-    }
-
-    const diasDoMes = new Date(ano, mes + 1, 0).getDate();
-    const resumo = {
-        totalCostBrl: Number(resposta.summary.totalCostBrl),
-        dailyConsumptionKwh: Number(resposta.summary.dailyConsumptionKwh),
-        monthlyConsumptionKwh: Number(resposta.summary.monthlyConsumptionKwh),
-        dailyChangePercent: Number(resposta.summary.dailyChangePercent ?? 0),
-        monthlyChangePercent: Number(resposta.summary.monthlyChangePercent ?? 0)
-    };
-
-    Object.values(resumo).forEach((valor) => {
-        if (!Number.isFinite(valor)) {
-            throw new Error("O resumo da API contém um valor inválido.");
-        }
-    });
-
-    const medidas = resposta.measurements;
-    if (!medidas || !medidas.voltage || !medidas.current || !medidas.power) {
-        throw new Error("A API deve enviar voltage, current e power em measurements.");
-    }
-
-    return {
-        resumo,
-        estadoAtual: normalizarEstadoAtual(resposta),
-        metricas: {
-            consumo: {
-                nome: "Consumo",
-                unidade: "kWh",
-                mensal: validarSerieApi(resposta.monthlyConsumptionKwh, 12, "monthlyConsumptionKwh"),
-                diario: validarSerieApi(resposta.dailyConsumptionKwh, diasDoMes, "dailyConsumptionKwh")
-            },
-            tensao: {
-                nome: "Tensão",
-                unidade: "V",
-                mensal: validarSerieApi(medidas.voltage.monthly, 12, "measurements.voltage.monthly"),
-                diario: validarSerieApi(medidas.voltage.daily, diasDoMes, "measurements.voltage.daily")
-            },
-            corrente: {
-                nome: "Corrente",
-                unidade: "A",
-                mensal: validarSerieApi(medidas.current.monthly, 12, "measurements.current.monthly"),
-                diario: validarSerieApi(medidas.current.daily, diasDoMes, "measurements.current.daily")
-            },
-            potencia: {
-                nome: "Potência",
-                unidade: "W",
-                mensal: validarSerieApi(medidas.power.monthly, 12, "measurements.power.monthly"),
-                diario: validarSerieApi(medidas.power.daily, diasDoMes, "measurements.power.daily")
-            }
-        },
-        anos: Array.isArray(resposta.availableYears) ? resposta.availableYears : []
-    };
-}
-
-// Atualiza os cards atuais e informa a origem do horário exibido.
 function atualizarEstadoAtual() {
     const formatarNumero = (valor, casas = 1) => valor === null
         ? "Não informado"
@@ -2390,12 +2073,13 @@ function atualizarEstadoAtual() {
     const presenca = document.getElementById("valorPresencaAtual");
     const intensidade = document.getElementById("valorIntensidadeAtual");
     const consumo = document.getElementById("valorConsumoAtual");
+    const energiaApi = document.getElementById("valorEnergiaApiAtual");
     const atualizacao = document.getElementById("ultimaAtualizacaoAtual");
     const detalhePresenca = document.getElementById("detalhePresencaAtual");
 
     luminosidade.textContent = estadoAtual.luminosidadeLux === null
         ? "Não informado"
-        : `${formatarNumero(estadoAtual.luminosidadeLux)} lux`;
+        : formatarNumero(estadoAtual.luminosidadeLux);
     presenca.textContent = formatarBooleano(estadoAtual.presencaDetectada);
     intensidade.textContent = estadoAtual.intensidadePercentual === null
         ? "Não informado"
@@ -2432,6 +2116,13 @@ function atualizarEstadoAtual() {
     consumo.textContent = estadoAtual.potenciaWatts === null
         ? "Não informado"
         : `${formatarNumero(estadoAtual.potenciaWatts)} W`;
+    if (energiaApi) {
+        energiaApi.textContent = Number.isFinite(estadoAtual.energiaKwh)
+            ? `${formatarNumero(estadoAtual.energiaKwh, 3)} kWh`
+            : Number.isFinite(estadoAtual.energiaWh)
+                ? `${formatarNumero(estadoAtual.energiaWh, 2)} Wh`
+                : "Não informado";
+    }
     detalhePresenca.textContent = estadoAtual.presencaDetectada === null
         ? "Leitura do sensor"
         : "Leitura do sensor de presença";
@@ -2485,25 +2176,6 @@ function atualizarEstadoAtual() {
     }
 }
 
-// Preenche o painel atual com leituras claramente demonstrativas quando não há API.
-function carregarEstadoDemonstrativo() {
-    atualizarSeriesDemoComHistorico();
-    estadoAtual = {
-        luminosidadeLux: 320,
-        presencaDetectada: false,
-        intensidadePercentual: 65,
-        potenciaWatts: 1140,
-        iluminacaoLigada: true,
-        esp32Conectado: true,
-        dispositivos: [{ id: "esp32", name: "Controlador ESP32", online: true }],
-        atualizadoEm: new Date().toISOString(),
-        origemHorario: "Demonstração atualizada"
-    };
-    registrarLeituraEnergia(estadoAtual);
-    atualizarEstadoAtual();
-}
-
-// Retorna a leitura mais recente de cada data e grandeza dentro do intervalo aplicado.
 function obterRegistrosDiariosFiltrados(chaveGrandeza, intervalo = intervaloPeriodoAplicado) {
     if (!intervalo) {
         return [];
@@ -2584,10 +2256,7 @@ function obterSerieSensorPorHora(chaveGrandeza, data) {
         }))
         .sort((primeiro, segundo) => primeiro.periodo.localeCompare(segundo.periodo));
 
-    // Mantém dados reais da API e completa apenas os resumos demonstrativos com 24 horas.
-    return amostrasArmazenadas.length
-        ? amostrasArmazenadas
-        : gerarAmostrasHorariasDemonstrativas(chaveGrandeza, data);
+    return amostrasArmazenadas;
 }
 
 // Atualiza os dias dos sensores com todos os dias civis do período global.
@@ -2860,13 +2529,16 @@ function atualizarIndicadores() {
         atualizarIndicadoresFiltrados();
         return;
     }
-    const formatarConsumo = (valor) => `${valor.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} kWh`;
-    const formatarVariacao = (valor) => `${valor > 0 ? "+" : ""}${valor.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}% no período`;
+    const formatarConsumo = (valor) => Number.isFinite(valor)
+        ? `${valor.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} kWh`
+        : "—";
+    const formatarVariacao = (valor) => Number.isFinite(valor)
+        ? `${valor > 0 ? "+" : ""}${valor.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}% no período`
+        : "Não informado pela API";
 
-    document.getElementById("cardCustoTotal").textContent = resumoConsumo.totalCostBrl.toLocaleString("pt-BR", {
-        style: "currency",
-        currency: "BRL"
-    });
+    document.getElementById("cardCustoTotal").textContent = Number.isFinite(resumoConsumo.totalCostBrl)
+        ? resumoConsumo.totalCostBrl.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+        : "—";
     document.getElementById("cardConsumoDiario").textContent = formatarConsumo(resumoConsumo.dailyConsumptionKwh);
     document.getElementById("cardConsumoMensal").textContent = formatarConsumo(resumoConsumo.monthlyConsumptionKwh);
     document.getElementById("variacaoConsumoDiario").textContent = formatarVariacao(resumoConsumo.dailyChangePercent);
@@ -2884,8 +2556,7 @@ function atualizarStatusApi(mensagem, tipo = "") {
         const estados = {
             success: "API conectada",
             loading: "Conectando API",
-            error: "API indisponível",
-            demo: "Modo demonstração"
+            error: "API indisponível"
         };
         indicador.classList.toggle("is-connected", tipo === "success");
         indicador.classList.toggle("is-error", tipo === "error");
@@ -2896,11 +2567,11 @@ function atualizarStatusApi(mensagem, tipo = "") {
 // Busca e valida os dados para o mês e ano selecionados.
 async function carregarDadosDashboard() {
     const baseUrl = API_CONFIG.baseUrl.trim();
+    const botaoAtualizar = document.getElementById("btnAtualizarDados");
     const botaoExportar = document.getElementById("btnExportarHistorico");
 
     if (!baseUrl) {
-        atualizarStatusApi("Exibindo dados de demonstração. Configure a URL em api-config.js para conectar a API.", "demo");
-        carregarEstadoDemonstrativo();
+        atualizarStatusApi("URL da API não configurada em api-config.js.", "error");
         atualizarIndicadores();
         desenharGraficos();
         return;
@@ -2912,116 +2583,66 @@ async function carregarDadosDashboard() {
 
     const controlador = new AbortController();
     requisicaoAtual = controlador;
-    // Reúne os meses do intervalo para carregar também as séries diárias intermediárias.
-    const primeiroDia = new Date(`${intervaloPeriodoAplicado.inicio}T00:00:00`);
-    const ultimoDia = new Date(`${intervaloPeriodoAplicado.fim}T00:00:00`);
-    const mesesDoPeriodo = [];
-    for (
-        const cursor = new Date(primeiroDia.getFullYear(), primeiroDia.getMonth(), 1);
-        cursor <= ultimoDia;
-        cursor.setMonth(cursor.getMonth() + 1)
-    ) {
-        mesesDoPeriodo.push({ ano: cursor.getFullYear(), mes: cursor.getMonth() });
-    }
-    const ultimoMes = mesesDoPeriodo[mesesDoPeriodo.length - 1];
-    const mesesAConsultar = mesesDoPeriodo.filter(({ ano, mes }, indice) => {
-        if (indice === mesesDoPeriodo.length - 1) {
-            return true;
-        }
-
-        const diasNoMes = new Date(ano, mes + 1, 0).getDate();
-        const dadosDoMes = registrosHistorico.filter((registro) =>
-            registro.tipo === "diario" &&
-            registro.origem === "API" &&
-            registro.data.startsWith(`${ano}-${String(mes + 1).padStart(2, "0")}-`)
-        );
-        const diasPorGrandeza = new Map();
-        dadosDoMes.forEach((registro) => {
-            if (!diasPorGrandeza.has(registro.chaveGrandeza)) {
-                diasPorGrandeza.set(registro.chaveGrandeza, new Set());
-            }
-            diasPorGrandeza.get(registro.chaveGrandeza).add(registro.data);
-        });
-
-        return ["consumo", "tensao", "corrente", "potencia"]
-            .some((chave) => (diasPorGrandeza.get(chave)?.size || 0) < diasNoMes);
-    });
-    const botaoAtualizar = document.getElementById("btnAtualizarDados");
+    const temporizador = window.setTimeout(() => controlador.abort(), API_CONFIG.timeoutMs);
     botaoAtualizar.disabled = true;
-    atualizarStatusApi(`Carregando dados de ${mesesAConsultar.length} ${mesesAConsultar.length === 1 ? "mês" : "meses"} do intervalo...`, "loading");
+    atualizarStatusApi("Coletando leituras do ESP32...", "loading");
 
     try {
-        let dadosMesFinal = null;
-        for (const [indice, { ano, mes }] of mesesAConsultar.entries()) {
-            const temporizador = window.setTimeout(() => controlador.abort(), API_CONFIG.timeoutMs);
-            try {
-                const enderecoBase = `${baseUrl.replace(/\/+$/, "")}/`;
-                const enderecoApi = new URL(API_CONFIG.dashboardPath.replace(/^\/+/, ""), enderecoBase);
-                enderecoApi.searchParams.set("year", String(ano));
-                enderecoApi.searchParams.set("month", String(mes + 1));
+        const enderecoBase = `${baseUrl.replace(/\/+$/, "")}/`;
+        const enderecoApi = new URL(API_CONFIG.dashboardPath.replace(/^\/+/, ""), enderecoBase);
+        const respostaHttp = await fetch(enderecoApi, {
+            headers: { Accept: "application/json" },
+            credentials: "omit",
+            cache: "no-store",
+            signal: controlador.signal
+        });
 
-                // Inclui cookies de sessão se o backend autenticar a API dessa maneira.
-                const respostaHttp = await fetch(enderecoApi, {
-                    headers: { Accept: "application/json" },
-                    credentials: "include",
-                    cache: "no-store",
-                    signal: controlador.signal
-                });
-
-                if (!respostaHttp.ok) {
-                    throw new Error(`A API respondeu com HTTP ${respostaHttp.status} ao consultar ${String(mes + 1).padStart(2, "0")}/${ano}.`);
-                }
-
-                const dados = normalizarRespostaApi(await respostaHttp.json(), mes, ano);
-                Object.assign(seriesGrandezas, dados.metricas);
-                resumoConsumo = dados.resumo;
-                registrarHistorico(mes, ano, "API", false, dados.estadoAtual);
-                if (ano === ultimoMes.ano && mes === ultimoMes.mes) {
-                    dadosMesFinal = dados;
-                }
-            } finally {
-                window.clearTimeout(temporizador);
-            }
-
-            atualizarStatusApi(`Carregando dados históricos: ${indice + 1} de ${mesesAConsultar.length} meses...`, "loading");
+        if (!respostaHttp.ok) {
+            throw new Error(`A API respondeu com HTTP ${respostaHttp.status}.`);
         }
 
-        if (!dadosMesFinal) {
-            throw new Error("Não foi possível carregar os dados do mês final do intervalo.");
-        }
-
-        Object.assign(seriesGrandezas, dadosMesFinal.metricas);
-        dadosConsumoMensal = dadosMesFinal.metricas.consumo.mensal;
-        dadosConsumoDiario = dadosMesFinal.metricas.consumo.diario;
-        resumoConsumo = dadosMesFinal.resumo;
-        estadoAtual = dadosMesFinal.estadoAtual;
+        const resposta = await respostaHttp.json();
+        const dados = normalizarLeiturasEsp32(resposta, new Date().toISOString());
+        Object.assign(seriesGrandezas, dados.metricas);
+        estadoAtual = dados.estadoAtual;
+        resumoConsumo = {
+            totalCostBrl: null,
+            dailyConsumptionKwh: null,
+            monthlyConsumptionKwh: null,
+            dailyChangePercent: null,
+            monthlyChangePercent: null
+        };
+        registrarHistorico(dados.mes, dados.ano, "API", false, estadoAtual);
         registrarLeituraEnergia(estadoAtual);
-        dadosReaisCarregados = true;
-        periodoDadosCarregados = ultimoMes;
         atualizarEstadoAtual();
         atualizarIndicadores();
         atualizarMesesGraficoDiario();
         atualizarControlesGraficosSensores();
         desenharGraficos();
-        botaoExportar.disabled = false;
-        atualizarStatusApi(`Dados do intervalo atualizados às ${new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}.`, "success");
+        botaoExportar.disabled = registrosHistorico.length === 0;
+        atualizarStatusApi(
+            `Leitura coletada às ${new Date(estadoAtual.atualizadoEm).toLocaleTimeString("pt-BR", {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit"
+            })}.`,
+            "success"
+        );
     } catch (erro) {
         atualizarIndicadores();
         desenharGraficos();
-        if (erro.name !== "AbortError") {
-            const periodoAnterior = periodoDadosCarregados
-                ? ` Último período válido: ${String(periodoDadosCarregados.mes + 1).padStart(2, "0")}/${periodoDadosCarregados.ano}.`
-                : " Nenhum dado real foi carregado ainda.";
-            atualizarStatusApi(`${erro.message}${periodoAnterior} Confira a URL e o contrato descrito em API.md.`, "error");
-        } else if (requisicaoAtual === controlador) {
+        if (erro.name === "AbortError") {
             atualizarStatusApi("A API demorou para responder. Tente atualizar novamente.", "error");
+        } else {
+            atualizarStatusApi(`Não foi possível carregar as leituras: ${erro.message}`, "error");
         }
     } finally {
+        window.clearTimeout(temporizador);
         if (requisicaoAtual === controlador) {
             requisicaoAtual = null;
             botaoAtualizar.disabled = false;
-            botaoExportar.disabled = registrosHistorico.length === 0;
         }
+        botaoExportar.disabled = registrosHistorico.length === 0;
     }
 }
 
@@ -3030,11 +2651,6 @@ function desenharGraficos() {
     document.querySelectorAll(".tooltip-grafico").forEach((tooltip) => {
         tooltip.hidden = true;
     });
-
-    // Não mostra séries de demonstração quando a API está configurada e ainda carrega.
-    if (API_CONFIG.baseUrl.trim() && !dadosReaisCarregados && !intervaloPeriodoAplicado) {
-        return;
-    }
 
     canvases.forEach((canvas) => {
         if (canvas.clientWidth > 0) {
