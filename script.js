@@ -32,7 +32,8 @@ const seriesGrandezas = {
     corrente: { nome: "Corrente", unidade: "A", mensal: [], diario: [] },
     potencia: { nome: "Potência", unidade: "W", mensal: [], diario: [] }
 };
-let grandezaSelecionada = "potencia";
+// Abre os gráficos de consumo mostrando a energia consumida por padrão.
+let grandezaSelecionada = "consumo";
 let resumoConsumo = {
     dailyConsumptionWh: null,
     monthlyConsumptionWh: null,
@@ -1150,7 +1151,9 @@ function configurarSelecaoGraficos() {
 
             exibirPainelDashboard(painelSelecionado, paineis);
             menu?.classList.remove("menu-aberto");
-            document.getElementById("btnAlternarMenu")?.setAttribute("aria-expanded", "false");
+            const botaoAlternarMenu = document.getElementById("btnAlternarMenu");
+            botaoAlternarMenu?.setAttribute("aria-expanded", "false");
+            botaoAlternarMenu?.setAttribute("aria-label", "Abrir navegação");
             document.getElementById("btnFecharMenu").hidden = true;
 
             // O canvas precisa estar visível para medir sua largura antes de desenhar.
@@ -2409,7 +2412,9 @@ function atualizarIndicadoresFiltrados() {
     }
 
     if (maiorConsumoMes) {
+        // Usa o ano da própria medição mensal exibida no card.
         const [, mesMes] = maiorConsumoMes.data.slice(0, 7).split("-");
+        const anoMes = maiorConsumoMes.data.slice(0, 4);
         document.getElementById("cardMaiorConsumoMes").textContent = formatarConsumo(Number(maiorConsumoMes.valor));
         document.getElementById("detalheMaiorConsumoMes").textContent = `${nomesMeses[Number(mesMes) - 1]} de ${anoMes}`;
     } else {
