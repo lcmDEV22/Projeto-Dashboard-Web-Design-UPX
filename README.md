@@ -6,7 +6,7 @@ Dashboard responsivo para acompanhar consumo de energia, leituras de sensores e 
 
 - Navegador moderno com suporte a JavaScript, `localStorage`, `sessionStorage` e Web Crypto.
 - Um servidor HTTP estático local para executar o projeto. Não há dependências npm para instalar.
-- Opcionalmente, uma API compatível com o contrato descrito em [API.md](API.md).
+- A API de leituras ESP32 configurada em `api-config.js`.
 
 ## Executar localmente
 
@@ -20,34 +20,18 @@ Acesse `http://localhost:8000/` no navegador. A página inicial é o login; sele
 
 Também é possível usar a extensão Live Server do VS Code: abra `index.html` e escolha **Open with Live Server**. Não é necessário executar uma etapa de build.
 
-## Configurar a API
+## API de leituras
 
-Por padrão, o dashboard usa dados demonstrativos. Para conectar uma API:
+O dashboard já está configurado para consultar `https://6acf5e9d03feaa52b21e6c92.mockapi.io/api/esp32/leituras`. A resposta é uma lista; a última leitura da lista é exibida como estado atual. Como os registros não possuem data, cada coleta recebe o horário de recebimento e é salva no histórico deste navegador.
 
-1. Abra `api-config.js`.
-2. Defina `baseUrl` com a URL base do serviço e, se necessário, ajuste `dashboardPath`.
-3. Faça o serviço retornar o JSON esperado para `GET /api/dashboard?year=AAAA&month=M`.
-
-Exemplo de configuração:
-
-```js
-const API_CONFIG = {
-    baseUrl: "http://localhost:3000",
-    dashboardPath: "/api/dashboard",
-    timeoutMs: 12000
-};
-```
-
-A rota precisa fornecer os dados de resumo, séries de consumo e medições de tensão, corrente e potência. `currentState` e seus campos são opcionais. Para apresentar mais de um dispositivo no painel **Dispositivos**, envie `currentState.devices` como uma lista de objetos com `id`, `name` e `online`. Se a lista for omitida, o dashboard usa `esp32Connected` para exibir o controlador ESP32. Campos de conexão ausentes aparecem como não informados; não são inferidos pelas leituras dos sensores.
-
-Consulte [API.md](API.md) para ver o JSON de exemplo, as regras de validação, as unidades, os campos opcionais e os detalhes do filtro de período. Se a API estiver em outra origem, ela deve permitir CORS para a origem do dashboard. As requisições incluem cookies (`credentials: include`), então o serviço também precisa aceitar credenciais quando usar autenticação por sessão.
+Consulte [API.md](API.md) para ver os campos utilizados, o tratamento dos horários e as limitações do histórico. Se a API estiver em outra origem, ela deve permitir CORS para a origem do dashboard.
 
 ## Recursos
 
 - **Resumo atual:** luminosidade, presença, intensidade da iluminação, potência, energia acumulada e estados do controlador.
-- **Consumo:** gráficos mensais, diários e acumulados; os gráficos diários podem exibir registros por horário quando disponíveis.
+- **Leituras:** gráficos de energia informada, tensão, corrente e potência; os gráficos usam amostras coletadas pelo dashboard.
 - **Iluminação e luminosidade:** gráficos dos sensores de intensidade da iluminação e luminosidade ambiente, por dia ou por horário.
-- **Dispositivos:** lista os dispositivos reportados pela API e informa se estão online ou offline.
+- **Dispositivos:** mostra o estado de conexão quando a API o informa; na resposta atual, esse estado fica como não informado.
 - **Histórico:** consulta registros locais, compara períodos de consumo e exporta os dados em uma planilha `.xlsx`.
 - **Atualização periódica:** consulta a API ao abrir o dashboard, pelo botão **Atualizar** e a cada minuto enquanto a página estiver visível.
 
@@ -80,8 +64,8 @@ Em telas estreitas, os botões de navegação passam para uma disposição compa
 
 ### Resumo atual
 
-Este painel mostra informações instantâneas recebidas do serviço ou valores claramente marcados como demonstração.
-Os indicadores incluem luminosidade ambiente em lux e presença detectada.
+Este painel mostra informações instantâneas recebidas do serviço.
+Os indicadores incluem o valor bruto de luminosidade enviado pelo sensor e a presença detectada.
 Também são apresentados o percentual de intensidade configurada para a iluminação e a potência instantânea em watts.
 O estado do ESP32 e da iluminação é exibido separadamente das medições numéricas.
 O horário de atualização ajuda a identificar quando os dados foram recebidos ou atualizados pelo dispositivo.
@@ -94,8 +78,8 @@ O total é preservado no navegador atual e não é recuperado de períodos anter
 
 ### Consumo
 
-O painel **Consumo** apresenta gráficos mensal e diário das métricas disponíveis.
-O seletor de grandeza permite alternar entre consumo, tensão, corrente e potência.
+O painel **Consumo** apresenta gráficos formados pelas amostras coletadas no navegador.
+O seletor de grandeza permite alternar entre energia informada, tensão, corrente e potência.
 O gráfico diário pode mostrar os valores agrupados por dia ou as amostras registradas por horário.
 No modo por horário, o seletor de data contém apenas dias com amostras horárias disponíveis.
 No modo por dia, o seletor de mês aparece quando o intervalo atravessa mais de um mês.
@@ -112,22 +96,17 @@ Cada gráfico possui seu próprio seletor de visualização por horário ou por 
 No modo horário, é necessário escolher uma data com amostras disponíveis.
 No modo diário, várias leituras do mesmo dia são resumidas pela média.
 A intensidade é representada em percentual, com escala de zero a cem por cento.
-A escala do gráfico de luminosidade é ajustada de acordo com os valores em lux.
+A escala do gráfico de luminosidade é ajustada de acordo com os valores recebidos; a API não informa a unidade nem uma conversão para lux.
 
 ### Dispositivos
 
-O painel **Dispositivos** exibe os nomes e estados enviados em `currentState.devices`.
-Cada item da lista precisa informar um identificador, um nome e um booleano `online`.
-O texto e a cor do estado distinguem dispositivos online e offline.
-O estado deve vir da API; o dashboard não considera uma leitura recente de sensor como prova de conexão.
-Se o serviço não enviar `devices`, o painel usa `esp32Connected` para mostrar o controlador ESP32.
-Se ambos os campos não informarem o estado, ele é apresentado como não informado.
-Uma lista `devices` vazia é mostrada como vazia, sem criar um dispositivo fictício.
-Quando a URL da API está vazia, o controlador é exibido com um status identificado como demonstração.
+O painel **Dispositivos** exibe o controlador ESP32.
+Como a resposta atual não informa o estado de conexão do dispositivo, esse estado aparece como não informado.
+Se a API não estiver disponível, o dashboard informa o erro e não substitui as leituras por valores fictícios.
 
 ### Histórico
 
-O histórico guarda snapshots recebidos da API e registros demonstrativos no navegador atual.
+O histórico guarda snapshots recebidos da API no navegador atual.
 É possível filtrar as linhas por grandeza e mês, além de comparar dois meses de consumo.
 A tabela mostra até 50 registros mais recentes para os filtros selecionados.
 A exportação inclui o histórico completo, independentemente do filtro aplicado à tabela.
@@ -136,37 +115,9 @@ Os filtros da tabela e da planilha servem para consulta e não alteram os regist
 
 ## Dados da API
 
-O dashboard faz uma requisição GET para cada mês necessário ao intervalo selecionado.
-Os parâmetros `year` e `month` usam o ano com quatro dígitos e o número do mês de 1 a 12.
-O mês final do intervalo é consultado para atualizar o estado mais recente.
-Meses anteriores com histórico diário completo podem ser reutilizados localmente.
-
-O objeto de resumo fornece consumo diário, consumo mensal e variações percentuais. O dashboard não utiliza informações de custo ou tarifa.
-As séries `monthlyConsumptionKwh` e os valores mensais de cada medição devem conter 12 números.
-As séries diárias devem conter um número por dia do mês solicitado.
-O número de dias é verificado considerando o calendário do mês e o ano consultado.
-As medições obrigatórias são `voltage`, `current` e `power`, cada uma com séries `monthly` e `daily`.
-Valores negativos, não numéricos ou séries com tamanho incorreto fazem a resposta ser rejeitada.
-
-Os campos de `currentState` são opcionais para manter compatibilidade com APIs existentes.
-Leituras omitidas aparecem como não informadas, em vez de serem convertidas em zero.
-Os estados de conexão precisam ser booleanos quando fornecidos.
-Para múltiplos dispositivos, use uma estrutura semelhante a esta:
-
-```json
-{
-    "currentState": {
-        "esp32Connected": true,
-        "devices": [
-            { "id": "esp32", "name": "Controlador ESP32", "online": true },
-            { "id": "sensor-presenca", "name": "Sensor de presença", "online": false }
-        ]
-    }
-}
-```
-
-Esse trecho mostra apenas o estado atual; a resposta real também deve conter os resumos e as séries obrigatórias.
-O exemplo completo e as regras campo a campo estão em [API.md](API.md).
+O dashboard lê a lista configurada em `api-config.js` e usa seu último item como leitura atual.
+Como os itens não contêm data, o instante de cada coleta é atribuído pelo dashboard e incluído no histórico local.
+O mapeamento dos campos e as limitações do histórico estão descritos em [API.md](API.md).
 
 ## Persistência e privacidade
 
@@ -192,33 +143,22 @@ Verifique o endereço e a porta exibidos pelo terminal após iniciar o servidor.
 Não abra uma subpasta como se fosse a raiz; `index.html` e `dashboard.html` ficam na raiz.
 Se a porta 8000 já estiver ocupada, inicie o servidor em outra porta, por exemplo 8001.
 
-### O dashboard mostra dados demonstrativos
+### O dashboard não mostra leituras
 
-Confira se `baseUrl` em `api-config.js` não está vazio.
-Verifique se o endereço base não contém espaços ou uma rota repetida.
-Confirme se a rota configurada corresponde ao endereço implementado pelo serviço.
-O status da API na página informa se o dashboard está em demonstração, carregando ou com erro.
+Confira o status de conexão e a mensagem da API no dashboard.
+Verifique se o endereço em `api-config.js` está acessível e se o serviço permite CORS para a origem do dashboard.
+Se a resposta estiver vazia, confirme que a lista contém ao menos uma leitura.
 
 ### A chamada da API falha
 
-Teste a rota diretamente e confirme que ela retorna JSON válido para os parâmetros de ano e mês.
-Confira se todas as séries têm os tamanhos exigidos e se os campos numéricos não são negativos.
+Teste a rota diretamente e confirme que ela retorna uma lista JSON com pelo menos uma leitura válida.
 Em serviços hospedados em outra origem, configure CORS para permitir a origem do dashboard.
-Se a API usar cookies, habilite o suporte a credenciais no CORS e configure os cookies conforme HTTPS e o domínio usados.
 Consulte o console do navegador e o status exibido no dashboard para detalhes adicionais.
-
-### Um dispositivo aparece como não informado
-
-Verifique se a resposta inclui `currentState.devices` com um booleano `online` por dispositivo.
-Para usar o modo de compatibilidade, envie `currentState.esp32Connected` como `true` ou `false`.
-Ausência desses campos não é tratada como offline, pois não há informação suficiente para concluir o estado.
 
 ### Um gráfico não tem pontos por horário
 
 O modo por horário depende de registros salvos com instante de leitura.
-O contrato atual não reconstrói amostras horárias antigas a partir de totais diários.
-Novas consultas bem-sucedidas passam a registrar as leituras atuais quando os campos correspondentes são enviados.
-No modo demonstrativo, as amostras horárias estão disponíveis apenas para o mês atual.
+A API atual não fornece um histórico datado, então os gráficos só acumulam horários depois que o dashboard começa a coletar.
 
 ## Manutenção do projeto
 
