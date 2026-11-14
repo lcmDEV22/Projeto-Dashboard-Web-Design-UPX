@@ -1113,9 +1113,9 @@ function atualizarVisibilidadeFiltroPeriodo(painelSelecionado) {
         filtroPeriodo.hidden = painelSelecionado === "secaoHistorico" || painelSelecionado === "secaoDispositivos";
     }
 
-    // Mantém os indicadores do período fora da seção de dispositivos.
+    // Exibe o resumo do período somente na aba Resumo Atual.
     if (resumoPeriodo) {
-        resumoPeriodo.hidden = painelSelecionado === "secaoDispositivos" || painelSelecionado === "secaoHistorico";
+        resumoPeriodo.hidden = painelSelecionado !== "secaoEstadoAtual";
     }
 }
 

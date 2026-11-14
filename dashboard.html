@@ -143,26 +143,10 @@
                     <p id="statusFiltroPeriodo" class="filtro-periodo-status" role="status" aria-live="polite"></p>
                 </section>
 
-                <!-- Resumo textual do consumo, sem gráficos ou informações financeiras. -->
+                <!-- Mantém os indicadores e o relatório do período exclusivos do Resumo Atual. -->
                 <section class="resumo-periodo" aria-labelledby="tituloResumoPeriodo">
                     <h2 id="tituloResumoPeriodo">Resumo do período</h2>
-                    <section class="cards-grid">
-                        <div class="card">
-                            <div class="card-glow-line" aria-hidden="true"></div>
-                            <span class="card-icon" aria-hidden="true"><span class="material-symbols-outlined">payments</span></span>
-                            <span class="card-title">Custo no período</span>
-                            <small class="card-description">Tarifa TE + TUSD consolidada</small>
-                            <strong id="cardCustoTotal">--</strong>
-                            <small id="variacaoCustoTotal">No intervalo selecionado</small>
-                        </div>
-                        <div class="card">
-                            <div class="card-glow-line" aria-hidden="true"></div>
-                            <span class="card-icon" aria-hidden="true"><span class="material-symbols-outlined">query_stats</span></span>
-                            <span class="card-title">Média diária</span>
-                            <small class="card-description">Demanda média normalizada</small>
-                            <strong id="cardConsumoDiario">--</strong>
-                            <small id="variacaoConsumoDiario">--</small>
-                        </article>
+                    <div class="cards-grid">
                         <article class="card">
                             <div class="card-glow-line" aria-hidden="true"></div>
                             <span class="card-icon" aria-hidden="true"><span class="material-symbols-outlined">electric_bolt</span></span>
@@ -213,6 +197,12 @@
                 </div>
 
                 <div class="estado-atual-grid">
+                    <!-- Exibe a média calculada no período selecionado junto aos indicadores atuais. -->
+                    <div class="card estado-card">
+                        <span class="estado-card-heading"><span class="card-title">Média diária</span><span class="material-symbols-outlined icon-cyan" aria-hidden="true">query_stats</span></span>
+                        <strong id="cardConsumoDiario">--</strong>
+                        <small id="variacaoConsumoDiario">--</small>
+                    </div>
                     <article class="card estado-card">
                         <span class="estado-card-heading"><span class="card-title">Luminosidade do sensor</span><span class="material-symbols-outlined icon-amber" aria-hidden="true">light_mode</span></span>
                         <strong id="valorLuminosidadeAtual">--</strong>
