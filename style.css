@@ -1167,6 +1167,40 @@ body.dashboard .card-icon .material-symbols-outlined {
     font-size: 18px;
 }
 
+body.dashboard .relatorio-consumo {
+    min-width: 0;
+    padding: 16px 18px;
+    border: 1px solid rgba(52, 211, 153, 0.14);
+    border-radius: 11px;
+    background: linear-gradient(135deg, rgba(52, 211, 153, 0.08), rgba(18, 30, 24, 0.92));
+}
+
+body.dashboard .relatorio-consumo-cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+body.dashboard .relatorio-consumo-cabecalho > .material-symbols-outlined {
+    color: var(--secondary);
+}
+
+body.dashboard .relatorio-consumo-cabecalho small {
+    color: var(--text-muted);
+    font-size: 0.65rem;
+}
+
+body.dashboard .relatorio-consumo p {
+    margin: 10px 0 0;
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    line-height: 1.55;
+}
+
+body.dashboard .cards-grid > .relatorio-consumo .card-title {
+    margin-bottom: 1px;
+}
+
 /* --------------------------------------------------------------------------
    Telemetria ao Vivo (Estado Atual dos Sensores)
    -------------------------------------------------------------------------- */

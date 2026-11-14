@@ -141,7 +141,7 @@ Os parâmetros `year` e `month` usam o ano com quatro dígitos e o número do m�
 O mês final do intervalo é consultado para atualizar o estado mais recente.
 Meses anteriores com histórico diário completo podem ser reutilizados localmente.
 
-O objeto de resumo fornece custo total, consumo diário e consumo mensal.
+O objeto de resumo fornece consumo diário, consumo mensal e variações percentuais. O dashboard não utiliza informações de custo ou tarifa.
 As séries `monthlyConsumptionKwh` e os valores mensais de cada medição devem conter 12 números.
 As séries diárias devem conter um número por dia do mês solicitado.
 O número de dias é verificado considerando o calendário do mês e o ano consultado.

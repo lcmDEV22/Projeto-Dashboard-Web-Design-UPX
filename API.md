@@ -17,7 +17,6 @@ A rota deve retornar JSON neste formato. As séries mensais devem conter 12 núm
 ```json
 {
   "summary": {
-    "totalCostBrl": 1240.5,
     "dailyConsumptionKwh": 32.4,
     "monthlyConsumptionKwh": 845.2,
     "dailyChangePercent": 2.1,
@@ -79,7 +78,7 @@ O card **Energia acumulada** integra a potência de `powerWatts` pelo tempo entr
 
 O painel **Analisar período** oferece mês atual, últimos 7, 30 ou 90 dias e intervalo personalizado com datas inicial e final. Ao aplicar, o dashboard consulta a API para cada mês que ainda não tenha histórico diário completo no navegador e atualiza o mês final do intervalo. Os cards de resumo e os gráficos usam os registros salvos que correspondem ao período. O gráfico mensal inclui cada mês do calendário entre as datas, mesmo quando a API não tem uma medição guardada para algum mês; nesses casos, a lacuna não é preenchida com um valor inventado. O gráfico diário mostra todos os dias do mês selecionado, com valores das medições disponíveis e lacunas para dias sem dados. O gráfico diário também oferece a opção **Por horário**, com um seletor de data limitado às datas que tenham amostras com horário; ao selecioná-la, o gráfico mensal permanece sem alteração. Dados horários reais começam a ser guardados a cada consulta bem-sucedida para a data atual. O serviço não fornece uma série horária histórica separada, portanto datas antigas sem amostras não são reconstruídas. Sem API, os pontos por hora são dados demonstrativos claramente identificados. A luminosidade, presença, iluminação, potência instantânea e conexão do ESP32 permanecem como estado atual e não são alteradas pelo filtro.
 
-O resumo informa quantos dias têm medições. O custo soma apenas meses completos dentro do intervalo; se não houver custo disponível para esses meses, mostra “—”. O gráfico mensal usa o total mensal registrado para cada mês que cruza o intervalo, enquanto o gráfico diário e os cards usam somente datas incluídas no intervalo. Como a API retorna dados diários de um mês por consulta, intervalos longos podem exigir uma consulta para cada mês ainda não guardado.
+O resumo informa quantos dias têm medições, o consumo acumulado, a média diária e um relatório textual do intervalo. O dashboard não apresenta custos ou tarifas. O gráfico mensal usa o total mensal registrado para cada mês que cruza o intervalo, enquanto o gráfico diário e os cards usam somente datas incluídas no intervalo. Como a API retorna dados diários de um mês por consulta, intervalos longos podem exigir uma consulta para cada mês ainda não guardado.
 
 ## Histórico no dashboard
 

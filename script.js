@@ -88,14 +88,11 @@ function gerarDadosFicticiosHistorico() {
             const mediaTensaoMensal = tensaoMensal.reduce((total, valor) => total + valor, 0) / Math.max(tensaoMensal.length, 1);
             const mediaCorrenteMensal = correnteMensal.reduce((total, valor) => total + valor, 0) / Math.max(correnteMensal.length, 1);
             const mediaPotenciaMensal = potenciaMensal.reduce((total, valor) => total + valor, 0) / Math.max(potenciaMensal.length, 1);
-            const custoMensal = Number((totalConsumoMensal * (0.82 + (mes % 5) * 0.07 + (ano - ANO_INICIAL_DADOS_FICTICIOS) * 0.03)).toFixed(2));
-
             registros.push(
                 { tipo: "mensal", data: formatarDataHistorico(ano, mes, 1), grandeza: "Consumo", chaveGrandeza: "consumo", valor: Number(totalConsumoMensal.toFixed(2)), unidade: "kWh", capturadoEm, origem: "Demonstração" },
                 { tipo: "mensal", data: formatarDataHistorico(ano, mes, 1), grandeza: "Tensão", chaveGrandeza: "tensao", valor: Number(mediaTensaoMensal.toFixed(2)), unidade: "V", capturadoEm, origem: "Demonstração" },
                 { tipo: "mensal", data: formatarDataHistorico(ano, mes, 1), grandeza: "Corrente", chaveGrandeza: "corrente", valor: Number(mediaCorrenteMensal.toFixed(2)), unidade: "A", capturadoEm, origem: "Demonstração" },
-                { tipo: "mensal", data: formatarDataHistorico(ano, mes, 1), grandeza: "Potência", chaveGrandeza: "potencia", valor: Number(mediaPotenciaMensal.toFixed(2)), unidade: "W", capturadoEm, origem: "Demonstração" },
-                { tipo: "resumo", data: formatarDataHistorico(ano, mes, 1), grandeza: "Custo total", chaveGrandeza: "custo", valor: custoMensal, unidade: "BRL", capturadoEm, origem: "Demonstração" }
+                { tipo: "mensal", data: formatarDataHistorico(ano, mes, 1), grandeza: "Potência", chaveGrandeza: "potencia", valor: Number(mediaPotenciaMensal.toFixed(2)), unidade: "W", capturadoEm, origem: "Demonstração" }
             );
         }
     }
@@ -154,13 +151,6 @@ function atualizarSeriesDemoComHistorico() {
     };
 
     const dadosDiaAtual = registrosHistorico.filter((registro) => registro.tipo === "diario" && registro.data === formatarDataHistorico(hoje.getFullYear(), hoje.getMonth(), hoje.getDate()));
-    const ultimoCusto = registrosHistorico
-        .filter((registro) => registro.tipo === "resumo" && registro.chaveGrandeza === "custo")
-        .sort((primeiro, segundo) =>
-            segundo.data.localeCompare(primeiro.data) ||
-            segundo.capturadoEm.localeCompare(primeiro.capturadoEm)
-        )[0];
-
     Object.assign(seriesGrandezas, {
         consumo: montarSerie("consumo", "Consumo", "kWh"),
         tensao: montarSerie("tensao", "Tensão", "V"),
@@ -172,7 +162,6 @@ function atualizarSeriesDemoComHistorico() {
     dadosConsumoDiario = seriesGrandezas.consumo.diario;
     const consumoHoje = dadosDiaAtual.find((registro) => registro.chaveGrandeza === "consumo")?.valor ?? 0;
     resumoConsumo = {
-        totalCostBrl: ultimoCusto ? Number(ultimoCusto.valor) : 0,
         dailyConsumptionKwh: consumoHoje,
         monthlyConsumptionKwh: seriesGrandezas.consumo.mensal.at(-1) ?? 0,
         dailyChangePercent: 0,
@@ -197,7 +186,6 @@ let grandezaSelecionada = "consumo";
 let dadosConsumoMensal = [...dadosDemoMensais];
 let dadosConsumoDiario = [...dadosDemoDiarios];
 let resumoConsumo = {
-    totalCostBrl: 1240.5,
     dailyConsumptionKwh: dadosDemoDiarios[0],
     monthlyConsumptionKwh: dadosDemoMensais[new Date().getMonth()],
     dailyChangePercent: 0,
@@ -1332,12 +1320,10 @@ function atualizarVisibilidadeFiltroPeriodo(painelSelecionado) {
     }
 }
 
+// Controla os painéis laterais e impede gráficos do consumo em Resumo Atual.
 function exibirPainelDashboard(painelSelecionado, paineis) {
-    const resumoInicial = painelSelecionado === "secaoEstadoAtual";
     paineis.forEach((painel) => {
-        painel.hidden = resumoInicial
-            ? !["secaoEstadoAtual", "secaoGraficosConsumo", "secaoDispositivos"].includes(painel.id)
-            : painel.id !== painelSelecionado;
+        painel.hidden = painel.id !== painelSelecionado;
     });
     atualizarVisibilidadeFiltroPeriodo(painelSelecionado);
 }
@@ -1564,17 +1550,6 @@ function registrarHistorico(mes, ano, origem, atualizarInterface = true, estadoL
             });
         });
 
-        // Guarda o custo apenas para o mês consultado; não replica o resumo nos outros meses.
-        novosRegistros.push({
-            tipo: "resumo",
-            data: formatarDataHistorico(ano, mes, 1),
-            grandeza: "Custo total",
-            chaveGrandeza: "custo",
-            valor: resumoConsumo.totalCostBrl,
-            unidade: "BRL",
-            capturadoEm,
-            origem
-        });
 
         serie.diario.forEach((valor, indice) => {
             if (!Number.isFinite(valor)) {
@@ -2327,7 +2302,6 @@ function normalizarRespostaApi(resposta, mes, ano) {
 
     const diasDoMes = new Date(ano, mes + 1, 0).getDate();
     const resumo = {
-        totalCostBrl: Number(resposta.summary.totalCostBrl),
         dailyConsumptionKwh: Number(resposta.summary.dailyConsumptionKwh),
         monthlyConsumptionKwh: Number(resposta.summary.monthlyConsumptionKwh),
         dailyChangePercent: Number(resposta.summary.dailyChangePercent ?? 0),
@@ -2693,38 +2667,30 @@ function atualizarIndicadoresFiltrados() {
     const fimUtc = Date.UTC(fim.getFullYear(), fim.getMonth(), fim.getDate());
     const diasNoIntervalo = Math.floor((fimUtc - inicioUtc) / 86400000) + 1;
 
-    // Só soma custos de meses inteiros dentro do período para evitar prorratear valores.
-    const custosPorMes = new Map();
-    registrosHistorico
-        .filter((registro) => registro.tipo === "resumo" && registro.chaveGrandeza === "custo")
-        .forEach((registro) => {
-            const ano = Number(registro.data.slice(0, 4));
-            const mes = Number(registro.data.slice(5, 7)) - 1;
-            const inicioMes = formatarDataHistorico(ano, mes, 1);
-            const fimMes = formatarDataHistorico(ano, mes, new Date(ano, mes + 1, 0).getDate());
-            if (inicioMes < intervalo.inicio || fimMes > intervalo.fim) {
-                return;
-            }
-
-            const periodo = registro.data.slice(0, 7);
-            const existente = custosPorMes.get(periodo);
-            if (!existente || registro.capturadoEm > existente.capturadoEm) {
-                custosPorMes.set(periodo, registro);
-            }
-        });
-
-    const custoTotal = Array.from(custosPorMes.values())
-        .reduce((total, registro) => total + registro.valor, 0);
     const formatarConsumo = (valor) => valor === null
         ? "—"
         : `${valor.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} kWh`;
 
-    document.getElementById("cardCustoTotal").textContent = custosPorMes.size
-        ? custoTotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
-        : "—";
-    document.getElementById("variacaoCustoTotal").textContent = custosPorMes.size
-        ? `${custosPorMes.size} ${custosPorMes.size === 1 ? "mês completo" : "meses completos"}`
-        : "Sem mês completo com custo registrado";
+    // Identifica o dia com maior consumo dentro das medições diárias filtradas.
+    const maiorConsumoDia = consumoDiario.reduce((maior, registro) =>
+        !maior || Number(registro.valor) > Number(maior.valor) ? registro : maior,
+    null);
+
+    // Agrupa as medições mensais disponíveis e encontra o maior total do intervalo.
+    const consumoMensalPorPeriodo = new Map();
+    registrosHistorico
+        .filter((registro) => registro.tipo === "mensal" && registro.chaveGrandeza === "consumo")
+        .filter((registro) => registro.data >= `${intervalo.inicio.slice(0, 7)}-01` && registro.data <= `${intervalo.fim.slice(0, 7)}-31`)
+        .forEach((registro) => {
+            const periodo = registro.data.slice(0, 7);
+            const atual = consumoMensalPorPeriodo.get(periodo);
+            if (!atual || registro.capturadoEm > atual.capturadoEm) {
+                consumoMensalPorPeriodo.set(periodo, registro);
+            }
+        });
+    const maiorConsumoMes = Array.from(consumoMensalPorPeriodo.values())
+        .reduce((maior, registro) => !maior || Number(registro.valor) > Number(maior.valor) ? registro : maior, null);
+
     document.getElementById("cardConsumoDiario").textContent = formatarConsumo(mediaDiaria);
     document.getElementById("variacaoConsumoDiario").textContent = consumoDiario.length
         ? `Média de ${consumoDiario.length} ${consumoDiario.length === 1 ? "dia medido" : "dias medidos"}`
@@ -2733,6 +2699,27 @@ function atualizarIndicadoresFiltrados() {
     document.getElementById("variacaoConsumoMensal").textContent = consumoDiario.length
         ? `Soma dos dias medidos no intervalo`
         : "Sem medições diárias";
+
+    if (maiorConsumoDia) {
+        document.getElementById("cardMaiorConsumoDia").textContent = formatarConsumo(Number(maiorConsumoDia.valor));
+        document.getElementById("detalheMaiorConsumoDia").textContent = maiorConsumoDia.data.split("-").reverse().join("/");
+    } else {
+        document.getElementById("cardMaiorConsumoDia").textContent = "—";
+        document.getElementById("detalheMaiorConsumoDia").textContent = "Sem dia medido";
+    }
+
+    if (maiorConsumoMes) {
+        const [, mesMes] = maiorConsumoMes.data.slice(0, 7).split("-");
+        document.getElementById("cardMaiorConsumoMes").textContent = formatarConsumo(Number(maiorConsumoMes.valor));
+        document.getElementById("detalheMaiorConsumoMes").textContent = `${nomesMeses[Number(mesMes) - 1]} de ${anoMes}`;
+    } else {
+        document.getElementById("cardMaiorConsumoMes").textContent = "—";
+        document.getElementById("detalheMaiorConsumoMes").textContent = "Sem mês medido";
+    }
+
+    document.getElementById("textoRelatorioConsumo").textContent = consumoDiario.length
+        ? `Entre ${intervalo.inicio.split("-").reverse().join("/")} e ${intervalo.fim.split("-").reverse().join("/")}, foram registradas ${consumoDiario.length === 1 ? "1 medição diária" : `${consumoDiario.length} medições diárias`}. O consumo acumulado foi de ${formatarConsumo(somaConsumo)}, com média de ${formatarConsumo(mediaDiaria)} por dia.${maiorConsumoDia ? ` O dia de maior consumo foi ${maiorConsumoDia.data.split("-").reverse().join("/")}.` : ""}${maiorConsumoMes ? ` O mês de maior consumo foi ${nomesMeses[Number(maiorConsumoMes.data.slice(5, 7)) - 1]} de ${maiorConsumoMes.data.slice(0, 4)}.` : ""}`
+        : "Não há medições diárias suficientes no intervalo para produzir um relatório de consumo.";
 
     const status = document.getElementById("statusFiltroPeriodo");
     if (consumoDiario.length) {
@@ -2863,14 +2850,24 @@ function atualizarIndicadores() {
     const formatarConsumo = (valor) => `${valor.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} kWh`;
     const formatarVariacao = (valor) => `${valor > 0 ? "+" : ""}${valor.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}% no período`;
 
-    document.getElementById("cardCustoTotal").textContent = resumoConsumo.totalCostBrl.toLocaleString("pt-BR", {
-        style: "currency",
-        currency: "BRL"
-    });
     document.getElementById("cardConsumoDiario").textContent = formatarConsumo(resumoConsumo.dailyConsumptionKwh);
     document.getElementById("cardConsumoMensal").textContent = formatarConsumo(resumoConsumo.monthlyConsumptionKwh);
     document.getElementById("variacaoConsumoDiario").textContent = formatarVariacao(resumoConsumo.dailyChangePercent);
     document.getElementById("variacaoConsumoMensal").textContent = formatarVariacao(resumoConsumo.monthlyChangePercent);
+
+    // Usa os dados demonstrativos apenas quando não existe um intervalo aplicado.
+    const maiorValorDia = Math.max(...dadosConsumoDiario);
+    const indiceMaiorDia = dadosConsumoDiario.indexOf(maiorValorDia);
+    const hoje = new Date();
+    document.getElementById("cardMaiorConsumoDia").textContent = formatarConsumo(maiorValorDia);
+    document.getElementById("detalheMaiorConsumoDia").textContent = `${indiceMaiorDia + 1}/${String(hoje.getMonth() + 1).padStart(2, "0")}/${hoje.getFullYear()}`;
+
+    const maiorValorMes = Math.max(...dadosConsumoMensal);
+    const indiceMaiorMes = dadosConsumoMensal.indexOf(maiorValorMes);
+    document.getElementById("cardMaiorConsumoMes").textContent = formatarConsumo(maiorValorMes);
+    document.getElementById("detalheMaiorConsumoMes").textContent = nomesMeses[indiceMaiorMes];
+
+    document.getElementById("textoRelatorioConsumo").textContent = `No mês atual, o consumo diário registrado foi de ${formatarConsumo(resumoConsumo.dailyConsumptionKwh)}, enquanto o consumo mensal acumulado é de ${formatarConsumo(resumoConsumo.monthlyConsumptionKwh)}. A maior leitura diária ocorreu em ${indiceMaiorDia + 1}/${String(hoje.getMonth() + 1).padStart(2, "0")}/${hoje.getFullYear()}, e ${nomesMeses[indiceMaiorMes]} foi o mês de maior consumo da série demonstrativa.`;
 }
 
 // Exibe o estado atual do serviço junto aos indicadores.

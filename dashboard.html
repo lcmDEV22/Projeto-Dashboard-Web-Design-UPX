@@ -143,35 +143,53 @@
                     <p id="statusFiltroPeriodo" class="filtro-periodo-status" role="status" aria-live="polite"></p>
                 </section>
 
-                <!-- Indicadores consolidados do período, separados das leituras atuais. -->
+                <!-- Resumo textual do consumo, sem gráficos ou informações financeiras. -->
                 <section class="resumo-periodo" aria-labelledby="tituloResumoPeriodo">
                     <h2 id="tituloResumoPeriodo">Resumo do período</h2>
-                    <section class="cards-grid">
-                        <div class="card">
-                            <div class="card-glow-line" aria-hidden="true"></div>
-                            <span class="card-icon" aria-hidden="true"><span class="material-symbols-outlined">payments</span></span>
-                            <span class="card-title">Custo no período</span>
-                            <small class="card-description">Tarifa TE + TUSD consolidada</small>
-                            <strong id="cardCustoTotal">--</strong>
-                            <small id="variacaoCustoTotal">No intervalo selecionado</small>
-                        </div>
-                        <div class="card">
+                    <div class="cards-grid">
+                        <article class="card">
                             <div class="card-glow-line" aria-hidden="true"></div>
                             <span class="card-icon" aria-hidden="true"><span class="material-symbols-outlined">query_stats</span></span>
                             <span class="card-title">Média diária</span>
-                            <small class="card-description">Demanda média normalizada</small>
+                            <small class="card-description">Consumo médio das leituras do intervalo</small>
                             <strong id="cardConsumoDiario">--</strong>
                             <small id="variacaoConsumoDiario">--</small>
-                        </div>
-                        <div class="card">
+                        </article>
+                        <article class="card">
                             <div class="card-glow-line" aria-hidden="true"></div>
                             <span class="card-icon" aria-hidden="true"><span class="material-symbols-outlined">electric_bolt</span></span>
                             <span class="card-title">Consumo acumulado</span>
-                            <small class="card-description">Consumo no intervalo selecionado</small>
+                            <small class="card-description">Total no intervalo selecionado</small>
                             <strong id="cardConsumoMensal">--</strong>
                             <small id="variacaoConsumoMensal">--</small>
-                        </div>
-                    </section>
+                        </article>
+                        <article class="card">
+                            <div class="card-glow-line" aria-hidden="true"></div>
+                            <span class="card-icon" aria-hidden="true"><span class="material-symbols-outlined">calendar_today</span></span>
+                            <span class="card-title">Dia de maior consumo</span>
+                            <small class="card-description">Maior leitura diária do intervalo</small>
+                            <strong id="cardMaiorConsumoDia">--</strong>
+                            <small id="detalheMaiorConsumoDia">--</small>
+                        </article>
+                        <article class="card">
+                            <div class="card-glow-line" aria-hidden="true"></div>
+                            <span class="card-icon" aria-hidden="true"><span class="material-symbols-outlined">date_range</span></span>
+                            <span class="card-title">Mês de maior consumo</span>
+                            <small class="card-description">Maior total mensal do intervalo</small>
+                            <strong id="cardMaiorConsumoMes">--</strong>
+                            <small id="detalheMaiorConsumoMes">--</small>
+                        </article>
+                        <article class="relatorio-consumo">
+                            <div class="relatorio-consumo-cabecalho">
+                                <span class="material-symbols-outlined" aria-hidden="true">description</span>
+                                <div>
+                                    <span class="card-title">Relatório de consumo</span>
+                                    <small>Análise automática do período</small>
+                                </div>
+                            </div>
+                            <p id="textoRelatorioConsumo">Aguardando medições disponíveis para gerar o relatório.</p>
+                        </article>
+                    </div>
                 </section>
             </div>
 
