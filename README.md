@@ -70,7 +70,7 @@ Também são apresentados o percentual de intensidade configurada para a ilumina
 O estado do ESP32 e da iluminação é exibido separadamente das medições numéricas.
 O horário de atualização ajuda a identificar quando os dados foram recebidos ou atualizados pelo dispositivo.
 
-O card de energia acumulada integra leituras consecutivas de potência para estimar o total em kWh.
+O card de energia acumulada integra leituras consecutivas de potência para estimar o total em Wh.
 O cálculo usa a média entre a potência anterior e a atual durante o intervalo entre as medições.
 Leituras repetidas ou mais antigas não são integradas novamente.
 Intervalos maiores que cinco minutos são descartados para evitar estimar energia durante lacunas longas.

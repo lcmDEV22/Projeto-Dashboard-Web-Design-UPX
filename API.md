@@ -19,9 +19,9 @@ A consulta é feita ao abrir o dashboard, pelo botão **Atualizar** e a cada 60 
 | `intensidade` ou `led1`/`led2`/`led3` | Intensidade da iluminação em porcentagem |
 | `luzAtiva` ou `luzativa` | Estado ligado/desligado da iluminação |
 | `tensao`, `corrente`, `potencia` | Gráficos em V, A e W |
-| `energiaKWh`/`energiakwh`, `energiaWh`/`energiawh` | Energia informada pela API, exibida no painel ao vivo e no histórico |
+| `energiaKWh`/`energiakwh`, `energiaWh`/`energiawh` | Energia informada pela API, normalizada e exibida em Wh no painel ao vivo, nos gráficos e no histórico |
 
-Quando a API fornece nomes repetidos com capitalização diferente, é usado o primeiro valor numérico diferente de zero; se todos forem zero, o zero é mantido. Campos ausentes não são estimados. A API atual não fornece custo nem séries diárias/mensais consolidadas; por isso, o custo aparece como indisponível e os gráficos históricos são formados somente pelas amostras coletadas pelo dashboard.
+Quando a API fornece nomes repetidos com capitalização diferente, é usado o primeiro valor numérico diferente de zero; se todos forem zero, o zero é mantido. Campos ausentes não são estimados. Leituras recebidas em kWh são convertidas para Wh. A API atual não fornece séries diárias/mensais consolidadas; por isso, os gráficos históricos são formados somente pelas amostras coletadas pelo dashboard.
 
 Como a resposta não informa se o ESP32 está conectado, o painel de dispositivos mostra a conexão como **Não informado**. O fato de a API responder não é usado para presumir o estado do dispositivo.
 

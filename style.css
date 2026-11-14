@@ -441,6 +441,8 @@ body.dashboard .dashboard-layout {
    Barra Lateral de Navegação (Sidebar Rail)
    -------------------------------------------------------------------------- */
 body.dashboard .dashboard-sidebar {
+    grid-column: 1;
+    grid-row: 1;
     position: sticky;
     top: 0;
     height: 100vh;
@@ -713,6 +715,8 @@ body.dashboard .sidebar-version .version-tag {
    Conteúdo Principal do Dashboard
    -------------------------------------------------------------------------- */
 body.dashboard .dashboard-main {
+    grid-column: 2;
+    grid-row: 1;
     width: 100%;
     max-width: 1680px;
     min-width: 0;
@@ -1064,7 +1068,7 @@ body.dashboard .filtro-periodo-status {
 }
 
 /* --------------------------------------------------------------------------
-   Resumo do Período (3 Cards de Métricas Consolidadas)
+   Resumo do Período
    -------------------------------------------------------------------------- */
 body.dashboard .resumo-periodo {
     margin-bottom: 18px;
@@ -1165,6 +1169,39 @@ body.dashboard .card-icon {
 
 body.dashboard .card-icon .material-symbols-outlined {
     font-size: 18px;
+}
+
+body.dashboard .card-media-diaria {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    padding-right: 58px;
+}
+
+body.dashboard .media-diaria-copy {
+    min-width: 0;
+}
+
+body.dashboard .media-diaria-copy .card-title,
+body.dashboard .media-diaria-copy .card-description {
+    margin-bottom: 0;
+}
+
+body.dashboard .media-diaria-valor {
+    display: grid;
+    justify-items: end;
+    gap: 4px;
+}
+
+body.dashboard .media-diaria-valor strong {
+    font-size: clamp(1.15rem, 2vw, 1.65rem);
+    white-space: nowrap;
+}
+
+body.dashboard .media-diaria-valor small {
+    margin-top: 0;
+    white-space: nowrap;
 }
 
 body.dashboard .relatorio-consumo {
@@ -1848,14 +1885,36 @@ body.dashboard .footer-copy {
    -------------------------------------------------------------------------- */
 body.dashboard .sidebar-backdrop {
     display: none;
+    position: fixed;
 }
 
+/* Mantém a navegação ao lado do conteúdo em tablets e usa a gaveta apenas em telas estreitas. */
 @media (max-width: 1100px) {
+    body.dashboard .estado-atual-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 1000px) {
+    body.dashboard .cards-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    body.dashboard .graficos-consumo-grid,
+    body.dashboard .graficos-iluminacao-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* A gaveta off-canvas fica restrita à largura de celular; acima disso, a sidebar ocupa sua coluna. */
+@media (max-width: 760px) {
+    /* Libera o conteúdo para ocupar toda a largura quando a sidebar vira uma gaveta. */
     body.dashboard .dashboard-layout {
         grid-template-columns: 1fr;
     }
 
     body.dashboard .dashboard-sidebar {
+        grid-column: 1;
         position: fixed;
         inset: 0 auto 0 0;
         width: min(290px, calc(100vw - 52px));
@@ -1868,6 +1927,10 @@ body.dashboard .sidebar-backdrop {
 
     body.dashboard .dashboard-sidebar.menu-aberto {
         transform: translateX(0);
+    }
+
+    body.dashboard .dashboard-main {
+        grid-column: 1;
     }
 
     body.dashboard .sidebar-backdrop:not([hidden]) {
@@ -1896,12 +1959,6 @@ body.dashboard .sidebar-backdrop {
         cursor: pointer;
     }
 
-    body.dashboard .estado-atual-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-}
-
-@media (max-width: 760px) {
     body.dashboard .dashboard-header {
         align-items: flex-start;
         flex-direction: column;

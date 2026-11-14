@@ -151,7 +151,7 @@
                             <div class="card-glow-line" aria-hidden="true"></div>
                             <span class="card-icon" aria-hidden="true"><span class="material-symbols-outlined">payments</span></span>
                             <span class="card-title">Custo no período</span>
-                            <small class="card-description">Não informada pela API atual</small>
+                            <small class="card-description">Tarifa TE + TUSD consolidada</small>
                             <strong id="cardCustoTotal">--</strong>
                             <small id="variacaoCustoTotal">No intervalo selecionado</small>
                         </div>
@@ -159,15 +159,15 @@
                             <div class="card-glow-line" aria-hidden="true"></div>
                             <span class="card-icon" aria-hidden="true"><span class="material-symbols-outlined">query_stats</span></span>
                             <span class="card-title">Média diária</span>
-                            <small class="card-description">Média das leituras de energia disponíveis</small>
+                            <small class="card-description">Demanda média normalizada</small>
                             <strong id="cardConsumoDiario">--</strong>
                             <small id="variacaoConsumoDiario">--</small>
                         </article>
                         <article class="card">
                             <div class="card-glow-line" aria-hidden="true"></div>
                             <span class="card-icon" aria-hidden="true"><span class="material-symbols-outlined">electric_bolt</span></span>
-                            <span class="card-title">Energia informada</span>
-                            <small class="card-description">Soma das leituras disponíveis no período</small>
+                            <span class="card-title">Consumo acumulado</span>
+                            <small class="card-description">Consumo no intervalo selecionado</small>
                             <strong id="cardConsumoMensal">--</strong>
                             <small id="variacaoConsumoMensal">--</small>
                         </article>
@@ -243,7 +243,7 @@
                     </article>
                     <article class="card estado-card">
                         <span class="estado-card-heading"><span class="card-title">Energia acumulada</span><span class="material-symbols-outlined icon-cyan" aria-hidden="true">electric_meter</span></span>
-                        <strong id="valorEnergiaAcumulada">0,0000 kWh</strong>
+                        <strong id="valorEnergiaAcumulada">0,0000 Wh</strong>
                         <small id="statusEnergiaAcumulada">Aguardando leituras de potência</small>
                     </article>
                 </div>
@@ -267,7 +267,7 @@
                         <div class="chart-toolbar">
                             <label for="grandezaGraficoMensal">
                                 <select id="grandezaGraficoMensal" class="seletor-grandeza">
-                                    <option value="consumo">Energia reportada (kWh)</option>
+                                    <option value="consumo">Energia reportada (Wh)</option>
                                     <option value="tensao">Tensão (V)</option>
                                     <option value="corrente">Corrente (A)</option>
                                     <option value="potencia">Potência (W)</option>
@@ -302,7 +302,7 @@
                             <label for="grandezaGraficoDiario">
                                 Grandeza
                                 <select id="grandezaGraficoDiario" class="seletor-grandeza">
-                                    <option value="consumo">Energia reportada (kWh)</option>
+                                    <option value="consumo">Energia reportada (Wh)</option>
                                     <option value="tensao">Tensão (V)</option>
                                     <option value="corrente">Corrente (A)</option>
                                     <option value="potencia">Potência (W)</option>
@@ -428,7 +428,7 @@
                 <section class="comparacao-historico" aria-labelledby="tituloComparacao">
                     <h3 id="tituloComparacao">Comparar períodos</h3>
                     <!-- A unidade fica dentro do painel para indicar claramente a escala da comparação. -->
-                    <p class="chart-period-status">Unidade de comparação: kWh.</p>
+                    <p class="chart-period-status">Unidade de comparação: Wh.</p>
                     <div class="comparacao-controles">
                         <label for="periodoComparacaoA">Primeiro período
                             <select id="periodoComparacaoA"></select>

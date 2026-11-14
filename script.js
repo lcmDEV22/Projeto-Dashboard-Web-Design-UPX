@@ -27,16 +27,15 @@ let energiaAcumulada = {
 };
 
 const seriesGrandezas = {
-    consumo: { nome: "Consumo", unidade: "kWh", mensal: [], diario: [] },
+    consumo: { nome: "Consumo", unidade: "Wh", mensal: [], diario: [] },
     tensao: { nome: "Tensão", unidade: "V", mensal: [], diario: [] },
     corrente: { nome: "Corrente", unidade: "A", mensal: [], diario: [] },
     potencia: { nome: "Potência", unidade: "W", mensal: [], diario: [] }
 };
 let grandezaSelecionada = "potencia";
 let resumoConsumo = {
-    totalCostBrl: null,
-    dailyConsumptionKwh: null,
-    monthlyConsumptionKwh: null,
+    dailyConsumptionWh: null,
+    monthlyConsumptionWh: null,
     dailyChangePercent: null,
     monthlyChangePercent: null
 };
@@ -385,14 +384,14 @@ function registrarLeituraEnergia(estado) {
     desenharGraficoEnergiaAcumulada();
 }
 
-// Atualiza o card com precisão suficiente para tornar visíveis pequenos incrementos de energia.
+// Converte o total persistido em kWh para Wh antes de exibi-lo no painel.
 function atualizarIndicadorEnergiaAcumulada() {
     const valor = document.getElementById("valorEnergiaAcumulada");
     if (valor) {
-        valor.textContent = `${energiaAcumulada.totalKwh.toLocaleString("pt-BR", {
-            minimumFractionDigits: 4,
-            maximumFractionDigits: 4
-        })} kWh`;
+        valor.textContent = `${(energiaAcumulada.totalKwh * 1000).toLocaleString("pt-BR", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        })} Wh`;
     }
 }
 
@@ -445,28 +444,29 @@ function desenharGraficoEnergiaAcumulada() {
     const margem = { topo: 38, direita: 20, base: 45, esquerda: 55 };
     const larguraGrafico = largura - margem.esquerda - margem.direita;
     const alturaGrafico = altura - margem.topo - margem.base;
-    const maximo = Math.max(1, ...leituras.map((leitura) => leitura.kwh));
+    const maximo = Math.max(1, ...leituras.map((leitura) => leitura.kwh * 1000));
     const pontos = leituras.map((leitura, indice) => {
         const x = margem.esquerda + (leituras.length === 1 ? larguraGrafico / 2 : (indice / (leituras.length - 1)) * larguraGrafico);
-        const y = margem.topo + alturaGrafico - (leitura.kwh / maximo) * alturaGrafico;
-        return { x, y, valor: leitura.kwh, indice, periodo: leitura.instante };
+        const valorWh = leitura.kwh * 1000;
+        const y = margem.topo + alturaGrafico - (valorWh / maximo) * alturaGrafico;
+        return { x, y, valor: valorWh, indice, periodo: leitura.instante };
     });
 
     dadosGraficos.set("graficoEnergiaAcumulada", {
         pontos,
         tipo: "intervalo",
         periodicidade: "horario",
-        unidade: "kWh"
+        unidade: "Wh"
     });
 
-    descricao.textContent = `${leituras.length.toLocaleString("pt-BR")} amostras horárias · total acumulado em kWh`;
+    descricao.textContent = `${leituras.length.toLocaleString("pt-BR")} amostras horárias · total acumulado em Wh`;
 
     // Identificador interno padronizado com os demais gráficos: grandeza e unidade no topo.
     contexto.font = "11px Inter, sans-serif";
     contexto.textAlign = "left";
     contexto.textBaseline = "alphabetic";
     contexto.fillStyle = "#6b8779";
-    contexto.fillText("Energia acumulada (kWh)", margem.esquerda, 16);
+    contexto.fillText("Energia acumulada (Wh)", margem.esquerda, 16);
 
     // Desenha uma grade horizontal com cinco divisões, igual aos outros gráficos do painel.
     contexto.lineWidth = 1;
@@ -510,7 +510,7 @@ function desenharGraficoEnergiaAcumulada() {
         let ultimoX = null;
         leituras.forEach((leitura, indice) => {
             const x = margem.esquerda + (indice / (leituras.length - 1)) * larguraGrafico;
-            const y = margem.topo + alturaGrafico - (leitura.kwh / maximo) * alturaGrafico;
+            const y = margem.topo + alturaGrafico - ((leitura.kwh * 1000) / maximo) * alturaGrafico;
             if (indice === 0) {
                 contexto.moveTo(x, margem.topo + alturaGrafico);
                 contexto.lineTo(x, y);
@@ -533,7 +533,7 @@ function desenharGraficoEnergiaAcumulada() {
     contexto.beginPath();
     leituras.forEach((leitura, indice) => {
         const x = margem.esquerda + (leituras.length === 1 ? larguraGrafico / 2 : (indice / (leituras.length - 1)) * larguraGrafico);
-        const y = margem.topo + alturaGrafico - (leitura.kwh / maximo) * alturaGrafico;
+        const y = margem.topo + alturaGrafico - ((leitura.kwh * 1000) / maximo) * alturaGrafico;
         if (indice === 0 || leitura.lacuna) {
             contexto.moveTo(x, y);
         } else {
@@ -545,7 +545,7 @@ function desenharGraficoEnergiaAcumulada() {
     // Marcadores refinados com anel externo e centro escuro
     leituras.forEach((leitura, indice) => {
         const x = margem.esquerda + (leituras.length === 1 ? larguraGrafico / 2 : (indice / (leituras.length - 1)) * larguraGrafico);
-        const y = margem.topo + alturaGrafico - (leitura.kwh / maximo) * alturaGrafico;
+        const y = margem.topo + alturaGrafico - ((leitura.kwh * 1000) / maximo) * alturaGrafico;
         contexto.beginPath();
         contexto.arc(x, y, 3.5, 0, Math.PI * 2);
         contexto.fillStyle = "#05110b";
@@ -1115,7 +1115,7 @@ function atualizarVisibilidadeFiltroPeriodo(painelSelecionado) {
 
     // Mantém os indicadores do período fora da seção de dispositivos.
     if (resumoPeriodo) {
-        resumoPeriodo.hidden = painelSelecionado === "secaoDispositivos";
+        resumoPeriodo.hidden = painelSelecionado === "secaoDispositivos" || painelSelecionado === "secaoHistorico";
     }
 }
 
@@ -1208,7 +1208,8 @@ function configurarNavegacaoResponsiva() {
         }
     });
     window.addEventListener("resize", () => {
-        if (window.innerWidth > 960) {
+        // Sincroniza o estado do menu com o breakpoint da gaveta definido no CSS.
+        if (window.innerWidth > 760) {
             fecharMenu();
         }
     });
@@ -1267,12 +1268,29 @@ function carregarHistoricoSalvo() {
         if (!Array.isArray(registrosSalvos)) {
             throw new Error("O histórico salvo não possui um formato válido.");
         }
-        registrosHistorico = registrosSalvos.filter((registro) =>
-            registroHistoricoValido(registro) && registro.origem !== "Demonstração"
-        );
+        let historicoAtualizado = false;
+        registrosHistorico = registrosSalvos
+            .filter((registro) => {
+                const manter = registroHistoricoValido(registro) &&
+                    registro.origem !== "Demonstração" &&
+                    registro.chaveGrandeza !== "custo";
+                if (!manter) {
+                    historicoAtualizado = true;
+                }
+                return manter;
+            })
+            .map((registro) => {
+                if (registro.chaveGrandeza === "consumo" && registro.unidade === "kWh") {
+                    historicoAtualizado = true;
+                    return { ...registro, valor: registro.valor * 1000, unidade: "Wh" };
+                }
+                return registro;
+            });
         const quantidadeIgnorada = registrosSalvos.length - registrosHistorico.length;
         if (quantidadeIgnorada) {
-            avisoHistorico = `${quantidadeIgnorada.toLocaleString("pt-BR")} registros fictícios ou inválidos foram removidos.`;
+            avisoHistorico = `${quantidadeIgnorada.toLocaleString("pt-BR")} registros fictícios, inválidos ou de custo foram removidos.`;
+        }
+        if (historicoAtualizado) {
             localStorage.setItem(CHAVE_HISTORICO, JSON.stringify(registrosHistorico));
         }
 
@@ -1314,19 +1332,6 @@ function registrarHistorico(mes, ano, origem, atualizarInterface = true, estadoL
                 origem
             });
         });
-
-        if (Number.isFinite(resumoConsumo.totalCostBrl)) {
-            novosRegistros.push({
-                tipo: "resumo",
-                data: formatarDataHistorico(ano, mes, 1),
-                grandeza: "Custo total",
-                chaveGrandeza: "custo",
-                valor: resumoConsumo.totalCostBrl,
-                unidade: "BRL",
-                capturadoEm,
-                origem
-            });
-        }
 
         serie.diario.forEach((valor, indice) => {
             if (!Number.isFinite(valor)) {
@@ -1514,7 +1519,7 @@ function renderizarComparacaoHistorico(periodos) {
     const percentual = variacao === null
         ? ""
         : ` (${variacao > 0 ? "+" : ""}${variacao.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%)`;
-    resultado.textContent = `${direcao === "sem alteração" ? "Sem alteração" : `${direcao[0].toLocaleUpperCase("pt-BR")}${direcao.slice(1)}`} de ${Math.abs(diferenca).toLocaleString("pt-BR", { maximumFractionDigits: 2 })} kWh${percentual} no segundo período em relação ao primeiro.`;
+    resultado.textContent = `${direcao === "sem alteração" ? "Sem alteração" : `${direcao[0].toLocaleUpperCase("pt-BR")}${direcao.slice(1)}`} de ${Math.abs(diferenca).toLocaleString("pt-BR", { maximumFractionDigits: 2 })} Wh${percentual} no segundo período em relação ao primeiro.`;
 
     const maiorValor = Math.max(registroA.valor, registroB.valor);
     [
@@ -1538,7 +1543,7 @@ function renderizarComparacaoHistorico(periodos) {
         trilho.appendChild(barra);
 
         const valor = document.createElement("strong");
-        valor.textContent = `${registro.valor.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} kWh`;
+        valor.textContent = `${registro.valor.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} Wh`;
         linha.append(rotulo, trilho, valor);
         grafico.appendChild(linha);
     });
@@ -1981,8 +1986,13 @@ function normalizarLeiturasEsp32(resposta, coletadoEm) {
     };
 
     const intensidade = lerNumero(["intensidade", "led1", "led2", "led3"], "intensidade", 100);
-    const energiaWh = lerNumero(["energiawh", "energiaWh"], "energiaWh");
-    const energiaKwh = lerNumero(["energiakwh", "energiaKWh"], "energiaKWh");
+    const energiaWhApi = lerNumero(["energiawh", "energiaWh"], "energiaWh");
+    const energiaKwhApi = lerNumero(["energiakwh", "energiaKWh"], "energiaKWh");
+    const energiaWh = energiaWhApi > 0
+        ? energiaWhApi
+        : energiaKwhApi > 0
+            ? energiaKwhApi * 1000
+            : energiaWhApi ?? (energiaKwhApi === null ? null : energiaKwhApi * 1000);
     const luminosidade = lerNumero(["luminosidade"], "luminosidade");
     const presenca = lerBooleano(["presenca"], "presenca");
     const tensao = lerNumero(["tensao"], "tensao");
@@ -1991,7 +2001,7 @@ function normalizarLeiturasEsp32(resposta, coletadoEm) {
     const iluminacaoLigada = lerBooleano(["luzAtiva", "luzativa"], "luzAtiva");
 
     if (
-        [intensidade, energiaWh, energiaKwh, luminosidade, tensao, corrente, potencia].every((valor) => valor === null) &&
+        [intensidade, energiaWh, luminosidade, tensao, corrente, potencia].every((valor) => valor === null) &&
         presenca === null &&
         iluminacaoLigada === null
     ) {
@@ -2011,11 +2021,10 @@ function normalizarLeiturasEsp32(resposta, coletadoEm) {
             dispositivos: [{ id: "esp32", name: "Controlador ESP32", online: null }],
             atualizadoEm: instante.toISOString(),
             origemHorario: "Coletado pelo dashboard",
-            energiaWh,
-            energiaKwh
+            energiaWh
         },
         metricas: {
-            consumo: criarSerie("Energia", "kWh", energiaKwh),
+            consumo: criarSerie("Energia", "Wh", energiaWh),
             tensao: criarSerie("Tensão", "V", tensao),
             corrente: criarSerie("Corrente", "A", corrente),
             potencia: criarSerie("Potência", "W", potencia)
@@ -2115,10 +2124,8 @@ function atualizarEstadoAtual() {
         ? "Não informado"
         : `${formatarNumero(estadoAtual.potenciaWatts)} W`;
     if (energiaApi) {
-        energiaApi.textContent = Number.isFinite(estadoAtual.energiaKwh)
-            ? `${formatarNumero(estadoAtual.energiaKwh, 3)} kWh`
-            : Number.isFinite(estadoAtual.energiaWh)
-                ? `${formatarNumero(estadoAtual.energiaWh, 2)} Wh`
+        energiaApi.textContent = Number.isFinite(estadoAtual.energiaWh)
+            ? `${formatarNumero(estadoAtual.energiaWh, 2)} Wh`
                 : "Não informado";
     }
     detalhePresenca.textContent = estadoAtual.presencaDetectada === null
@@ -2362,7 +2369,7 @@ function atualizarIndicadoresFiltrados() {
 
     const formatarConsumo = (valor) => valor === null
         ? "—"
-        : `${valor.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} kWh`;
+        : `${valor.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} Wh`;
 
     // Identifica o dia com maior consumo dentro das medições diárias filtradas.
     const maiorConsumoDia = consumoDiario.reduce((maior, registro) =>
@@ -2541,17 +2548,14 @@ function atualizarIndicadores() {
         return;
     }
     const formatarConsumo = (valor) => Number.isFinite(valor)
-        ? `${valor.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} kWh`
+        ? `${valor.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} Wh`
         : "—";
     const formatarVariacao = (valor) => Number.isFinite(valor)
         ? `${valor > 0 ? "+" : ""}${valor.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}% no período`
         : "Não informado pela API";
 
-    document.getElementById("cardCustoTotal").textContent = Number.isFinite(resumoConsumo.totalCostBrl)
-        ? resumoConsumo.totalCostBrl.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
-        : "—";
-    document.getElementById("cardConsumoDiario").textContent = formatarConsumo(resumoConsumo.dailyConsumptionKwh);
-    document.getElementById("cardConsumoMensal").textContent = formatarConsumo(resumoConsumo.monthlyConsumptionKwh);
+    document.getElementById("cardConsumoDiario").textContent = formatarConsumo(resumoConsumo.dailyConsumptionWh);
+    document.getElementById("cardConsumoMensal").textContent = formatarConsumo(resumoConsumo.monthlyConsumptionWh);
     document.getElementById("variacaoConsumoDiario").textContent = formatarVariacao(resumoConsumo.dailyChangePercent);
     document.getElementById("variacaoConsumoMensal").textContent = formatarVariacao(resumoConsumo.monthlyChangePercent);
 
@@ -2567,7 +2571,7 @@ function atualizarIndicadores() {
     document.getElementById("cardMaiorConsumoMes").textContent = formatarConsumo(maiorValorMes);
     document.getElementById("detalheMaiorConsumoMes").textContent = nomesMeses[indiceMaiorMes];
 
-    document.getElementById("textoRelatorioConsumo").textContent = `No mês atual, o consumo diário registrado foi de ${formatarConsumo(resumoConsumo.dailyConsumptionKwh)}, enquanto o consumo mensal acumulado é de ${formatarConsumo(resumoConsumo.monthlyConsumptionKwh)}. A maior leitura diária ocorreu em ${indiceMaiorDia + 1}/${String(hoje.getMonth() + 1).padStart(2, "0")}/${hoje.getFullYear()}, e ${nomesMeses[indiceMaiorMes]} foi o mês de maior consumo da série demonstrativa.`;
+    document.getElementById("textoRelatorioConsumo").textContent = `No mês atual, o consumo diário registrado foi de ${formatarConsumo(resumoConsumo.dailyConsumptionWh)}, enquanto o consumo mensal acumulado é de ${formatarConsumo(resumoConsumo.monthlyConsumptionWh)}. A maior leitura diária ocorreu em ${indiceMaiorDia + 1}/${String(hoje.getMonth() + 1).padStart(2, "0")}/${hoje.getFullYear()}, e ${nomesMeses[indiceMaiorMes]} foi o mês de maior consumo da série demonstrativa.`;
 }
 
 // Exibe o estado atual do serviço junto aos indicadores.
@@ -2631,9 +2635,8 @@ async function carregarDadosDashboard() {
         Object.assign(seriesGrandezas, dados.metricas);
         estadoAtual = dados.estadoAtual;
         resumoConsumo = {
-            totalCostBrl: null,
-            dailyConsumptionKwh: null,
-            monthlyConsumptionKwh: null,
+            dailyConsumptionWh: null,
+            monthlyConsumptionWh: null,
             dailyChangePercent: null,
             monthlyChangePercent: null
         };
